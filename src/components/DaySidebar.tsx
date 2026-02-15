@@ -302,7 +302,7 @@ function SortableDayItem({
   format, dayCost, t,
 }: SortableDayItemProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: day.id });
-  const style = { transform: CSS.Transform.toString(transform), transition, zIndex: isDragging ? 50 : undefined, touchAction: 'auto' as const };
+  const style = { transform: CSS.Transform.toString(transform), transition, zIndex: isDragging ? 50 : undefined };
 
   const accent = getAccent(day.destinationId);
   const totalCount = day.activities.length;

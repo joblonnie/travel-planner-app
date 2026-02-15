@@ -1,6 +1,6 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { MapPin, Clock, Check, CheckCircle2, Circle, FileText, Ticket, Pencil, Trash2, SkipForward, MoreHorizontal, Plus, X, Receipt, Copy } from 'lucide-react';
+import { MapPin, Clock, Check, CheckCircle2, Circle, FileText, Ticket, Pencil, Trash2, SkipForward, MoreHorizontal, Plus, X, Receipt, Copy, GripVertical } from 'lucide-react';
 import type { ScheduledActivity, ExpenseOwner } from '../types/index.ts';
 import { useState, useRef, useEffect } from 'react';
 import { useTripStore } from '../store/useTripStore.ts';
@@ -58,7 +58,6 @@ export function ActivityCard({ activity, dayId }: Props) {
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    touchAction: 'auto' as const,
   };
 
   // Close actions menu on outside click
@@ -123,9 +122,7 @@ export function ActivityCard({ activity, dayId }: Props) {
       <div
         ref={setNodeRef}
         style={style}
-        {...attributes}
-        {...listeners}
-        className={`group relative rounded-2xl border transition-all duration-300 ease-out cursor-grab active:cursor-grabbing ${
+        className={`group relative rounded-2xl border transition-all duration-300 ease-out ${
           showActions ? 'z-30' : isDragging ? 'z-20' : ''
         } ${
           isDragging
@@ -137,7 +134,16 @@ export function ActivityCard({ activity, dayId }: Props) {
             : 'border-white/60 bg-white/70 backdrop-blur-xl shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:bg-white/90 hover:-translate-y-0.5'
         }`}
       >
-        <div className="p-3.5 sm:p-4" onClick={() => { if (!isDragging) setShowDetail(true); }}>
+        {/* Drag handle */}
+        <div
+          {...attributes}
+          {...listeners}
+          className="absolute left-0 top-0 bottom-0 w-6 flex items-center justify-center cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-400 transition-colors z-10"
+          style={{ touchAction: 'none' }}
+        >
+          <GripVertical size={14} />
+        </div>
+        <div className="pl-5 p-3.5 sm:p-4 sm:pl-6" onClick={() => { if (!isDragging) setShowDetail(true); }}>
           {/* Top row: type badge + time + cost + actions */}
           <div className="flex items-center gap-1.5 mb-2">
             {/* Status toggle */}

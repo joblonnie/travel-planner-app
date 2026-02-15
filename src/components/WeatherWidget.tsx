@@ -19,16 +19,16 @@ export function WeatherWidget({ weather, cityName, compact }: Props) {
 
   if (compact) {
     return (
-      <div className="flex items-center gap-3 text-sm">
-        <div className="flex items-center gap-1.5">
-          {getWeatherIcon(18)}
-          <span className="font-bold text-white drop-shadow-md text-base">{weather.avgTempLow}°~{weather.avgTempHigh}°</span>
+      <div className="flex items-center gap-1.5 sm:gap-3 text-sm">
+        <div className="flex items-center gap-1 sm:gap-1.5">
+          {getWeatherIcon(16)}
+          <span className="font-bold text-white drop-shadow-md text-sm sm:text-base">{weather.avgTempLow}°~{weather.avgTempHigh}°</span>
         </div>
-        <div className="flex items-center gap-1 text-white/80">
+        <div className="hidden sm:flex items-center gap-1 text-white/80">
           <Droplets size={12} className="text-blue-300 drop-shadow-sm" />
           <span className="text-xs">{weather.rainfall}</span>
         </div>
-        <div className="flex items-center gap-1 text-white/80">
+        <div className="hidden sm:flex items-center gap-1 text-white/80">
           <Shirt size={12} className="text-rose-300 drop-shadow-sm" />
           <span className="text-xs">{weather.clothing}</span>
         </div>
