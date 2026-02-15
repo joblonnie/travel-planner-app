@@ -47,7 +47,7 @@ function calcEndTime(startTime: string, duration: string): string | null {
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 }
 
-export function ActivityCard({ activity, dayId, index }: Props) {
+export function ActivityCard({ activity, dayId }: Props) {
   const [showBooking, setShowBooking] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -155,17 +155,13 @@ export function ActivityCard({ activity, dayId, index }: Props) {
             : 'border-white/60 bg-white/70 backdrop-blur-xl shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:bg-white/90 hover:-translate-y-0.5'
         }`}
       >
-        {/* Drag handle */}
-        {/* Drag handle with order number - 48px touch target */}
+        {/* Drag handle - 48px touch target */}
         <div
           {...attributes}
           {...listeners}
-          className="absolute left-0 top-0 bottom-0 w-12 flex flex-col items-center justify-center cursor-grab active:cursor-grabbing text-gray-300 active:text-spain-red transition-colors z-10 gap-0.5"
+          className="absolute left-0 top-0 bottom-0 w-12 flex items-center justify-center cursor-grab active:cursor-grabbing text-gray-300 active:text-spain-red transition-colors z-10"
           style={{ touchAction: 'none' }}
         >
-          <span className={`text-[10px] font-black ${isCompleted ? 'text-emerald-500' : isSkipped ? 'text-amber-400' : 'text-gray-400'}`}>
-            {(index ?? 0) + 1}
-          </span>
           <GripVertical size={16} />
         </div>
         <div className="pl-12 p-3.5 sm:p-4 sm:pl-14" onClick={() => { if (!isDragging) setShowDetail(true); }}>
