@@ -19,7 +19,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { useTripStore } from '../store/useTripStore.ts';
 import { useCurrency } from '../hooks/useCurrency.ts';
-import { useI18n } from '../i18n/useI18n.ts';
+import { useI18n, type TranslationKey } from '../i18n/useI18n.ts';
 import { DayFormModal } from './DayFormModal.tsx';
 import { DestinationFormModal } from './DestinationFormModal.tsx';
 import { FlightFormModal } from './FlightFormModal.tsx';
@@ -135,7 +135,7 @@ interface InterCityIndicatorProps {
   onAdd: () => void;
   onEdit: (transport: InterCityTransport) => void;
   onDelete: (id: string) => void;
-  t: (key: string) => string;
+  t: (key: TranslationKey) => string;
 }
 
 function InterCityIndicator({ fromCity, toCity, transports, onAdd, onEdit, onDelete, t }: InterCityIndicatorProps) {
@@ -293,7 +293,7 @@ interface SortableDayItemProps {
   canMoveDown: boolean;
   format: (n: number) => string;
   dayCost: number;
-  t: (key: string) => string;
+  t: (key: TranslationKey) => string;
 }
 
 function SortableDayItem({

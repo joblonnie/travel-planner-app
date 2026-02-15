@@ -198,7 +198,6 @@ export function CameraOcrModal({ onClose, onAddExpense }: Props) {
   };
 
   const currentAmount = isManualMode ? parseFloat(manualAmount) || 0 : detectedAmount || 0;
-  const currentCurrency = isManualMode ? manualCurrency : detectedCurrency;
 
   const toKrw = (amount: number, cur: DetectedCurrency): number => {
     if (cur === 'EUR') return Math.round(amount * exchangeRate);

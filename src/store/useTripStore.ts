@@ -692,7 +692,7 @@ export const useTripStore = create<TripStore>()(
             owners,
           };
         }
-        return state as TripStore;
+        return state as unknown as TripStore;
       },
     }
   )

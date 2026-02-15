@@ -11,9 +11,9 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['icon-192.svg', 'icon-512.svg'],
       manifest: {
-        name: 'Spain Honeymoon Planner 2026',
-        short_name: '허니문플래너',
-        description: '스페인 신혼여행 일정 플래너',
+        name: 'Travel Planner',
+        short_name: '여행플래너',
+        description: '여행 일정 플래너',
         theme_color: '#c60b1e',
         background_color: '#ffffff',
         display: 'standalone',

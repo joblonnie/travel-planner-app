@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { X, Check, Train } from 'lucide-react';
 import { useEscKey } from '../hooks/useEscKey.ts';
 import { useTripStore } from '../store/useTripStore.ts';
-import { useI18n } from '../i18n/useI18n.ts';
+import { useI18n, type TranslationKey } from '../i18n/useI18n.ts';
 import type { InterCityTransport } from '../types/index.ts';
 
 interface Props {
@@ -58,7 +58,7 @@ export function TransportFormModal({ fromDayId, toDayId, fromCity, toCity, trans
 
   const getTypeLabel = (tp: string) => {
     const key = `transport.${tp}`;
-    return t(key);
+    return t(key as TranslationKey);
   };
 
   return (

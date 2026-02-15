@@ -127,7 +127,7 @@ export function BudgetPage() {
       id: crypto.randomUUID(),
       category: form.category,
       amount: parseFloat(form.amount),
-      currency: form.currency,
+      currency: form.currency as 'EUR',
       description: form.description,
       date: form.date,
       dayId: form.dayId || undefined,

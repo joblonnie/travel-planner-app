@@ -58,7 +58,7 @@ function FallbackMap({ activities }: { activities: ScheduledActivity[] }) {
 
 export function MapView({ activities, centerLat, centerLng }: Props) {
   const { isLoaded, apiKey } = useGoogleMaps();
-  const { position: geoPos, enabled: gpsEnabled, enable: enableGps, watching } = useGeolocation();
+  const { position: geoPos, enabled: gpsEnabled, enable: enableGps } = useGeolocation();
   const { t } = useI18n();
   const mapRef = useRef<google.maps.Map | null>(null);
 
