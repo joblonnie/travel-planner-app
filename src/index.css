@@ -1,0 +1,190 @@
+@import "tailwindcss";
+
+@theme {
+  /* Primary - deep luxurious red */
+  --color-spain-red: #be123c;
+  --color-spain-red-dark: #9f1239;
+  --color-spain-red-light: #e11d48;
+
+  /* Accent - rich gold */
+  --color-spain-yellow: #d97706;
+  --color-spain-yellow-dark: #b45309;
+  --color-spain-yellow-light: #f59e0b;
+
+  /* Accent secondary - warm rose */
+  --color-accent-rose: #fb7185;
+  --color-accent-rose-dark: #f43f5e;
+  --color-accent-rose-light: #fda4af;
+
+  /* Accent tertiary - warm amber cream */
+  --color-accent-cream: #fef3c7;
+  --color-accent-cream-dark: #fde68a;
+
+  /* Dark */
+  --color-spain-dark: #0f172a;
+  --color-spain-navy: #1e293b;
+
+  /* Warm neutrals */
+  --color-warm-50: #fafaf9;
+  --color-warm-100: #f5f5f4;
+  --color-warm-200: #e7e5e4;
+  --color-warm-300: #d6d3d1;
+  --color-warm-400: #a8a29e;
+
+  /* Sidebar */
+  --color-sidebar-bg: #fafaf9;
+  --color-sidebar-active: #fef3c7;
+}
+
+/* Keyframes */
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes subtle-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', 'SF Pro Display', system-ui, -apple-system, sans-serif;
+  background-color: #f8f8f7;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* PWA safe area for notch devices */
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
+  /* Prevent pull-to-refresh in standalone mode */
+  overscroll-behavior-y: contain;
+  /* Prevent text selection on long press for app feel */
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Allow text selection in input/textarea */
+input, textarea, [contenteditable] {
+  -webkit-user-select: auto;
+  user-select: auto;
+}
+
+/* Subtle background texture */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.3;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+}
+
+/* Animated top accent bar */
+#root::before {
+  content: '';
+  display: block;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    #9f1239 0%,
+    #be123c 20%,
+    #d97706 40%,
+    #f59e0b 50%,
+    #d97706 60%,
+    #be123c 80%,
+    #9f1239 100%
+  );
+  background-size: 200% 100%;
+  animation: gradient-shift 8s ease-in-out infinite;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+}
+
+/* Glassmorphism utilities */
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.glass-dark {
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* Animation utilities */
+.animate-fade-in {
+  animation: fade-in 0.3s ease-out;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.4s ease-out;
+}
+
+.animate-subtle-pulse {
+  animation: subtle-pulse 3s ease-in-out infinite;
+}
+
+/* Scrollbar hide */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Modern thin scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #d6d3d1 transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: #d6d3d1;
+  border-radius: 9999px;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: #a8a29e;
+}
+
+/* Modern selection */
+::selection {
+  background-color: rgba(190, 18, 60, 0.12);
+  color: #9f1239;
+}
