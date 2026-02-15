@@ -16,8 +16,10 @@ function App() {
   const startDate = useTripStore((s) => s.startDate);
   const endDate = useTripStore((s) => s.endDate);
   const days = useTripStore((s) => s.days);
+  const currentDayIndex = useTripStore((s) => s.currentDayIndex);
   const currentPage = useTripStore((s) => s.currentPage);
   const setCurrentPage = useTripStore((s) => s.setCurrentPage);
+  const currentDay = days[currentDayIndex];
   const { t, language, setLanguage } = useI18n();
   const { currency, setCurrency } = useCurrency();
   const [showSettings, setShowSettings] = useState(false);
@@ -56,7 +58,16 @@ function App() {
               <Settings size={10} className="text-warm-300 group-hover:text-spain-red transition-colors duration-200 flex-shrink-0" />
             </button>
             <p className="text-[10px] sm:text-[11px] text-warm-400 font-mono tracking-wide hidden sm:block">{startDate} ~ {endDate} ({days.length} {t('app.days')})</p>
-            <p className="text-[10px] text-warm-400 font-mono tracking-wide sm:hidden">{days.length}{t('app.days')}</p>
+            <p className="text-[10px] text-warm-400 tracking-wide sm:hidden flex items-center gap-1">
+              {currentDay && (
+                <>
+                  <span className="font-bold text-spain-red">Day {currentDay.dayNumber}</span>
+                  <span className="text-warm-300">·</span>
+                  <span className="truncate">{currentDay.destination}</span>
+                </>
+              )}
+              {!currentDay && <span className="font-mono">{days.length}{t('app.days')}</span>}
+            </p>
           </div>
         </div>
 

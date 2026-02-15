@@ -302,7 +302,7 @@ function SortableDayItem({
   format, dayCost, t,
 }: SortableDayItemProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: day.id });
-  const style = { transform: CSS.Transform.toString(transform), transition, zIndex: isDragging ? 50 : undefined, touchAction: 'none' as const };
+  const style = { transform: CSS.Transform.toString(transform), transition, zIndex: isDragging ? 50 : undefined, touchAction: 'auto' as const };
 
   const accent = getAccent(day.destinationId);
   const totalCount = day.activities.length;
@@ -466,7 +466,7 @@ export function DaySidebar({ onClose }: { onClose: () => void }) {
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
-    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 400, tolerance: 8 } }),
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 

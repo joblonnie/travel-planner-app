@@ -58,7 +58,7 @@ export function ActivityCard({ activity, dayId }: Props) {
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    touchAction: 'none' as const,
+    touchAction: 'auto' as const,
   };
 
   // Close actions menu on outside click
