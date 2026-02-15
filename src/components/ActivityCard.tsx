@@ -135,15 +135,16 @@ export function ActivityCard({ activity, dayId }: Props) {
         }`}
       >
         {/* Drag handle */}
+        {/* Drag handle - min 44px touch target */}
         <div
           {...attributes}
           {...listeners}
-          className="absolute left-0 top-0 bottom-0 w-6 flex items-center justify-center cursor-grab active:cursor-grabbing text-gray-300 hover:text-gray-400 transition-colors z-10"
+          className="absolute left-0 top-0 bottom-0 w-10 flex items-center justify-center cursor-grab active:cursor-grabbing text-gray-300 active:text-spain-red transition-colors z-10"
           style={{ touchAction: 'none' }}
         >
-          <GripVertical size={14} />
+          <GripVertical size={16} />
         </div>
-        <div className="pl-5 p-3.5 sm:p-4 sm:pl-6" onClick={() => { if (!isDragging) setShowDetail(true); }}>
+        <div className="pl-9 p-3.5 sm:p-4 sm:pl-10" onClick={() => { if (!isDragging) setShowDetail(true); }}>
           {/* Top row: type badge + time + cost + actions */}
           <div className="flex items-center gap-1.5 mb-2">
             {/* Status toggle */}
