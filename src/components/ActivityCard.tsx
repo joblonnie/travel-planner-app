@@ -26,7 +26,28 @@ interface Props {
   totalCount?: number;
 }
 
-export function ActivityCard({ activity, dayId }: Props) {
+// Calculate end time from start time + duration string
+function calcEndTime(startTime: string, duration: string): string | null {
+  if (!startTime || !duration) return null;
+  const match = startTime.match(/^(\d{1,2}):(\d{2})$/);
+  if (!match) return null;
+  let totalMin = parseInt(match[1]) * 60 + parseInt(match[2]);
+
+  // Parse duration: "2시간", "1시간 30분", "30분", "1.5h", "2h", "90min" etc
+  const hours = duration.match(/(\d+(?:\.\d+)?)\s*(?:시간|h)/i);
+  const mins = duration.match(/(\d+)\s*(?:분|min)/i);
+  let durMin = 0;
+  if (hours) durMin += Math.round(parseFloat(hours[1]) * 60);
+  if (mins) durMin += parseInt(mins[1]);
+  if (durMin === 0) return null;
+
+  totalMin += durMin;
+  const h = Math.floor(totalMin / 60) % 24;
+  const m = totalMin % 60;
+  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+}
+
+export function ActivityCard({ activity, dayId, index }: Props) {
   const [showBooking, setShowBooking] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -135,16 +156,19 @@ export function ActivityCard({ activity, dayId }: Props) {
         }`}
       >
         {/* Drag handle */}
-        {/* Drag handle - min 44px touch target */}
+        {/* Drag handle with order number - 48px touch target */}
         <div
           {...attributes}
           {...listeners}
-          className="absolute left-0 top-0 bottom-0 w-10 flex items-center justify-center cursor-grab active:cursor-grabbing text-gray-300 active:text-spain-red transition-colors z-10"
+          className="absolute left-0 top-0 bottom-0 w-12 flex flex-col items-center justify-center cursor-grab active:cursor-grabbing text-gray-300 active:text-spain-red transition-colors z-10 gap-0.5"
           style={{ touchAction: 'none' }}
         >
+          <span className={`text-[10px] font-black ${isCompleted ? 'text-emerald-500' : isSkipped ? 'text-amber-400' : 'text-gray-400'}`}>
+            {(index ?? 0) + 1}
+          </span>
           <GripVertical size={16} />
         </div>
-        <div className="pl-9 p-3.5 sm:p-4 sm:pl-10" onClick={() => { if (!isDragging) setShowDetail(true); }}>
+        <div className="pl-12 p-3.5 sm:p-4 sm:pl-14" onClick={() => { if (!isDragging) setShowDetail(true); }}>
           {/* Top row: type badge + time + cost + actions */}
           <div className="flex items-center gap-1.5 mb-2">
             {/* Status toggle */}
@@ -178,7 +202,16 @@ export function ActivityCard({ activity, dayId }: Props) {
             <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${typeColors[activity.type] || 'bg-gray-500/10 text-gray-600 border-gray-200/50'}`}>
               {typeLabel}
             </span>
-            <span className="text-xs text-gray-600 font-mono tabular-nums font-medium ml-0.5">{activity.time}</span>
+            {/* Time: start ~ end (duration) */}
+            <span className="text-xs text-gray-600 font-mono tabular-nums font-medium ml-0.5 flex items-center gap-1">
+              {activity.time}
+              {calcEndTime(activity.time, activity.duration) && (
+                <span className="text-gray-400">~{calcEndTime(activity.time, activity.duration)}</span>
+              )}
+              {activity.duration && (
+                <span className="text-[10px] text-gray-400 font-sans">({activity.duration})</span>
+              )}
+            </span>
 
             {activity.isBooked && (
               <span className="flex items-center gap-0.5 text-[10px] text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full font-medium">
