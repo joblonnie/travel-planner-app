@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { X, Check, Plane } from 'lucide-react';
 import { useEscKey } from '../hooks/useEscKey.ts';
 import { useTripStore } from '../store/useTripStore.ts';
+import { useI18n, type TranslationKey } from '../i18n/useI18n.ts';
 import type { FlightInfo } from '../types/index.ts';
 
 interface Props {
@@ -12,6 +13,7 @@ interface Props {
 
 export function FlightFormModal({ dayId, flight, onClose }: Props) {
   const { addFlight, updateFlight } = useTripStore();
+  const { t } = useI18n();
   const isEdit = !!flight;
 
   const [airline, setAirline] = useState(flight?.airline || '');
@@ -57,7 +59,7 @@ export function FlightFormModal({ dayId, flight, onClose }: Props) {
             <div className="w-7 h-7 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center shadow-sm">
               <Plane size={14} className="text-white" />
             </div>
-            {isEdit ? '항공편 수정' : '항공편 추가'}
+            {isEdit ? t('flight.editTitle' as TranslationKey) : t('flight.addTitle' as TranslationKey)}
           </h3>
           <button onClick={onClose} className="p-1.5 hover:bg-gray-100 rounded-xl transition-colors">
             <X size={18} className="text-gray-400" />
@@ -68,23 +70,23 @@ export function FlightFormModal({ dayId, flight, onClose }: Props) {
           {/* Airline & Flight Number */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1.5">항공사</label>
+              <label className="block text-xs font-medium text-gray-500 mb-1.5">{t('flight.airline' as TranslationKey)}</label>
               <input
                 type="text"
                 value={airline}
                 onChange={(e) => setAirline(e.target.value)}
-                placeholder="예: 대한항공"
+                placeholder={t('flight.airlinePlaceholder' as TranslationKey)}
                 autoFocus
                 className="w-full text-sm px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-200/50 focus:border-blue-400 outline-none bg-gray-50/30 focus:bg-white transition-colors"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1.5">편명</label>
+              <label className="block text-xs font-medium text-gray-500 mb-1.5">{t('flight.flightNumber' as TranslationKey)}</label>
               <input
                 type="text"
                 value={flightNumber}
                 onChange={(e) => setFlightNumber(e.target.value)}
-                placeholder="예: KE913"
+                placeholder={t('flight.flightNumberPlaceholder' as TranslationKey)}
                 className="w-full text-sm px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-200/50 focus:border-blue-400 outline-none bg-gray-50/30 focus:bg-white transition-colors"
               />
             </div>
@@ -93,22 +95,22 @@ export function FlightFormModal({ dayId, flight, onClose }: Props) {
           {/* Departure & Arrival */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1.5">출발지</label>
+              <label className="block text-xs font-medium text-gray-500 mb-1.5">{t('flight.departureCity' as TranslationKey)}</label>
               <input
                 type="text"
                 value={departure}
                 onChange={(e) => setDeparture(e.target.value)}
-                placeholder="예: ICN 인천"
+                placeholder={t('flight.departureCityPlaceholder' as TranslationKey)}
                 className="w-full text-sm px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-200/50 focus:border-blue-400 outline-none bg-gray-50/30 focus:bg-white transition-colors"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1.5">도착지</label>
+              <label className="block text-xs font-medium text-gray-500 mb-1.5">{t('flight.arrivalCity' as TranslationKey)}</label>
               <input
                 type="text"
                 value={arrival}
                 onChange={(e) => setArrival(e.target.value)}
-                placeholder="예: BCN 바르셀로나"
+                placeholder={t('flight.arrivalCityPlaceholder' as TranslationKey)}
                 className="w-full text-sm px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-200/50 focus:border-blue-400 outline-none bg-gray-50/30 focus:bg-white transition-colors"
               />
             </div>
@@ -117,7 +119,7 @@ export function FlightFormModal({ dayId, flight, onClose }: Props) {
           {/* Times */}
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1.5">출발 시간</label>
+              <label className="block text-xs font-medium text-gray-500 mb-1.5">{t('flight.departureTime' as TranslationKey)}</label>
               <input
                 type="time"
                 value={departureTime}
@@ -126,7 +128,7 @@ export function FlightFormModal({ dayId, flight, onClose }: Props) {
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1.5">도착 시간</label>
+              <label className="block text-xs font-medium text-gray-500 mb-1.5">{t('flight.arrivalTime' as TranslationKey)}</label>
               <input
                 type="time"
                 value={arrivalTime}
@@ -138,24 +140,24 @@ export function FlightFormModal({ dayId, flight, onClose }: Props) {
 
           {/* Confirmation Number */}
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1.5">예약 번호 (선택)</label>
+            <label className="block text-xs font-medium text-gray-500 mb-1.5">{t('flight.confirmationNumber' as TranslationKey)}</label>
             <input
               type="text"
               value={confirmationNumber}
               onChange={(e) => setConfirmationNumber(e.target.value)}
-              placeholder="예약 확인 번호"
+              placeholder={t('flight.confirmationPlaceholder' as TranslationKey)}
               className="w-full text-sm px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-200/50 focus:border-blue-400 outline-none bg-gray-50/30 focus:bg-white transition-colors"
             />
           </div>
 
           {/* Notes */}
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1.5">메모 (선택)</label>
+            <label className="block text-xs font-medium text-gray-500 mb-1.5">{t('flight.notes' as TranslationKey)}</label>
             <input
               type="text"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="터미널, 좌석 번호 등"
+              placeholder={t('flight.notesPlaceholder' as TranslationKey)}
               className="w-full text-sm px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-200/50 focus:border-blue-400 outline-none bg-gray-50/30 focus:bg-white transition-colors"
             />
           </div>
@@ -169,7 +171,7 @@ export function FlightFormModal({ dayId, flight, onClose }: Props) {
             className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-blue-500/20 transition-all disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98]"
           >
             <Check size={16} />
-            {isEdit ? '저장' : '추가'}
+            {isEdit ? t('activityForm.save' as TranslationKey) : t('activityForm.add' as TranslationKey)}
           </button>
         </div>
       </div>

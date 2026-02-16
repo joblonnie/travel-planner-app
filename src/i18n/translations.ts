@@ -17,6 +17,8 @@ export const translations = {
   'day.schedule': { ko: '개 일정', en: ' activities', es: ' actividades' },
   'day.todaySchedule': { ko: '오늘의 일정', en: "Today's Schedule", es: 'Horario de Hoy' },
   'day.dragToReorder': { ko: '드래그로 순서 변경', en: 'Drag to reorder', es: 'Arrastrar para reordenar' },
+  'day.reorderMode': { ko: '순서 변경', en: 'Reorder', es: 'Reordenar' },
+  'day.reorderDone': { ko: '완료', en: 'Done', es: 'Listo' },
   'day.addActivity': { ko: '일정 추가', en: 'Add Activity', es: 'Agregar Actividad' },
   'day.today': { ko: '오늘', en: 'Today', es: 'Hoy' },
   'day.total': { ko: '전체', en: 'Total', es: 'Total' },
@@ -26,6 +28,9 @@ export const translations = {
   'day.enableGps': { ko: 'GPS 켜기', en: 'Enable GPS', es: 'Activar GPS' },
   'day.locating': { ko: '위치 찾는 중...', en: 'Locating...', es: 'Localizando...' },
   'day.notes': { ko: '메모', en: 'Notes', es: 'Notas' },
+  'day.walkAbout': { ko: '도보 약 ', en: '~', es: '~' },
+  'day.minutes': { ko: '분', en: 'min', es: 'min' },
+  'day.remaining': { ko: '남은 거리 ', en: 'left ', es: 'restante ' },
 
   // Activity Types
   'type.attraction': { ko: '관광', en: 'Attraction', es: 'Atracción' },
@@ -72,7 +77,7 @@ export const translations = {
   'activityForm.time': { ko: '시간', en: 'Time', es: 'Hora' },
   'activityForm.duration': { ko: '소요시간', en: 'Duration', es: 'Duración' },
   'activityForm.type': { ko: '유형', en: 'Type', es: 'Tipo' },
-  'activityForm.cost': { ko: '예상 비용 (EUR)', en: 'Estimated Cost (EUR)', es: 'Costo Estimado (EUR)' },
+  'activityForm.cost': { ko: '예상 비용', en: 'Estimated Cost', es: 'Costo Estimado' },
   'activityForm.lat': { ko: '위도', en: 'Latitude', es: 'Latitud' },
   'activityForm.lng': { ko: '경도', en: 'Longitude', es: 'Longitud' },
   'activityForm.add': { ko: '추가', en: 'Add', es: 'Agregar' },
@@ -137,6 +142,8 @@ export const translations = {
   // Navigation
   'nav.planner': { ko: '일정', en: 'Planner', es: 'Planificador' },
   'nav.budget': { ko: '가계부', en: 'Budget', es: 'Presupuesto' },
+  'nav.tools': { ko: '도구', en: 'Tools', es: 'Herramientas' },
+  'nav.settings': { ko: '설정', en: 'Settings', es: 'Config' },
 
   // Day CRUD
   'day.addDay': { ko: '일정 추가', en: 'Add Day', es: 'Agregar Día' },
@@ -321,6 +328,105 @@ export const translations = {
   'detail.storageLimitWarning': { ko: '저장 공간 한도에 가까워지고 있습니다 (3MB)', en: 'Approaching storage limit (3MB)', es: 'Cerca del límite de almacenamiento (3MB)' },
   'detail.uploadMedia': { ko: '파일 선택', en: 'Choose File', es: 'Elegir Archivo' },
   'detail.capturePhoto': { ko: '사진 촬영', en: 'Take Photo', es: 'Tomar Foto' },
+
+  // Multi-trip
+  'trips.title': { ko: '여행 목록', en: 'My Trips', es: 'Mis Viajes' },
+  'trips.create': { ko: '새 여행 만들기', en: 'Create Trip', es: 'Crear Viaje' },
+  'trips.switch': { ko: '여행 전환', en: 'Switch Trip', es: 'Cambiar Viaje' },
+  'trips.delete': { ko: '여행 삭제', en: 'Delete Trip', es: 'Eliminar Viaje' },
+  'trips.deleteConfirm': { ko: '이 여행을 삭제하시겠습니까? 모든 데이터가 삭제됩니다.', en: 'Delete this trip? All data will be removed.', es: '¿Eliminar este viaje? Todos los datos serán eliminados.' },
+  'trips.duplicate': { ko: '여행 복제', en: 'Duplicate Trip', es: 'Duplicar Viaje' },
+  'trips.noTrips': { ko: '여행이 없습니다', en: 'No trips yet', es: 'Sin viajes aún' },
+  'trips.current': { ko: '현재 여행', en: 'Current Trip', es: 'Viaje Actual' },
+  'trips.cannotDeleteLast': { ko: '마지막 여행은 삭제할 수 없습니다', en: 'Cannot delete the last trip', es: 'No se puede eliminar el último viaje' },
+  'trips.tripName': { ko: '여행 이름', en: 'Trip Name', es: 'Nombre del Viaje' },
+  'trips.emoji': { ko: '이모지', en: 'Emoji', es: 'Emoji' },
+  'trips.budget': { ko: '예산', en: 'Budget', es: 'Presupuesto' },
+  'trips.progress': { ko: '진행률', en: 'Progress', es: 'Progreso' },
+  'trips.days': { ko: '일', en: 'days', es: 'días' },
+  'trips.activities': { ko: '개 일정', en: 'activities', es: 'actividades' },
+  'trips.manageTrips': { ko: '여행 관리', en: 'Manage Trips', es: 'Gestionar Viajes' },
+  'trips.backToPlanner': { ko: '일정으로 돌아가기', en: 'Back to Planner', es: 'Volver al Planificador' },
+  'trips.createdAt': { ko: '생성일', en: 'Created', es: 'Creado' },
+
+  // Place
+  'day.addPlace': { ko: '장소 추가', en: 'Add Place', es: 'Agregar Lugar' },
+  'addPlace.title': { ko: '장소 추가', en: 'Add Place', es: 'Agregar Lugar' },
+
+  // Accommodation
+  'accommodation.title': { ko: '숙소', en: 'Accommodation', es: 'Alojamiento' },
+  'accommodation.checkIn': { ko: '체크인', en: 'Check-in', es: 'Check-in' },
+  'accommodation.checkOut': { ko: '체크아웃', en: 'Check-out', es: 'Check-out' },
+
+  // Sidebar hardcoded
+  'sidebar.noActivities': { ko: '일정 없음', en: 'No activities', es: 'Sin actividades' },
+  'sidebar.completed': { ko: '완료', en: 'Done', es: 'Hecho' },
+  'sidebar.count': { ko: '개', en: '', es: '' },
+  'sidebar.daysAndActivities': { ko: '일 · {acts}개 일정', en: 'days · {acts} activities', es: 'días · {acts} actividades' },
+  'sidebar.close': { ko: '닫기', en: 'Close', es: 'Cerrar' },
+
+  // Day navigation
+  'day.prevDay': { ko: '이전 날', en: 'Previous day', es: 'Día anterior' },
+  'day.nextDay': { ko: '다음 날', en: 'Next day', es: 'Día siguiente' },
+  'day.insertHere': { ko: '여기에 추가', en: 'Insert here', es: 'Insertar aquí' },
+
+  // Flight
+  'flight.departure': { ko: '출발', en: 'Departure', es: 'Salida' },
+  'flight.arrival': { ko: '도착', en: 'Arrival', es: 'Llegada' },
+  'flight.deleteConfirm': { ko: '삭제하시겠습니까?', en: 'Delete?', es: '¿Eliminar?' },
+
+  // Budget comparison
+  'budget.overBudget': { ko: '초과', en: 'over', es: 'excedido' },
+  'budget.saved': { ko: '절약', en: 'saved', es: 'ahorrado' },
+
+  // Trip count
+  'trips.tripCount': { ko: '개의 여행', en: 'trips', es: 'viajes' },
+
+  // Accommodation form (DayFormModal)
+  'accommodation.autoApply': { ko: '같은 도시 숙소 자동 적용', en: 'Auto-applied from same city', es: 'Aplicado automáticamente de la misma ciudad' },
+  'accommodation.addInfo': { ko: '숙소 정보 추가', en: 'Add accommodation info', es: 'Agregar alojamiento' },
+  'accommodation.info': { ko: '숙소 정보', en: 'Accommodation Info', es: 'Info del Alojamiento' },
+  'accommodation.searchPlaceholder': { ko: '숙소 검색 (호텔, 에어비앤비...)', en: 'Search accommodation (hotel, Airbnb...)', es: 'Buscar alojamiento (hotel, Airbnb...)' },
+  'accommodation.namePlaceholder': { ko: '숙소 이름 (예: Hotel Arts Barcelona)', en: 'Accommodation name (e.g. Hotel Arts Barcelona)', es: 'Nombre del alojamiento (ej. Hotel Arts Barcelona)' },
+  'accommodation.addressPlaceholder': { ko: '주소', en: 'Address', es: 'Dirección' },
+  'accommodation.costPerNight': { ko: '1박 비용', en: 'Cost per night', es: 'Costo por noche' },
+  'accommodation.confirmationNumber': { ko: '예약 번호', en: 'Confirmation #', es: 'Nº de reserva' },
+  'accommodation.optional': { ko: '선택', en: 'Optional', es: 'Opcional' },
+  'accommodation.notesPlaceholder': { ko: '메모 (와이파이 비번, 주차 정보 등)', en: 'Notes (wifi password, parking info, etc.)', es: 'Notas (contraseña wifi, info de parking, etc.)' },
+  'form.notesPlaceholder': { ko: '메모를 입력하세요...', en: 'Enter notes...', es: 'Ingrese notas...' },
+
+  // Flight form (FlightFormModal)
+  'flight.editTitle': { ko: '항공편 수정', en: 'Edit Flight', es: 'Editar Vuelo' },
+  'flight.addTitle': { ko: '항공편 추가', en: 'Add Flight', es: 'Agregar Vuelo' },
+  'flight.airline': { ko: '항공사', en: 'Airline', es: 'Aerolínea' },
+  'flight.airlinePlaceholder': { ko: '예: 대한항공', en: 'e.g. Korean Air', es: 'ej. Iberia' },
+  'flight.flightNumber': { ko: '편명', en: 'Flight #', es: 'Nº de vuelo' },
+  'flight.flightNumberPlaceholder': { ko: '예: KE913', en: 'e.g. KE913', es: 'ej. IB3456' },
+  'flight.departureCity': { ko: '출발지', en: 'From', es: 'Origen' },
+  'flight.departureCityPlaceholder': { ko: '예: ICN 인천', en: 'e.g. ICN Incheon', es: 'ej. MAD Madrid' },
+  'flight.arrivalCity': { ko: '도착지', en: 'To', es: 'Destino' },
+  'flight.arrivalCityPlaceholder': { ko: '예: BCN 바르셀로나', en: 'e.g. BCN Barcelona', es: 'ej. BCN Barcelona' },
+  'flight.departureTime': { ko: '출발 시간', en: 'Departure time', es: 'Hora de salida' },
+  'flight.arrivalTime': { ko: '도착 시간', en: 'Arrival time', es: 'Hora de llegada' },
+  'flight.confirmationNumber': { ko: '예약 번호 (선택)', en: 'Confirmation # (optional)', es: 'Nº de reserva (opcional)' },
+  'flight.confirmationPlaceholder': { ko: '예약 확인 번호', en: 'Confirmation number', es: 'Número de confirmación' },
+  'flight.notes': { ko: '메모 (선택)', en: 'Notes (optional)', es: 'Notas (opcional)' },
+  'flight.notesPlaceholder': { ko: '터미널, 좌석 번호 등', en: 'Terminal, seat number, etc.', es: 'Terminal, número de asiento, etc.' },
+
+  // Destination form (DestinationFormModal)
+  'place.citySearch': { ko: '도시 검색', en: 'City Search', es: 'Buscar Ciudad' },
+  'place.citySearchPlaceholder': { ko: '도시 이름을 검색하세요...', en: 'Search for a city...', es: 'Buscar una ciudad...' },
+  'place.namePlaceholder': { ko: '예: 세비야, 톨레도, 발렌시아...', en: 'e.g. Seville, Toledo, Valencia...', es: 'ej. Sevilla, Toledo, Valencia...' },
+  'place.descriptionPlaceholder': { ko: '장소에 대한 설명...', en: 'Description of the place...', es: 'Descripción del lugar...' },
+
+  // Trip create
+  'trips.namePlaceholder': { ko: '예: 이탈리아 여행 2026', en: 'e.g. Italy Trip 2026', es: 'ej. Viaje a Italia 2026' },
+
+  // Settings
+  'settings.dataManagement': { ko: '데이터 관리', en: 'Data Management', es: 'Gestión de Datos' },
+
+  // Camera OCR
+  'camera.ocrResult': { ko: 'OCR 인식 결과', en: 'OCR Result', es: 'Resultado OCR' },
 } as const;
 
 export type TranslationKey = keyof typeof translations;

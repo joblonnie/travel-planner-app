@@ -1,27 +1,29 @@
 import { useState } from 'react';
-import { Plane, Heart, CalendarDays, Wallet, Globe, ArrowLeftRight, Settings, Camera, PanelLeftOpen, Search } from 'lucide-react';
+import { Plane, Heart, CalendarDays, Wallet, Globe, ArrowLeftRight, Settings, Camera, PanelLeftOpen, Search, Map } from 'lucide-react';
 import { DaySidebar } from './components/DaySidebar.tsx';
 import { DayContent } from './components/DayContent.tsx';
 import { BudgetPage } from './components/BudgetPage.tsx';
+import { TripListPage } from './components/TripListPage.tsx';
 import { TripSettingsModal } from './components/TripSettingsModal.tsx';
 import { CameraOcrModal } from './components/CameraOcrModal.tsx';
 import { SearchModal } from './components/SearchModal.tsx';
 import { useTripStore } from './store/useTripStore.ts';
-import { useI18n } from './i18n/useI18n.ts';
+import { useTripData } from './store/useCurrentTrip.ts';
+import { useI18n, type TranslationKey } from './i18n/useI18n.ts';
 import { useCurrency } from './hooks/useCurrency.ts';
 import { languageNames } from './i18n/translations.ts';
 
 function App() {
-  const tripName = useTripStore((s) => s.tripName);
-  const startDate = useTripStore((s) => s.startDate);
-  const endDate = useTripStore((s) => s.endDate);
-  const days = useTripStore((s) => s.days);
-  const currentDayIndex = useTripStore((s) => s.currentDayIndex);
+  const tripName = useTripData((t) => t.tripName);
+  const startDate = useTripData((t) => t.startDate);
+  const endDate = useTripData((t) => t.endDate);
+  const days = useTripData((t) => t.days);
+  const currentDayIndex = useTripData((t) => t.currentDayIndex);
   const currentPage = useTripStore((s) => s.currentPage);
   const setCurrentPage = useTripStore((s) => s.setCurrentPage);
   const currentDay = days[currentDayIndex];
   const { t, language, setLanguage } = useI18n();
-  const { currency, setCurrency } = useCurrency();
+  const { currency, nextCurrency, symbol } = useCurrency();
   const [showSettings, setShowSettings] = useState(false);
   const [showCamera, setShowCamera] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -72,16 +74,17 @@ function App() {
         </div>
 
         <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
-          {/* Sidebar Toggle (planner only) */}
+          {/* Sidebar Toggle (planner only, desktop) */}
           {currentPage === 'planner' && (
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className={`flex items-center justify-center p-1.5 sm:p-2 rounded-full transition-all duration-200 border min-w-[32px] min-h-[32px] ${
+              className={`hidden sm:flex items-center justify-center p-2 rounded-full transition-all duration-200 border min-w-[32px] min-h-[32px] ${
                 sidebarOpen
                   ? 'bg-spain-red/10 text-spain-red border-spain-red/20'
                   : 'bg-warm-100/80 text-warm-400 border-warm-200/50 hover:bg-spain-red/10 hover:text-spain-red'
               }`}
               title={t('sidebar.schedule')}
+              aria-label={t('sidebar.schedule')}
             >
               <PanelLeftOpen size={14} />
             </button>
@@ -111,37 +114,44 @@ function App() {
               <Wallet size={13} />
               <span className="hidden sm:inline">{t('nav.budget')}</span>
             </button>
+            <button
+              onClick={() => setCurrentPage('trips')}
+              className={`flex items-center gap-1.5 px-3 sm:px-3.5 py-1.5 rounded-full text-xs font-medium transition-all duration-200 ${
+                currentPage === 'trips'
+                  ? 'bg-white text-spain-red shadow-[0_1px_3px_rgba(0,0,0,0.08)]'
+                  : 'text-warm-400 hover:text-spain-dark'
+              }`}
+            >
+              <Map size={13} />
+              <span className="hidden sm:inline">{t('trips.manageTrips' as TranslationKey)}</span>
+            </button>
           </div>
 
-          {/* Search */}
+          {/* Desktop: individual action buttons */}
           <button
             onClick={() => setShowSearch(true)}
-            className="flex items-center justify-center p-1.5 sm:p-2 bg-warm-100/80 text-warm-400 rounded-full hover:bg-spain-red/10 hover:text-spain-red transition-all duration-200 border border-warm-200/50 min-w-[32px] min-h-[32px]"
+            className="hidden sm:flex items-center justify-center p-2 bg-warm-100/80 text-warm-400 rounded-full hover:bg-spain-red/10 hover:text-spain-red transition-all duration-200 border border-warm-200/50 min-w-[32px] min-h-[32px]"
             title={t('feature.search')}
+            aria-label={t('feature.search')}
           >
             <Search size={14} />
           </button>
-
-          {/* Camera OCR */}
           <button
             onClick={() => setShowCamera(true)}
-            className="flex items-center justify-center p-1.5 sm:p-2 bg-warm-100/80 text-warm-400 rounded-full hover:bg-spain-red/10 hover:text-spain-red transition-all duration-200 border border-warm-200/50 min-w-[32px] min-h-[32px]"
+            className="hidden sm:flex items-center justify-center p-2 bg-warm-100/80 text-warm-400 rounded-full hover:bg-spain-red/10 hover:text-spain-red transition-all duration-200 border border-warm-200/50 min-w-[32px] min-h-[32px]"
             title={t('camera.title')}
+            aria-label={t('camera.title')}
           >
             <Camera size={14} />
           </button>
-
-          {/* Currency Toggle */}
           <button
-            onClick={() => setCurrency(currency === 'EUR' ? 'KRW' : 'EUR')}
-            className="flex items-center gap-1 px-2.5 sm:px-3 py-1.5 bg-spain-yellow/10 text-spain-yellow-dark rounded-full text-[11px] font-semibold hover:bg-spain-yellow/20 transition-all duration-200 border border-spain-yellow/15"
+            onClick={nextCurrency}
+            className="hidden sm:flex items-center gap-1 px-3 py-1.5 bg-spain-yellow/10 text-spain-yellow-dark rounded-full text-[11px] font-semibold hover:bg-spain-yellow/20 transition-all duration-200 border border-spain-yellow/15"
             title={t('currency.toggle')}
           >
             <ArrowLeftRight size={11} />
-            <span>{currency === 'EUR' ? '\u20AC' : '\u20A9'}</span>
+            <span>{symbol} {currency}</span>
           </button>
-
-          {/* Language Toggle */}
           <button
             onClick={nextLanguage}
             className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 bg-warm-100/80 text-warm-400 rounded-full text-[11px] font-semibold hover:bg-warm-200/60 hover:text-spain-dark transition-all duration-200 border border-warm-200/50"
@@ -150,12 +160,15 @@ function App() {
             <Globe size={11} />
             {languageNames[language]}
           </button>
+
         </div>
       </header>
 
-      {/* Main Layout */}
-      <div className="flex-1">
-        {currentPage === 'planner' ? <DayContent /> : <BudgetPage />}
+      {/* Main Layout — add bottom padding on mobile for bottom nav */}
+      <div className="flex-1 pb-16 sm:pb-0">
+        {currentPage === 'planner' && <DayContent />}
+        {currentPage === 'budget' && <BudgetPage />}
+        {currentPage === 'trips' && <TripListPage />}
       </div>
 
       {/* Sidebar Overlay */}
@@ -166,6 +179,62 @@ function App() {
       {showSettings && <TripSettingsModal onClose={() => setShowSettings(false)} />}
       {showCamera && <CameraOcrModal onClose={() => setShowCamera(false)} onAddExpense={handleCameraExpense} />}
       {showSearch && <SearchModal onClose={() => setShowSearch(false)} />}
+
+      {/* Mobile Bottom Navigation */}
+      <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-30 bg-white/80 backdrop-blur-2xl border-t border-gray-200/50 shadow-[0_-2px_10px_rgba(0,0,0,0.05)] pb-[env(safe-area-inset-bottom)]">
+        <div className="flex items-center justify-around px-2 h-14">
+          <button
+            onClick={() => {
+              if (currentPage !== 'planner') {
+                setCurrentPage('planner');
+                setSidebarOpen(true);
+              } else {
+                setSidebarOpen(!sidebarOpen);
+              }
+            }}
+            className={`flex flex-col items-center gap-0.5 min-w-[48px] py-1.5 rounded-xl transition-colors ${
+              currentPage === 'planner' && sidebarOpen ? 'text-spain-red' : 'text-gray-400 active:text-spain-red'
+            }`}
+          >
+            <PanelLeftOpen size={20} />
+            <span className="text-[10px] font-medium">{t('sidebar.schedule')}</span>
+          </button>
+
+          <button
+            onClick={() => setShowCamera(true)}
+            className="flex flex-col items-center gap-0.5 min-w-[48px] py-1.5 rounded-xl text-gray-400 active:text-spain-red transition-colors"
+          >
+            <Camera size={20} />
+            <span className="text-[10px] font-medium">{t('camera.title')}</span>
+          </button>
+
+          <button
+            onClick={nextCurrency}
+            className="flex flex-col items-center gap-0.5 min-w-[48px] py-1.5 rounded-xl text-gray-400 active:text-amber-500 transition-colors"
+          >
+            <ArrowLeftRight size={20} />
+            <span className="text-[10px] font-semibold">{symbol} {currency}</span>
+          </button>
+
+          <button
+            onClick={() => setShowSearch(true)}
+            className="flex flex-col items-center gap-0.5 min-w-[48px] py-1.5 rounded-xl text-gray-400 active:text-spain-red transition-colors"
+          >
+            <Search size={20} />
+            <span className="text-[10px] font-medium">{t('feature.search')}</span>
+          </button>
+
+          <button
+            onClick={() => setCurrentPage('trips')}
+            className={`flex flex-col items-center gap-0.5 min-w-[48px] py-1.5 rounded-xl transition-colors ${
+              currentPage === 'trips' ? 'text-spain-red' : 'text-gray-400 active:text-spain-red'
+            }`}
+          >
+            <Map size={20} />
+            <span className="text-[10px] font-medium">{t('trips.manageTrips' as TranslationKey)}</span>
+          </button>
+        </div>
+      </nav>
     </div>
   );
 }

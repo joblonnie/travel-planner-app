@@ -7,6 +7,7 @@ import type { ScheduledActivity, MediaItem, ExpenseOwner } from '../types/index.
 import { useTripStore } from '../store/useTripStore.ts';
 import { useCurrency } from '../hooks/useCurrency.ts';
 import { useI18n, type TranslationKey } from '../i18n/useI18n.ts';
+import { translations } from '../i18n/translations.ts';
 import { OwnerBadge, OwnerSelector } from './OwnerSelector.tsx';
 
 interface Props {
@@ -53,7 +54,8 @@ export function ActivityDetailModal({ activity, dayId, onClose }: Props) {
   const mediaSizeBytes = getMediaTotalSize(media);
   const isNearStorageLimit = mediaSizeBytes > 3 * 1024 * 1024;
 
-  const typeLabel = t(`type.${activity.type}` as TranslationKey);
+  const typeKey = `type.${activity.type}` as TranslationKey;
+  const typeLabel = translations[typeKey] ? t(typeKey) : activity.type;
 
   const handleAddMemo = () => {
     const trimmed = memoText.trim();

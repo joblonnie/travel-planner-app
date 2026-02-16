@@ -1,6 +1,6 @@
 import { Users, User } from 'lucide-react';
 import type { ExpenseOwner } from '../types/index.ts';
-import { useTripStore } from '../store/useTripStore.ts';
+import { useTripData } from '../store/useCurrentTrip.ts';
 
 export const ownerColorMap: Record<string, { text: string; bg: string; active: string; badge: string }> = {
   gray:    { text: 'text-gray-500',    bg: 'bg-gray-100',    active: 'bg-gray-700 text-white border-gray-700',       badge: 'bg-gray-50 text-gray-600 border-gray-200/50' },
@@ -21,7 +21,7 @@ interface Props {
 }
 
 export function OwnerSelector({ value, onChange, size = 'md' }: Props) {
-  const owners = useTripStore((s) => s.owners);
+  const owners = useTripData((t) => t.owners);
   const isSmall = size === 'sm';
 
   return (
@@ -56,7 +56,7 @@ export function OwnerSelector({ value, onChange, size = 'md' }: Props) {
 }
 
 export function OwnerBadge({ owner, size = 'sm' }: { owner: ExpenseOwner; size?: 'sm' | 'md' }) {
-  const owners = useTripStore((s) => s.owners);
+  const owners = useTripData((t) => t.owners);
   if (owner === 'shared') return null;
 
   const ownerConfig = owners.find((o) => o.id === owner);
@@ -65,7 +65,7 @@ export function OwnerBadge({ owner, size = 'sm' }: { owner: ExpenseOwner; size?:
   const colors = ownerColorMap[ownerConfig.color] || ownerColorMap.gray;
 
   return (
-    <span className={`inline-flex items-center gap-0.5 rounded-full border font-bold ${colors.badge} ${
+    <span className={`inline-flex items-center gap-0.5 rounded-full border font-bold flex-shrink-0 whitespace-nowrap ${colors.badge} ${
       size === 'sm' ? 'text-[9px] px-1.5 py-0' : 'text-[10px] px-2 py-0.5'
     }`}>
       <User size={size === 'sm' ? 8 : 10} />

@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect } from 'react';
 import { X, Search, MapPin, Calendar } from 'lucide-react';
 import { useTripStore } from '../store/useTripStore.ts';
+import { useTripData } from '../store/useCurrentTrip.ts';
 import { useI18n, type TranslationKey } from '../i18n/useI18n.ts';
+import { translations } from '../i18n/translations.ts';
 import { useCurrency } from '../hooks/useCurrency.ts';
 import { useEscKey } from '../hooks/useEscKey.ts';
 
@@ -18,7 +20,7 @@ const typeColors: Record<string, string> = {
 };
 
 export function SearchModal({ onClose }: Props) {
-  const days = useTripStore((s) => s.days);
+  const days = useTripData((t) => t.days);
   const setCurrentDay = useTripStore((s) => s.setCurrentDay);
   const { t } = useI18n();
   const { format } = useCurrency();
@@ -121,7 +123,7 @@ export function SearchModal({ onClose }: Props) {
                       <div className="flex items-center gap-2 mt-1">
                         <span className="text-xs text-gray-500">{activity.time}</span>
                         <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full border ${typeColors[activity.type] ?? ''}`}>
-                          {t(`type.${activity.type}` as TranslationKey)}
+                          {translations[`type.${activity.type}` as TranslationKey] ? t(`type.${activity.type}` as TranslationKey) : activity.type}
                         </span>
                       </div>
                     </div>

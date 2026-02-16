@@ -6,6 +6,7 @@ import {
   Settings, Pencil,
 } from 'lucide-react';
 import { useTripStore, type Expense } from '../store/useTripStore.ts';
+import { useTripData } from '../store/useCurrentTrip.ts';
 import { useCurrency } from '../hooks/useCurrency.ts';
 import { useI18n, type TranslationKey } from '../i18n/useI18n.ts';
 import { OwnerSelector, OwnerBadge, ownerColorMap } from './OwnerSelector.tsx';
@@ -50,13 +51,18 @@ type OwnerFilter = ExpenseOwner | 'all';
 
 export function BudgetPage() {
   const { t } = useI18n();
-  const { format, formatWithBoth } = useCurrency();
+  const { format, formatWithBoth, currency, symbol, DEFAULT_RATES } = useCurrency();
+  const expenses = useTripData((t) => t.expenses);
+  const totalBudget = useTripData((t) => t.totalBudget);
+  const days = useTripData((t) => t.days);
+  const pendingCameraExpense = useTripData((t) => t.pendingCameraExpense);
+  const owners = useTripData((t) => t.owners);
   const {
-    expenses, totalBudget, addExpense, removeExpense,
-    getTotalCost, getTotalExpenses, getTotalExpensesByOwner, setTotalBudget, days,
+    addExpense, removeExpense,
+    getTotalCost, getTotalExpenses, getTotalExpensesByOwner, setTotalBudget,
     removeActivityExpense,
-    pendingCameraExpense, setPendingCameraExpense,
-    owners, addOwner, removeOwner, updateOwner,
+    setPendingCameraExpense,
+    addOwner, removeOwner, updateOwner,
   } = useTripStore();
 
   const [showAddForm, setShowAddForm] = useState(false);
@@ -123,11 +129,14 @@ export function BudgetPage() {
 
   const handleAddExpense = () => {
     if (!form.amount || !form.description) return;
+    const inputAmount = parseFloat(form.amount);
+    const rate = currency === 'EUR' ? 1 : (DEFAULT_RATES[currency] ?? 1);
+    const amountInEur = currency === 'EUR' ? inputAmount : inputAmount / rate;
     addExpense({
       id: crypto.randomUUID(),
       category: form.category,
-      amount: parseFloat(form.amount),
-      currency: form.currency as 'EUR',
+      amount: Math.round(amountInEur * 100) / 100,
+      currency: 'EUR',
       description: form.description,
       date: form.date,
       dayId: form.dayId || undefined,
@@ -267,43 +276,45 @@ export function BudgetPage() {
                 const isEditing = editingOwnerId === owner.id;
                 const colors = ownerColorMap[owner.color] || ownerColorMap.gray;
                 return (
-                  <div key={owner.id} className="flex items-center gap-2 py-1.5">
+                  <div key={owner.id} className="py-1.5">
                     {isEditing ? (
-                      <>
-                        <input
-                          type="text"
-                          value={editOwnerName}
-                          onChange={(e) => setEditOwnerName(e.target.value)}
-                          onKeyDown={(e) => e.key === 'Enter' && handleSaveOwnerEdit()}
-                          className="flex-1 px-2.5 py-1.5 border border-gray-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-spain-red/20 min-h-[36px]"
-                          autoFocus
-                        />
-                        <div className="flex gap-1">
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            value={editOwnerName}
+                            onChange={(e) => setEditOwnerName(e.target.value)}
+                            onKeyDown={(e) => e.key === 'Enter' && handleSaveOwnerEdit()}
+                            className="flex-1 px-2.5 py-1.5 border border-gray-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-spain-red/20 min-h-[36px]"
+                            autoFocus
+                          />
+                          <button
+                            onClick={handleSaveOwnerEdit}
+                            className="text-xs font-bold text-emerald-600 hover:text-emerald-700 px-2 py-1.5 min-h-[36px]"
+                          >
+                            {t('booking.save')}
+                          </button>
+                          <button
+                            onClick={() => setEditingOwnerId(null)}
+                            className="text-xs text-gray-400 hover:text-gray-600 px-1 py-1.5 min-h-[36px]"
+                          >
+                            <X size={14} />
+                          </button>
+                        </div>
+                        <div className="flex flex-wrap gap-1.5">
                           {OWNER_COLOR_OPTIONS.map((c) => (
                             <button
                               key={c}
                               onClick={() => setEditOwnerColor(c)}
-                              className={`w-6 h-6 rounded-full border-2 transition-all ${
+                              className={`w-7 h-7 rounded-full border-2 transition-all ${
                                 (ownerColorMap[c] || ownerColorMap.gray).bg
                               } ${editOwnerColor === c ? 'border-gray-800 scale-110' : 'border-transparent'}`}
                             />
                           ))}
                         </div>
-                        <button
-                          onClick={handleSaveOwnerEdit}
-                          className="text-xs font-bold text-emerald-600 hover:text-emerald-700 px-2 py-1.5 min-h-[36px]"
-                        >
-                          {t('booking.save')}
-                        </button>
-                        <button
-                          onClick={() => setEditingOwnerId(null)}
-                          className="text-xs text-gray-400 hover:text-gray-600 px-1 py-1.5 min-h-[36px]"
-                        >
-                          <X size={14} />
-                        </button>
-                      </>
+                      </div>
                     ) : (
-                      <>
+                      <div className="flex items-center gap-2">
                         <span className={`w-3 h-3 rounded-full flex-shrink-0 ${colors.bg}`} />
                         <span className="text-sm font-medium text-gray-700 flex-1">{owner.name}</span>
                         {owner.id === 'shared' && (
@@ -312,6 +323,7 @@ export function BudgetPage() {
                         <button
                           onClick={() => { setEditingOwnerId(owner.id); setEditOwnerName(owner.name); setEditOwnerColor(owner.color); }}
                           className="p-1.5 text-gray-300 hover:text-gray-600 transition-colors min-w-[32px] min-h-[32px] flex items-center justify-center"
+                          aria-label={t('activity.edit')}
                         >
                           <Pencil size={13} />
                         </button>
@@ -319,11 +331,12 @@ export function BudgetPage() {
                           <button
                             onClick={() => setDeleteOwnerId(owner.id)}
                             className="p-1.5 text-gray-300 hover:text-red-500 transition-colors min-w-[32px] min-h-[32px] flex items-center justify-center"
+                            aria-label={t('activity.delete')}
                           >
                             <Trash2 size={13} />
                           </button>
                         )}
-                      </>
+                      </div>
                     )}
                   </div>
                 );
@@ -331,33 +344,35 @@ export function BudgetPage() {
             </div>
 
             {/* Add new owner */}
-            <div className="flex items-center gap-2 pt-2 border-t border-gray-100">
-              <input
-                type="text"
-                value={newOwnerName}
-                onChange={(e) => setNewOwnerName(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleAddOwner()}
-                placeholder={t('owner.namePlaceholder')}
-                className="flex-1 px-2.5 py-1.5 border border-gray-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-spain-red/20 min-h-[36px]"
-              />
-              <div className="flex gap-1">
+            <div className="space-y-2 pt-2 border-t border-gray-100">
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={newOwnerName}
+                  onChange={(e) => setNewOwnerName(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleAddOwner()}
+                  placeholder={t('owner.namePlaceholder')}
+                  className="flex-1 px-2.5 py-1.5 border border-gray-200 rounded-lg text-sm outline-none focus:ring-2 focus:ring-spain-red/20 min-h-[36px]"
+                />
+                <button
+                  onClick={handleAddOwner}
+                  disabled={!newOwnerName.trim()}
+                  className="flex items-center gap-1 px-3 py-1.5 bg-spain-red text-white rounded-lg text-xs font-bold hover:bg-spain-red-dark transition-colors min-h-[36px] disabled:opacity-40"
+                >
+                  <Plus size={12} /> {t('owner.addMember')}
+                </button>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
                 {OWNER_COLOR_OPTIONS.map((c) => (
                   <button
                     key={c}
                     onClick={() => setNewOwnerColor(c)}
-                    className={`w-6 h-6 rounded-full border-2 transition-all ${
+                    className={`w-7 h-7 rounded-full border-2 transition-all ${
                       (ownerColorMap[c] || ownerColorMap.gray).bg
                     } ${newOwnerColor === c ? 'border-gray-800 scale-110' : 'border-transparent'}`}
                   />
                 ))}
               </div>
-              <button
-                onClick={handleAddOwner}
-                disabled={!newOwnerName.trim()}
-                className="flex items-center gap-1 px-3 py-1.5 bg-spain-red text-white rounded-lg text-xs font-bold hover:bg-spain-red-dark transition-colors min-h-[36px] disabled:opacity-40"
-              >
-                <Plus size={12} /> {t('owner.addMember')}
-              </button>
             </div>
           </div>
         )}
@@ -523,8 +538,8 @@ export function BudgetPage() {
                 {actualTotal > estimatedTotal ? <TrendingUp size={14} /> : <TrendingDown size={14} />}
                 <span className="text-sm font-bold">
                   {actualTotal > estimatedTotal
-                    ? `${format(actualTotal - estimatedTotal)} (${Math.round(((actualTotal - estimatedTotal) / estimatedTotal) * 100)}%) 초과`
-                    : `${format(estimatedTotal - actualTotal)} (${Math.round(((estimatedTotal - actualTotal) / estimatedTotal) * 100)}%) 절약`
+                    ? `${format(actualTotal - estimatedTotal)} (${Math.round(((actualTotal - estimatedTotal) / estimatedTotal) * 100)}%) ${t('budget.overBudget' as TranslationKey)}`
+                    : `${format(estimatedTotal - actualTotal)} (${Math.round(((estimatedTotal - actualTotal) / estimatedTotal) * 100)}%) ${t('budget.saved' as TranslationKey)}`
                   }
                 </span>
               </div>
@@ -622,13 +637,14 @@ export function BudgetPage() {
                             </div>
                             <div className="space-y-1.5 ml-4">
                               {actExpenses.map((exp) => (
-                                <div key={exp.id} className="flex items-center gap-2 py-0.5 group/budgetExp">
-                                  <span className="text-[11px] text-gray-500 truncate flex-1">{exp.description}</span>
+                                <div key={exp.id} className="flex items-center gap-2 py-0.5 group/budgetExp min-w-0">
+                                  <span className="text-[11px] text-gray-500 truncate flex-1 min-w-0">{exp.description}</span>
                                   <OwnerBadge owner={exp.owner} />
                                   <span className="text-[11px] font-bold text-spain-red tabular-nums flex-shrink-0">{format(exp.amount)}</span>
                                   <button
                                     onClick={() => removeActivityExpense(day.id, act.id, exp.id)}
                                     className="p-1.5 text-gray-200 hover:text-red-400 transition-colors sm:opacity-0 sm:group-hover/budgetExp:opacity-100 flex-shrink-0"
+                                    aria-label={t('activity.delete')}
                                   >
                                     <X size={12} />
                                   </button>
@@ -649,16 +665,17 @@ export function BudgetPage() {
                       {filteredExpenses.filter((e) => e.dayId === day.id).length > 0 && (
                         <div className="pt-1 border-t border-gray-100">
                           {filteredExpenses.filter((e) => e.dayId === day.id).map((exp) => (
-                            <div key={exp.id} className="flex items-center gap-2 py-1 group/dayExp">
+                            <div key={exp.id} className="flex items-center gap-2 py-1 group/dayExp min-w-0">
                               <div className={`w-5 h-5 rounded flex items-center justify-center text-white flex-shrink-0 ${categoryColors[exp.category]}`}>
                                 {categoryIcons[exp.category]}
                               </div>
-                              <span className="text-[11px] text-gray-500 truncate flex-1">{exp.description}</span>
+                              <span className="text-[11px] text-gray-500 truncate flex-1 min-w-0">{exp.description}</span>
                               <OwnerBadge owner={exp.owner} />
                               <span className="text-[11px] font-bold text-spain-red tabular-nums flex-shrink-0">{format(exp.amount)}</span>
                               <button
                                 onClick={() => setDeleteExpenseId(exp.id)}
                                 className="p-1.5 text-gray-200 hover:text-red-400 transition-colors sm:opacity-0 sm:group-hover/dayExp:opacity-100 flex-shrink-0"
+                                aria-label={t('activity.delete')}
                               >
                                 <X size={12} />
                               </button>
@@ -690,21 +707,22 @@ export function BudgetPage() {
                     {categoryIcons[expense.category]}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5">
-                      <p className="text-xs sm:text-sm font-medium text-gray-800 truncate">{expense.description}</p>
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <p className="text-xs sm:text-sm font-medium text-gray-800 truncate min-w-0">{expense.description}</p>
                       <OwnerBadge owner={expense.owner} />
                     </div>
-                    <div className="flex items-center gap-1.5 sm:gap-2 text-xs text-gray-400">
-                      <span className={`px-1.5 sm:px-2 py-0.5 rounded-full border ${categoryBgColors[expense.category]} text-[11px] sm:text-xs font-medium`}>
+                    <div className="flex flex-wrap items-center gap-1 sm:gap-1.5 text-xs text-gray-400">
+                      <span className={`flex-shrink-0 whitespace-nowrap px-1.5 sm:px-2 py-0.5 rounded-full border ${categoryBgColors[expense.category]} text-[11px] sm:text-xs font-medium`}>
                         {t(`cat.${expense.category}` as TranslationKey)}
                       </span>
-                      <span>{expense.date}</span>
+                      <span className="whitespace-nowrap">{expense.date}</span>
                     </div>
                   </div>
-                  <span className="text-xs sm:text-sm font-bold text-spain-dark flex-shrink-0">{formatWithBoth(expense.amount)}</span>
+                  <span className="text-xs sm:text-sm font-bold text-spain-dark flex-shrink-0 text-right whitespace-nowrap">{formatWithBoth(expense.amount)}</span>
                   <button
                     onClick={() => setDeleteExpenseId(expense.id)}
                     className="p-2 text-gray-300 hover:text-red-500 sm:opacity-0 sm:group-hover:opacity-100 transition-all flex-shrink-0 min-w-[40px] min-h-[40px] flex items-center justify-center"
+                    aria-label={t('activity.delete')}
                   >
                     <Trash2 size={14} />
                   </button>
@@ -752,7 +770,7 @@ export function BudgetPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1.5">{t('budget.amount')} (EUR)</label>
+                <label className="block text-xs font-medium text-gray-500 mb-1.5">{t('budget.amount')} ({symbol} {currency})</label>
                 <input
                   type="number"
                   step="0.01"

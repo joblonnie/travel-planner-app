@@ -58,6 +58,18 @@
   50% { opacity: 0.7; }
 }
 
+@keyframes footstep-walk {
+  0% { opacity: 0; transform: translateY(-2px) scale(0.7); }
+  20% { opacity: 1; transform: translateY(0) scale(1); }
+  80% { opacity: 1; transform: translateY(0) scale(1); }
+  100% { opacity: 0; transform: translateY(2px) scale(0.7); }
+}
+
+@keyframes footstep-pulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
 html {
   scroll-behavior: smooth;
 }
@@ -187,4 +199,26 @@ body::after {
 ::selection {
   background-color: rgba(190, 18, 60, 0.12);
   color: #9f1239;
+}
+
+/* Accessibility: Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Focus visible ring for keyboard navigation */
+:focus-visible {
+  outline: 2px solid #be123c;
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+/* Remove outline for mouse/touch users */
+:focus:not(:focus-visible) {
+  outline: none;
 }

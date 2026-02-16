@@ -18,6 +18,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { useTripStore } from '../store/useTripStore.ts';
+import { useTripData } from '../store/useCurrentTrip.ts';
 import { useCurrency } from '../hooks/useCurrency.ts';
 import { useI18n, type TranslationKey } from '../i18n/useI18n.ts';
 import { DayFormModal } from './DayFormModal.tsx';
@@ -53,6 +54,7 @@ interface ImmigrationCardProps {
 }
 
 function ImmigrationCard({ schedule, onEdit, onDelete }: ImmigrationCardProps) {
+  const { t } = useI18n();
   const isDeparture = schedule.type === 'departure';
   const Icon = isDeparture ? PlaneTakeoff : PlaneLanding;
   const gradientClass = isDeparture
@@ -76,7 +78,7 @@ function ImmigrationCard({ schedule, onEdit, onDelete }: ImmigrationCardProps) {
             <Icon size={12} className="text-white" />
           </div>
           <span className={`text-[10px] font-bold ${labelColorClass} tracking-wider uppercase`}>
-            {isDeparture ? '출국' : '입국'}
+            {isDeparture ? t('immigration.departure') : t('immigration.arrival')}
           </span>
           {schedule.airline && schedule.flightNumber && (
             <span className={`text-[11px] ${labelColorClass}/70 font-medium`}>
@@ -113,12 +115,14 @@ function ImmigrationCard({ schedule, onEdit, onDelete }: ImmigrationCardProps) {
         <button
           onClick={(e) => { e.stopPropagation(); onEdit(); }}
           className={`p-1 text-gray-400 hover:${labelColorClass} hover:bg-white/60 rounded-lg transition-all`}
+          aria-label={t('activity.edit')}
         >
           <Pencil size={12} />
         </button>
         <button
           onClick={(e) => { e.stopPropagation(); onDelete(); }}
           className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50/60 rounded-lg transition-all"
+          aria-label={t('activity.delete')}
         >
           <Trash2 size={12} />
         </button>
@@ -164,12 +168,14 @@ function InterCityIndicator({ fromCity, toCity, transports, onAdd, onEdit, onDel
             <button
               onClick={() => onEdit(tr)}
               className="p-0.5 text-gray-300 hover:text-amber-600 rounded opacity-0 group-hover/tr:opacity-100 transition-all"
+              aria-label={t('activity.edit')}
             >
               <Pencil size={14} />
             </button>
             <button
               onClick={() => onDelete(tr.id)}
               className="p-0.5 text-gray-300 hover:text-red-500 rounded opacity-0 group-hover/tr:opacity-100 transition-all"
+              aria-label={t('activity.delete')}
             >
               <Trash2 size={14} />
             </button>
@@ -211,6 +217,7 @@ interface FlightCardProps {
 }
 
 function FlightCard({ flight, onEdit, onDelete }: FlightCardProps) {
+  const { t } = useI18n();
   return (
     <div className="group/flight relative bg-gradient-to-r from-blue-500/[0.07] via-indigo-500/[0.05] to-sky-500/[0.07] backdrop-blur-xl rounded-2xl border border-blue-200/30 overflow-hidden transition-all duration-300 hover:shadow-[0_4px_20px_rgba(59,130,246,0.1)] hover:border-blue-200/50">
       {/* Top accent */}
@@ -236,7 +243,7 @@ function FlightCard({ flight, onEdit, onDelete }: FlightCardProps) {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1 mb-0.5">
               <PlaneTakeoff size={10} className="text-blue-400/70" />
-              <span className="text-[11px] text-gray-400 font-semibold uppercase tracking-wide">출발</span>
+              <span className="text-[11px] text-gray-400 font-semibold uppercase tracking-wide">{t('flight.departure' as TranslationKey)}</span>
             </div>
             <p className="text-[11px] font-bold text-gray-700 truncate">{flight.departure}</p>
             <p className="text-base font-black text-blue-600 font-mono tabular-nums leading-tight">{flight.departureTime}</p>
@@ -251,7 +258,7 @@ function FlightCard({ flight, onEdit, onDelete }: FlightCardProps) {
           {/* Arrival */}
           <div className="flex-1 min-w-0 text-right">
             <div className="flex items-center gap-1 mb-0.5 justify-end">
-              <span className="text-[11px] text-gray-400 font-semibold uppercase tracking-wide">도착</span>
+              <span className="text-[11px] text-gray-400 font-semibold uppercase tracking-wide">{t('flight.arrival' as TranslationKey)}</span>
               <PlaneLanding size={10} className="text-blue-400/70" />
             </div>
             <p className="text-[11px] font-bold text-gray-700 truncate">{flight.arrival}</p>
@@ -265,12 +272,14 @@ function FlightCard({ flight, onEdit, onDelete }: FlightCardProps) {
         <button
           onClick={(e) => { e.stopPropagation(); onEdit(); }}
           className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-100/60 rounded-lg transition-all"
+          aria-label={t('activity.edit')}
         >
           <Pencil size={12} />
         </button>
         <button
           onClick={(e) => { e.stopPropagation(); onDelete(); }}
           className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50/60 rounded-lg transition-all"
+          aria-label={t('activity.delete')}
         >
           <Trash2 size={12} />
         </button>
@@ -318,7 +327,7 @@ function SortableDayItem({
       <div className="group">
         <button
           onClick={onSelect}
-          className={`w-full text-left rounded-2xl transition-all duration-300 ${
+          className={`w-full text-left rounded-2xl transition-all duration-300 cursor-pointer ${
             isActive
               ? 'bg-white shadow-[0_4px_24px_rgba(0,0,0,0.08)] ring-1 ring-spain-red/10'
               : 'bg-white/40 hover:bg-white/70 hover:shadow-[0_2px_12px_rgba(0,0,0,0.05)]'
@@ -359,7 +368,7 @@ function SortableDayItem({
                 <>
                   <span className="text-[10px] text-gray-500 flex items-center gap-0.5">
                     <Calendar size={12} />
-                    {totalCount}개
+                    {totalCount}{t('sidebar.count' as TranslationKey)}
                   </span>
                   {completedCount > 0 && (
                     <span className="text-[10px] text-emerald-600 flex items-center gap-0.5 font-medium">
@@ -369,7 +378,7 @@ function SortableDayItem({
                   )}
                 </>
               ) : (
-                <span className="text-[10px] text-gray-500 italic">일정 없음</span>
+                <span className="text-[10px] text-gray-500 italic">{t('sidebar.noActivities' as TranslationKey)}</span>
               )}
               {hasAccom && <Hotel size={10} className="text-purple-500" />}
               {dayCost > 0 && (
@@ -399,6 +408,7 @@ function SortableDayItem({
             onClick={(e) => { e.stopPropagation(); onMoveUp(); }}
             disabled={!canMoveUp}
             className={`p-1.5 rounded-md transition-all ${canMoveUp ? 'text-gray-500 hover:text-gray-700 hover:bg-gray-100/80' : 'text-gray-200'}`}
+            aria-label={t('day.prevDay' as TranslationKey)}
           >
             <ChevronUp size={14} />
           </button>
@@ -406,6 +416,7 @@ function SortableDayItem({
             onClick={(e) => { e.stopPropagation(); onMoveDown(); }}
             disabled={!canMoveDown}
             className={`p-1.5 rounded-md transition-all ${canMoveDown ? 'text-gray-500 hover:text-gray-700 hover:bg-gray-100/80' : 'text-gray-200'}`}
+            aria-label={t('day.nextDay' as TranslationKey)}
           >
             <ChevronDown size={14} />
           </button>
@@ -413,19 +424,21 @@ function SortableDayItem({
           <button
             onClick={(e) => { e.stopPropagation(); onDuplicate(); }}
             className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50/80 rounded-md transition-all"
-            title="복제"
+            aria-label={t('feature.duplicate' as TranslationKey)}
           >
             <Copy size={14} />
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); onEdit(); }}
             className="p-1.5 text-gray-500 hover:text-spain-red hover:bg-red-50/80 rounded-md transition-all"
+            aria-label={t('activity.edit')}
           >
             <Pencil size={14} />
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); onDelete(); }}
             className="p-1.5 text-gray-500 hover:text-red-500 hover:bg-red-50/80 rounded-md transition-all"
+            aria-label={t('activity.delete')}
           >
             <Trash2 size={14} />
           </button>
@@ -437,15 +450,17 @@ function SortableDayItem({
 
 /* ─── Main Sidebar ─── */
 export function DaySidebar({ onClose }: { onClose: () => void }) {
+  const days = useTripData((t) => t.days);
+  const currentDayIndex = useTripData((t) => t.currentDayIndex);
+  const immigrationSchedules = useTripData((t) => t.immigrationSchedules);
+  const interCityTransports = useTripData((t) => t.interCityTransports);
   const {
-    days, currentDayIndex, setCurrentDay, getDayCost, removeDay, removeFlight, reorderDays,
-    immigrationSchedules, removeImmigrationSchedule,
-    interCityTransports, removeInterCityTransport, duplicateDay,
+    setCurrentDay, getDayCost, removeDay, removeFlight, reorderDays,
+    removeImmigrationSchedule, removeInterCityTransport, duplicateDay,
   } = useTripStore();
   const { format } = useCurrency();
   const { t } = useI18n();
 
-  const [showAddModal, setShowAddModal] = useState(false);
   const [editingDay, setEditingDay] = useState<DayPlan | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
@@ -522,24 +537,24 @@ export function DaySidebar({ onClose }: { onClose: () => void }) {
       <div className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm" onClick={onClose} />
 
       {/* Sidebar Panel */}
-      <aside className="fixed top-0 left-0 z-50 w-80 max-w-[85vw] h-full bg-white/95 backdrop-blur-2xl border-r border-gray-200/50 shadow-2xl overflow-y-auto scrollbar-hide scroll-smooth">
+      <aside className="fixed top-0 left-0 z-50 w-80 max-w-[85vw] h-full bg-white/95 backdrop-blur-2xl border-r border-gray-200/50 shadow-2xl overflow-y-auto scrollbar-hide scroll-smooth" role="navigation" aria-label={t('sidebar.schedule')}>
         <div className="p-3 pt-3">
           {/* ── Header ── */}
           <div className="mb-4 px-1">
             <div className="flex items-center justify-between mb-2.5">
               <h2 className="text-xs font-bold text-gray-700 tracking-wide">{t('sidebar.schedule')}</h2>
-              <div className="flex items-center gap-0.5">
+              <div className="flex items-center gap-1">
                 <button
-                  onClick={() => setShowAddModal(true)}
-                  className="p-1.5 rounded-lg text-spain-red hover:bg-red-50/80 transition-all"
-                  title={t('day.addDay')}
+                  onClick={() => setShowDestModal(true)}
+                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold text-spain-red hover:bg-red-50/80 transition-all border border-spain-red/15"
                 >
-                  <Plus size={15} />
+                  <MapPin size={12} />
+                  {t('place.addPlace')}
                 </button>
                 <button
                   onClick={onClose}
-                  className="p-1.5 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100/80 transition-all ml-0.5"
-                  title="닫기"
+                  className="p-1.5 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100/80 transition-all"
+                  aria-label={t('sidebar.close' as TranslationKey)}
                 >
                   <X size={15} />
                 </button>
@@ -549,7 +564,7 @@ export function DaySidebar({ onClose }: { onClose: () => void }) {
             {/* Summary */}
             <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-3.5 border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.04)]">
               <div className="flex items-center justify-between text-[10px] text-gray-600 mb-1.5">
-                <span className="font-medium">{days.length}일 · {totalActivities}개 일정</span>
+                <span className="font-medium">{days.length}{t('trips.days' as TranslationKey)} · {totalActivities}{t('trips.activities' as TranslationKey)}</span>
                 <span className="font-bold text-spain-red text-[11px]">{format(totalCost)}</span>
               </div>
               <div className="h-1.5 bg-gray-100/60 rounded-full overflow-hidden">
@@ -561,7 +576,7 @@ export function DaySidebar({ onClose }: { onClose: () => void }) {
                 />
               </div>
               {totalCompleted > 0 && (
-                <p className="text-[11px] text-gray-600 mt-1.5 text-right font-medium">{totalCompleted}/{totalActivities} 완료 ({overallProgress}%)</p>
+                <p className="text-[11px] text-gray-600 mt-1.5 text-right font-medium">{totalCompleted}/{totalActivities} {t('day.reorderDone')} ({overallProgress}%)</p>
               )}
             </div>
           </div>
@@ -661,14 +676,14 @@ export function DaySidebar({ onClose }: { onClose: () => void }) {
                                 return (
                                   <div key={flight.id} className="p-3 bg-red-50/80 backdrop-blur-sm rounded-2xl border border-red-200/50">
                                     <p className="text-[10px] text-red-600 font-bold mb-1">
-                                      {flight.airline} {flight.flightNumber} 삭제?
+                                      {flight.airline} {flight.flightNumber} - {t('flight.deleteConfirm' as TranslationKey)}
                                     </p>
                                     <div className="flex gap-1.5">
                                       <button onClick={handleDeleteFlight} className="flex-1 bg-gradient-to-r from-red-500 to-red-600 text-white text-[11px] py-1.5 rounded-xl font-bold transition-all">
-                                        삭제
+                                        {t('activity.delete')}
                                       </button>
                                       <button onClick={() => setDeleteFlightInfo(null)} className="flex-1 bg-white text-gray-500 text-[11px] py-1.5 rounded-xl border border-gray-200/60 hover:bg-gray-50 transition-colors">
-                                        취소
+                                        {t('activity.cancel')}
                                       </button>
                                     </div>
                                   </div>
@@ -747,23 +762,10 @@ export function DaySidebar({ onClose }: { onClose: () => void }) {
             )}
           </div>
 
-          {/* Add city button */}
-          <div className="mt-3">
-            <button
-              onClick={() => setShowDestModal(true)}
-              className="w-full flex items-center justify-center gap-1.5 py-2.5 px-3 text-[11px] text-gray-500 hover:text-emerald-600 rounded-2xl border-2 border-dashed border-gray-300/60 hover:border-emerald-300/50 hover:bg-emerald-50/20 transition-all group"
-            >
-              <MapPin size={13} className="group-hover:scale-110 transition-transform" />
-              <span className="font-medium">{t('place.addPlace')}</span>
-            </button>
-          </div>
         </div>
       </aside>
 
       {/* ── Modals ── */}
-      {showAddModal && (
-        <DayFormModal onClose={() => setShowAddModal(false)} />
-      )}
       {showDestModal && (
         <DestinationFormModal onClose={() => setShowDestModal(false)} />
       )}

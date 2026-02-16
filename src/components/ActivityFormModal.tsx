@@ -4,14 +4,17 @@ import { X, PlusCircle, Save, Trash2, MapPin, Landmark, ShoppingBag, UtensilsCro
 import { GoogleMap, MarkerF } from '@react-google-maps/api';
 import type { ScheduledActivity } from '../types/index.ts';
 import { useTripStore } from '../store/useTripStore.ts';
+import { useTripData } from '../store/useCurrentTrip.ts';
 import { useI18n, type TranslationKey } from '../i18n/useI18n.ts';
 import { useGoogleMaps } from '../hooks/useGoogleMaps.ts';
+import { useCurrency } from '../hooks/useCurrency.ts';
 
 interface Props {
   dayId: string;
   onClose: () => void;
   insertAtIndex?: number;
   activity?: ScheduledActivity; // If provided, edit mode
+  placeOnly?: boolean; // Simplified mode: name + type + location only (for route checking)
 }
 
 const typeConfig: { value: ScheduledActivity['type']; labelKey: string; icon: React.ReactNode; color: string }[] = [
@@ -24,14 +27,16 @@ const typeConfig: { value: ScheduledActivity['type']; labelKey: string; icon: Re
 
 const durationPresetKeys = ['duration.30min', 'duration.1h', 'duration.1h30', 'duration.2h', 'duration.3h', 'duration.halfDay'] as const;
 
-export function ActivityFormModal({ dayId, onClose, insertAtIndex, activity }: Props) {
+export function ActivityFormModal({ dayId, onClose, insertAtIndex, activity, placeOnly }: Props) {
   const addActivity = useTripStore((s) => s.addActivity);
   const updateActivity = useTripStore((s) => s.updateActivity);
   const removeActivity = useTripStore((s) => s.removeActivity);
-  const days = useTripStore((s) => s.days);
+  const days = useTripData((t) => t.days);
   const getAllDestinations = useTripStore((s) => s.getAllDestinations);
   const { t } = useI18n();
   const { isLoaded, apiKey } = useGoogleMaps();
+  const { currency, symbol, convert, DEFAULT_RATES } = useCurrency();
+  const rate = DEFAULT_RATES[currency] ?? 1;
 
   useEscKey(onClose);
   const allDestinations = getAllDestinations();
@@ -42,10 +47,15 @@ export function ActivityFormModal({ dayId, onClose, insertAtIndex, activity }: P
   const isEdit = !!activity;
 
   const [nameKo, setNameKo] = useState(activity?.nameKo ?? '');
-  const [time, setTime] = useState(activity?.time ?? '09:00');
-  const [duration, setDuration] = useState(activity?.duration ?? t('duration.1h'));
+  const [time, setTime] = useState(activity?.time ?? (placeOnly ? '' : '09:00'));
+  const [duration, setDuration] = useState(activity?.duration ?? (placeOnly ? '' : t('duration.1h')));
   const [type, setType] = useState<ScheduledActivity['type']>(activity?.type ?? 'attraction');
-  const [estimatedCost, setEstimatedCost] = useState(activity?.estimatedCost ?? 0);
+  // Cost displayed in current currency; stored as EUR internally
+  const [costInput, setCostInput] = useState(() => {
+    if (placeOnly) return 0;
+    const eurVal = activity?.estimatedCost ?? 0;
+    return currency === 'EUR' ? eurVal : Math.round(eurVal * rate);
+  });
   const [lat, setLat] = useState(activity?.lat?.toString() ?? '');
   const [lng, setLng] = useState(activity?.lng?.toString() ?? '');
   const [notes, setNotes] = useState(activity?.booking?.notes ?? '');
@@ -89,6 +99,9 @@ export function ActivityFormModal({ dayId, onClose, insertAtIndex, activity }: P
         const placeLng = place.geometry.location.lng();
         setLat(placeLat.toFixed(6));
         setLng(placeLng.toFixed(6));
+        if (place.name && (!nameKo || placeOnly)) {
+          setNameKo(place.name);
+        }
         mapRef.current?.panTo({ lat: placeLat, lng: placeLng });
         mapRef.current?.setZoom(16);
       }
@@ -131,6 +144,9 @@ export function ActivityFormModal({ dayId, onClose, insertAtIndex, activity }: P
   const handleSubmit = () => {
     if (!nameKo.trim()) return;
 
+    // Convert input cost back to EUR for storage
+    const estimatedCostEur = currency === 'EUR' ? costInput : +(costInput / rate).toFixed(2);
+
     if (isEdit) {
       const updates: Partial<ScheduledActivity> = {
         nameKo: nameKo.trim(),
@@ -138,7 +154,7 @@ export function ActivityFormModal({ dayId, onClose, insertAtIndex, activity }: P
         time,
         duration,
         type,
-        estimatedCost,
+        estimatedCost: estimatedCostEur,
         ...(lat && lng ? { lat: parseFloat(lat), lng: parseFloat(lng) } : { lat: undefined, lng: undefined }),
         booking: { ...(activity.booking || { notes: '' }), notes },
       };
@@ -151,7 +167,7 @@ export function ActivityFormModal({ dayId, onClose, insertAtIndex, activity }: P
         time,
         duration,
         type,
-        estimatedCost,
+        estimatedCost: estimatedCostEur,
         currency: 'EUR',
         isBooked: false,
         ...(lat && lng ? { lat: parseFloat(lat), lng: parseFloat(lng) } : {}),
@@ -177,91 +193,158 @@ export function ActivityFormModal({ dayId, onClose, insertAtIndex, activity }: P
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-md sm:p-4" onClick={onClose}>
       <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl max-w-lg w-full max-h-[85vh] sm:max-h-[90vh] overflow-y-auto border border-gray-100/50" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-center justify-between p-4 border-b border-gray-100/80">
-          <h3 className="font-bold text-gray-800">{isEdit ? t('editActivity.title') : t('addActivity.title')}</h3>
+          <h3 className="font-bold text-gray-800">{isEdit ? t('editActivity.title') : placeOnly ? t('addPlace.title' as TranslationKey) : t('addActivity.title')}</h3>
           <button onClick={onClose} className="p-1.5 hover:bg-gray-100 rounded-xl transition-colors">
             <X size={18} className="text-gray-400" />
           </button>
         </div>
 
         <div className="p-4 space-y-5">
-          {/* Quick-add from destination content */}
-          {!isEdit && destination && destination.contents.length > 0 && (
-            <div>
-              <button
-                onClick={() => setShowContentSuggestions(!showContentSuggestions)}
-                className="flex items-center gap-1.5 text-xs text-spain-red font-bold hover:underline mb-1.5"
-              >
-                <Zap size={13} /> {t('feature.quickAdd' as TranslationKey)} ({destination.contents.length})
-              </button>
-              {showContentSuggestions && (
-                <div className="grid grid-cols-1 gap-1 max-h-36 overflow-y-auto bg-gray-50 rounded-xl p-2 border border-gray-100">
-                  {destination.contents.map((c) => (
-                    <button
-                      key={c.id}
-                      onClick={() => {
-                        setNameKo(c.nameKo);
-                        setType(c.type);
-                        setEstimatedCost(c.estimatedCost);
-                        setDuration(c.duration);
-                        if (c.lat && c.lng) { setLat(c.lat.toString()); setLng(c.lng.toString()); }
-                        setShowContentSuggestions(false);
-                      }}
-                      className="flex items-center gap-2 px-2.5 py-1.5 text-left rounded-lg hover:bg-white transition-colors"
+          {/* ── placeOnly mode: search + map first ── */}
+          {placeOnly && (
+            <>
+              {/* Place search — top */}
+              {mapAvailable && (
+                <div className="space-y-2">
+                  <div className="relative">
+                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-blue-400" />
+                    <input
+                      ref={searchInputRef}
+                      type="text"
+                      placeholder={t('addActivity.placeSearch')}
+                      autoFocus
+                      className="w-full pl-9 pr-3.5 py-2.5 border border-blue-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/40 outline-none bg-blue-50/30 focus:bg-white transition-colors"
+                    />
+                  </div>
+                  <div className="rounded-xl overflow-hidden border border-gray-200 h-48">
+                    <GoogleMap
+                      mapContainerStyle={{ width: '100%', height: '100%' }}
+                      center={mapCenter}
+                      zoom={14}
+                      onClick={handleMapClick}
+                      options={{ disableDefaultUI: true, zoomControl: true }}
+                      onLoad={(map) => { mapRef.current = map; }}
                     >
-                      <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
-                        c.type === 'attraction' ? 'bg-indigo-100 text-indigo-600' :
-                        c.type === 'meal' ? 'bg-orange-100 text-orange-600' :
-                        c.type === 'shopping' ? 'bg-amber-100 text-amber-600' :
-                        c.type === 'transport' ? 'bg-slate-100 text-slate-500' :
-                        'bg-emerald-100 text-emerald-600'
-                      }`}>
-                        {t(`type.${c.type}` as TranslationKey)}
-                      </span>
-                      <span className="text-xs font-medium text-gray-700 truncate flex-1">{c.nameKo}</span>
-                      {c.estimatedCost > 0 && <span className="text-[10px] text-spain-red font-bold flex-shrink-0">€{c.estimatedCost}</span>}
+                      {lat && lng && (
+                        <MarkerF
+                          position={{ lat: parseFloat(lat), lng: parseFloat(lng) }}
+                          animation={google.maps.Animation.DROP}
+                        />
+                      )}
+                    </GoogleMap>
+                  </div>
+                </div>
+              )}
+
+              {/* Name input (auto-filled from search) */}
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1.5">{t('place.name' as TranslationKey)} *</label>
+                <input
+                  type="text"
+                  value={nameKo}
+                  onChange={(e) => setNameKo(e.target.value)}
+                  placeholder={t('addActivity.namePlaceholder')}
+                  autoFocus={!mapAvailable}
+                  className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/40 outline-none bg-gray-50/30 focus:bg-white transition-colors"
+                />
+              </div>
+
+              {/* Lat/Lng (manual fallback) */}
+              {!mapAvailable && (
+                <div className="grid grid-cols-2 gap-2">
+                  <input type="text" value={lat} onChange={(e) => setLat(e.target.value)} placeholder={t('activityForm.lat')} className="w-full px-3.5 py-2 border border-gray-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/40 outline-none bg-gray-50/30 focus:bg-white transition-colors" />
+                  <input type="text" value={lng} onChange={(e) => setLng(e.target.value)} placeholder={t('activityForm.lng')} className="w-full px-3.5 py-2 border border-gray-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/40 outline-none bg-gray-50/30 focus:bg-white transition-colors" />
+                </div>
+              )}
+              {lat && lng && (
+                <p className="text-[10px] text-emerald-600 font-mono">{lat}, {lng}</p>
+              )}
+            </>
+          )}
+
+          {/* ── Normal mode below ── */}
+          {!placeOnly && (
+            <>
+              {/* Quick-add from destination content */}
+              {!isEdit && destination && destination.contents.length > 0 && (
+                <div>
+                  <button
+                    onClick={() => setShowContentSuggestions(!showContentSuggestions)}
+                    className="flex items-center gap-1.5 text-xs text-spain-red font-bold hover:underline mb-1.5"
+                  >
+                    <Zap size={13} /> {t('feature.quickAdd' as TranslationKey)} ({destination.contents.length})
+                  </button>
+                  {showContentSuggestions && (
+                    <div className="grid grid-cols-1 gap-1 max-h-36 overflow-y-auto bg-gray-50 rounded-xl p-2 border border-gray-100">
+                      {destination.contents.map((c) => (
+                        <button
+                          key={c.id}
+                          onClick={() => {
+                            setNameKo(c.nameKo);
+                            setType(c.type);
+                            setCostInput(currency === 'EUR' ? c.estimatedCost : Math.round(c.estimatedCost * rate));
+                            setDuration(c.duration);
+                            if (c.lat && c.lng) { setLat(c.lat.toString()); setLng(c.lng.toString()); }
+                            setShowContentSuggestions(false);
+                          }}
+                          className="flex items-center gap-2 px-2.5 py-1.5 text-left rounded-lg hover:bg-white transition-colors"
+                        >
+                          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full ${
+                            c.type === 'attraction' ? 'bg-indigo-100 text-indigo-600' :
+                            c.type === 'meal' ? 'bg-orange-100 text-orange-600' :
+                            c.type === 'shopping' ? 'bg-amber-100 text-amber-600' :
+                            c.type === 'transport' ? 'bg-slate-100 text-slate-500' :
+                            'bg-emerald-100 text-emerald-600'
+                          }`}>
+                            {t(`type.${c.type}` as TranslationKey)}
+                          </span>
+                          <span className="text-xs font-medium text-gray-700 truncate flex-1">{c.nameKo}</span>
+                          {c.estimatedCost > 0 && <span className="text-[10px] text-spain-red font-bold flex-shrink-0">{symbol}{convert(c.estimatedCost).toLocaleString()}</span>}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Name input */}
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-1.5">{t('activityForm.nameKo')} *</label>
+                <input
+                  type="text"
+                  value={nameKo}
+                  onChange={(e) => setNameKo(e.target.value)}
+                  placeholder={t('addActivity.namePlaceholder')}
+                  autoFocus
+                  className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-spain-red/20 focus:border-spain-red/40 outline-none bg-gray-50/30 focus:bg-white transition-colors"
+                />
+              </div>
+
+              {/* Type selection - visual grid */}
+              <div>
+                <label className="block text-xs font-medium text-gray-500 mb-2">{t('activityForm.type')}</label>
+                <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
+                  {typeConfig.map((opt) => (
+                    <button
+                      key={opt.value}
+                      onClick={() => setType(opt.value)}
+                      className={`flex flex-col items-center gap-1.5 py-2.5 px-1 rounded-xl border text-xs font-medium transition-all ${
+                        type === opt.value
+                          ? `${opt.color} ring-2 ring-offset-1 ring-current/20 shadow-sm scale-[1.02]`
+                          : 'bg-gray-50/50 text-gray-400 border-gray-100 hover:bg-gray-100 hover:border-gray-200'
+                      }`}
+                    >
+                      {opt.icon}
+                      <span className="text-[10px]">{t(opt.labelKey as TranslationKey)}</span>
                     </button>
                   ))}
                 </div>
-              )}
-            </div>
+              </div>
+            </>
           )}
 
-          {/* Name input */}
-          <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1.5">{t('activityForm.nameKo')} *</label>
-            <input
-              type="text"
-              value={nameKo}
-              onChange={(e) => setNameKo(e.target.value)}
-              placeholder={t('addActivity.namePlaceholder')}
-              autoFocus
-              className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-spain-red/20 focus:border-spain-red/40 outline-none bg-gray-50/30 focus:bg-white transition-colors"
-            />
-          </div>
-
-          {/* Type selection - visual grid */}
-          <div>
-            <label className="block text-xs font-medium text-gray-500 mb-2">{t('activityForm.type')}</label>
-            <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
-              {typeConfig.map((opt) => (
-                <button
-                  key={opt.value}
-                  onClick={() => setType(opt.value)}
-                  className={`flex flex-col items-center gap-1.5 py-2.5 px-1 rounded-xl border text-xs font-medium transition-all ${
-                    type === opt.value
-                      ? `${opt.color} ring-2 ring-offset-1 ring-current/20 shadow-sm scale-[1.02]`
-                      : 'bg-gray-50/50 text-gray-400 border-gray-100 hover:bg-gray-100 hover:border-gray-200'
-                  }`}
-                >
-                  {opt.icon}
-                  <span className="text-[10px]">{t(opt.labelKey as TranslationKey)}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
           {/* Time Conflict Warning */}
-          {conflictingActivities.length > 0 && (
+          {!placeOnly && conflictingActivities.length > 0 && (
             <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200/60 rounded-xl">
               <AlertTriangle size={16} className="text-amber-500 flex-shrink-0 mt-0.5" />
               <div>
@@ -275,7 +358,8 @@ export function ActivityFormModal({ dayId, onClose, insertAtIndex, activity }: P
             </div>
           )}
 
-          {/* Time, Duration & End Time */}
+          {/* Time, Duration & End Time — hidden in placeOnly mode */}
+          {!placeOnly && (
           <div>
             <label className="block text-xs font-medium text-gray-500 mb-1.5">{t('activityForm.time')} / {t('activityForm.duration')}</label>
             <div className="flex items-center gap-2 mb-2">
@@ -316,39 +400,42 @@ export function ActivityFormModal({ dayId, onClose, insertAtIndex, activity }: P
               })}
             </div>
           </div>
+          )}
 
-          {/* Cost */}
+          {/* Cost — hidden in placeOnly mode */}
+          {!placeOnly && (
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1.5">{t('activityForm.cost')}</label>
+            <label className="block text-xs font-medium text-gray-500 mb-1.5">{t('activityForm.cost')} ({currency})</label>
             <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
               <div className="flex items-center gap-2 flex-1 min-w-0">
-                <span className="text-sm text-gray-400 font-bold">EUR</span>
+                <span className="text-sm text-gray-400 font-bold">{symbol}</span>
                 <input
                   type="number"
-                  value={estimatedCost}
-                  onChange={(e) => setEstimatedCost(Number(e.target.value))}
+                  value={costInput}
+                  onChange={(e) => setCostInput(Number(e.target.value))}
                   min={0}
                   className="flex-1 px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-spain-red/20 focus:border-spain-red/40 outline-none bg-gray-50/30 focus:bg-white transition-colors min-w-0"
                 />
               </div>
               {/* Quick cost buttons */}
               <div className="flex gap-1">
-                {[0, 10, 20, 50].map((v) => (
+                {(currency === 'KRW' ? [0, 10000, 30000, 50000] : currency === 'JPY' ? [0, 1000, 3000, 5000] : currency === 'USD' ? [0, 10, 25, 50] : [0, 10, 20, 50]).map((v) => (
                   <button
                     key={v}
-                    onClick={() => setEstimatedCost(v)}
+                    onClick={() => setCostInput(v)}
                     className={`text-[10px] px-2.5 py-1 rounded-full border transition-all ${
-                      estimatedCost === v
+                      costInput === v
                         ? 'bg-gradient-to-r from-spain-red to-rose-500 text-white border-spain-red shadow-sm'
                         : 'bg-gray-50/80 text-gray-400 border-gray-100 hover:bg-gray-100 hover:border-gray-200'
                     }`}
                   >
-                    {v === 0 ? t('addActivity.free') : `\u20AC${v}`}
+                    {v === 0 ? t('addActivity.free') : `${symbol}${v.toLocaleString()}`}
                   </button>
                 ))}
               </div>
             </div>
           </div>
+          )}
 
           {/* Notes (edit mode) */}
           {isEdit && (
@@ -364,7 +451,8 @@ export function ActivityFormModal({ dayId, onClose, insertAtIndex, activity }: P
             </div>
           )}
 
-          {/* Location */}
+          {/* Location — only in normal mode (placeOnly has it above) */}
+          {!placeOnly && (
           <div>
             <div className="flex items-center justify-between mb-1.5">
               <label className="text-xs font-medium text-gray-500 flex items-center gap-1">
@@ -450,6 +538,7 @@ export function ActivityFormModal({ dayId, onClose, insertAtIndex, activity }: P
               <p className="text-[10px] text-emerald-600 mt-1 font-mono">{lat}, {lng}</p>
             )}
           </div>
+          )}
         </div>
 
         <div className="p-4 border-t border-gray-100/80 bg-gray-50/30 rounded-b-3xl space-y-2">

@@ -1,6 +1,7 @@
 import { useState, useRef } from 'react';
 import { X, Settings, Globe, Download, Upload, FileSpreadsheet } from 'lucide-react';
 import { useTripStore } from '../store/useTripStore.ts';
+import { useTripData } from '../store/useCurrentTrip.ts';
 import { useI18n, type TranslationKey } from '../i18n/useI18n.ts';
 import { useCurrency } from '../hooks/useCurrency.ts';
 import { useEscKey } from '../hooks/useEscKey.ts';
@@ -13,32 +14,33 @@ interface Props {
 export function TripSettingsModal({ onClose }: Props) {
   const { t, language, setLanguage } = useI18n();
   const store = useTripStore();
+  const tripData = useTripData((trip) => trip);
   const { currency } = useCurrency();
   useEscKey(onClose);
 
-  const [tripName, setTripName] = useState(store.tripName);
-  const [startDate, setStartDate] = useState(store.startDate);
-  const [endDate, setEndDate] = useState(store.endDate);
-  const [totalBudget, setTotalBudget] = useState(store.totalBudget);
+  const [tripName, setTripName] = useState(tripData.tripName);
+  const [startDate, setStartDate] = useState(tripData.startDate);
+  const [endDate, setEndDate] = useState(tripData.endDate);
+  const [totalBudget, setTotalBudget] = useState(tripData.totalBudget);
   const [exchangeRate, setExchangeRate] = useState(store.exchangeRate);
   const [importMsg, setImportMsg] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleExport = () => {
     const state = useTripStore.getState();
+    const trip = state.trips.find((t) => t.id === state.currentTripId);
+    if (!trip) return;
     const exportData = {
-      tripName: state.tripName, startDate: state.startDate, endDate: state.endDate,
-      days: state.days, expenses: state.expenses, totalBudget: state.totalBudget,
-      exchangeRate: state.exchangeRate, immigrationSchedules: state.immigrationSchedules,
-      interCityTransports: state.interCityTransports, customDestinations: state.customDestinations,
-      restaurantComments: state.restaurantComments, owners: state.owners,
-      exportedAt: new Date().toISOString(), version: 4,
+      trips: [trip],
+      exchangeRate: state.exchangeRate,
+      exportedAt: new Date().toISOString(),
+      version: 5,
     };
     const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${state.tripName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.json`;
+    a.download = `${trip.tripName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -52,11 +54,15 @@ export function TripSettingsModal({ onClose }: Props) {
       setImportMsg(result ? t('feature.importSuccess' as TranslationKey) : t('feature.importError' as TranslationKey));
       setTimeout(() => setImportMsg(''), 3000);
       if (result) {
-        setTripName(useTripStore.getState().tripName);
-        setStartDate(useTripStore.getState().startDate);
-        setEndDate(useTripStore.getState().endDate);
-        setTotalBudget(useTripStore.getState().totalBudget);
-        setExchangeRate(useTripStore.getState().exchangeRate);
+        const s = useTripStore.getState();
+        const ct = s.trips.find((tr) => tr.id === s.currentTripId);
+        if (ct) {
+          setTripName(ct.tripName);
+          setStartDate(ct.startDate);
+          setEndDate(ct.endDate);
+          setTotalBudget(ct.totalBudget);
+        }
+        setExchangeRate(s.exchangeRate);
       }
     };
     reader.readAsText(file);
@@ -65,12 +71,14 @@ export function TripSettingsModal({ onClose }: Props) {
 
   const handleCsvExport = () => {
     const state = useTripStore.getState();
+    const trip = state.trips.find((t) => t.id === state.currentTripId);
+    if (!trip) return;
     const allExpenses: string[] = ['Date,Day,Category,Description,Amount,Currency,Owner'];
-    state.expenses.forEach((e) => {
-      const day = state.days.find((d) => d.id === e.dayId);
+    trip.expenses.forEach((e) => {
+      const day = trip.days.find((d) => d.id === e.dayId);
       allExpenses.push(`${e.date},${day ? 'Day ' + day.dayNumber : ''},${e.category},"${e.description}",${e.amount},${e.currency || 'EUR'},${e.owner}`);
     });
-    state.days.forEach((day) => {
+    trip.days.forEach((day) => {
       day.activities.forEach((act) => {
         (act.expenses || []).forEach((e) => {
           allExpenses.push(`${e.createdAt.split('T')[0]},Day ${day.dayNumber},activity,"${act.nameKo}: ${e.description}",${e.amount},${e.currency},${e.owner}`);
@@ -175,7 +183,7 @@ export function TripSettingsModal({ onClose }: Props) {
 
           {/* Data Management */}
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1.5">데이터 관리</label>
+            <label className="block text-xs font-medium text-gray-500 mb-1.5">{t('settings.dataManagement' as TranslationKey)}</label>
             <div className="flex gap-2">
               <button onClick={handleExport} className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-emerald-50 text-emerald-700 rounded-xl text-xs font-bold hover:bg-emerald-100 transition-colors border border-emerald-200/50">
                 <Download size={14} /> {t('feature.export' as TranslationKey)}
@@ -188,7 +196,7 @@ export function TripSettingsModal({ onClose }: Props) {
               </button>
             </div>
             <input ref={fileInputRef} type="file" accept=".json" className="hidden" onChange={handleImport} />
-            {importMsg && <p className={`text-xs font-bold mt-1.5 ${importMsg.includes('완료') || importMsg.includes('complete') ? 'text-emerald-600' : 'text-red-500'}`}>{importMsg}</p>}
+            {importMsg && <p className={`text-xs font-bold mt-1.5 ${importMsg === t('feature.importSuccess' as TranslationKey) ? 'text-emerald-600' : 'text-red-500'}`}>{importMsg}</p>}
           </div>
 
           <div>

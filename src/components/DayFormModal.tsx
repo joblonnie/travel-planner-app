@@ -3,7 +3,8 @@ import { X, Check, Trash2, Hotel, MapPin, Search } from 'lucide-react';
 import { GoogleMap, MarkerF } from '@react-google-maps/api';
 import { useEscKey } from '../hooks/useEscKey.ts';
 import { useTripStore } from '../store/useTripStore.ts';
-import { useI18n } from '../i18n/useI18n.ts';
+import { useTripData } from '../store/useCurrentTrip.ts';
+import { useI18n, type TranslationKey } from '../i18n/useI18n.ts';
 import { useGoogleMaps } from '../hooks/useGoogleMaps.ts';
 import { CitySearch } from './CitySearch.tsx';
 import type { DayPlan, Destination, AccommodationInfo } from '../types/index.ts';
@@ -14,7 +15,8 @@ interface Props {
 }
 
 export function DayFormModal({ day, onClose }: Props) {
-  const { addDay, updateDay, updateAccommodationByDestination, getAllDestinations, addCustomDestination, days } = useTripStore();
+  const days = useTripData((t) => t.days);
+  const { addDay, updateDay, updateAccommodationByDestination, getAllDestinations, addCustomDestination } = useTripStore();
   const { t } = useI18n();
   const { isLoaded, apiKey } = useGoogleMaps();
   const allDestinations = getAllDestinations();
@@ -229,7 +231,7 @@ export function DayFormModal({ day, onClose }: Props) {
             <textarea
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="메모를 입력하세요..."
+              placeholder={t('form.notesPlaceholder' as TranslationKey)}
               rows={2}
               className="w-full text-sm px-3.5 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-spain-red/20 focus:border-spain-red/40 outline-none resize-none bg-gray-50/30 focus:bg-white transition-colors"
             />
@@ -240,11 +242,11 @@ export function DayFormModal({ day, onClose }: Props) {
             <div className="flex items-center justify-between mb-2">
               <label className="text-xs font-medium text-gray-500 flex items-center gap-1.5">
                 <Hotel size={12} className="text-purple-500" />
-                숙소
+                {t('accommodation.title' as TranslationKey)}
               </label>
               {existingAccom && !isEdit && (
                 <span className="text-[10px] text-purple-500 bg-purple-50 px-2 py-0.5 rounded-full font-medium">
-                  같은 도시 숙소 자동 적용
+                  {t('accommodation.autoApply' as TranslationKey)}
                 </span>
               )}
             </div>
@@ -253,12 +255,12 @@ export function DayFormModal({ day, onClose }: Props) {
                 onClick={initAccommodation}
                 className="w-full py-3 border border-dashed border-purple-200 rounded-xl text-[11px] text-purple-400 hover:text-purple-600 hover:border-purple-300 hover:bg-purple-50/30 transition-all flex items-center justify-center gap-1.5"
               >
-                <Hotel size={13} /> 숙소 정보 추가
+                <Hotel size={13} /> {t('accommodation.addInfo' as TranslationKey)}
               </button>
             ) : accommodation && (
               <div className="p-3 bg-gradient-to-br from-purple-50/80 to-violet-50/50 rounded-2xl border border-purple-100/80 space-y-2.5 shadow-sm">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold text-purple-500 uppercase tracking-wider">숙소 정보</span>
+                  <span className="text-[10px] font-bold text-purple-500 uppercase tracking-wider">{t('accommodation.info' as TranslationKey)}</span>
                   <button
                     onClick={() => { setAccommodation(undefined); setShowAccomForm(false); }}
                     className="text-gray-300 hover:text-red-500 transition-colors"
@@ -275,7 +277,7 @@ export function DayFormModal({ day, onClose }: Props) {
                       <input
                         ref={accomSearchRef}
                         type="text"
-                        placeholder="숙소 검색 (호텔, 에어비앤비...)"
+                        placeholder={t('accommodation.searchPlaceholder' as TranslationKey)}
                         className="w-full pl-9 pr-3.5 py-2 border border-purple-200/50 rounded-xl text-xs focus:ring-2 focus:ring-purple-200 outline-none bg-white"
                       />
                     </div>
@@ -307,19 +309,19 @@ export function DayFormModal({ day, onClose }: Props) {
                   type="text"
                   value={accommodation.name}
                   onChange={(e) => setAccommodation({ ...accommodation, name: e.target.value })}
-                  placeholder="숙소 이름 (예: Hotel Arts Barcelona)"
+                  placeholder={t('accommodation.namePlaceholder' as TranslationKey)}
                   className="w-full text-xs px-2.5 py-2 border border-purple-200/50 rounded-xl bg-white focus:ring-2 focus:ring-purple-200 outline-none"
                 />
                 <input
                   type="text"
                   value={accommodation.address}
                   onChange={(e) => setAccommodation({ ...accommodation, address: e.target.value })}
-                  placeholder="주소"
+                  placeholder={t('accommodation.addressPlaceholder' as TranslationKey)}
                   className="w-full text-xs px-2.5 py-2 border border-purple-200/50 rounded-xl bg-white focus:ring-2 focus:ring-purple-200 outline-none"
                 />
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="text-[9px] text-purple-400 font-medium">체크인</label>
+                    <label className="text-[9px] text-purple-400 font-medium">{t('accommodation.checkIn' as TranslationKey)}</label>
                     <input
                       type="time"
                       value={accommodation.checkIn || ''}
@@ -328,7 +330,7 @@ export function DayFormModal({ day, onClose }: Props) {
                     />
                   </div>
                   <div>
-                    <label className="text-[9px] text-purple-400 font-medium">체크아웃</label>
+                    <label className="text-[9px] text-purple-400 font-medium">{t('accommodation.checkOut' as TranslationKey)}</label>
                     <input
                       type="time"
                       value={accommodation.checkOut || ''}
@@ -339,7 +341,7 @@ export function DayFormModal({ day, onClose }: Props) {
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <label className="text-[9px] text-purple-400 font-medium">1박 비용</label>
+                    <label className="text-[9px] text-purple-400 font-medium">{t('accommodation.costPerNight' as TranslationKey)}</label>
                     <div className="flex items-center gap-1">
                       <span className="text-xs text-gray-400 font-bold">€</span>
                       <input
@@ -352,12 +354,12 @@ export function DayFormModal({ day, onClose }: Props) {
                     </div>
                   </div>
                   <div>
-                    <label className="text-[9px] text-purple-400 font-medium">예약 번호</label>
+                    <label className="text-[9px] text-purple-400 font-medium">{t('accommodation.confirmationNumber' as TranslationKey)}</label>
                     <input
                       type="text"
                       value={accommodation.confirmationNumber || ''}
                       onChange={(e) => setAccommodation({ ...accommodation, confirmationNumber: e.target.value })}
-                      placeholder="선택"
+                      placeholder={t('accommodation.optional' as TranslationKey)}
                       className="w-full text-xs px-2.5 py-1.5 border border-purple-200/50 rounded-xl bg-white focus:ring-2 focus:ring-purple-200 outline-none"
                     />
                   </div>
@@ -366,7 +368,7 @@ export function DayFormModal({ day, onClose }: Props) {
                   type="text"
                   value={accommodation.notes || ''}
                   onChange={(e) => setAccommodation({ ...accommodation, notes: e.target.value })}
-                  placeholder="메모 (와이파이 비번, 주차 정보 등)"
+                  placeholder={t('accommodation.notesPlaceholder' as TranslationKey)}
                   className="w-full text-xs px-2.5 py-2 border border-purple-200/50 rounded-xl bg-white focus:ring-2 focus:ring-purple-200 outline-none"
                 />
               </div>

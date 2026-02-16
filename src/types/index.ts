@@ -193,3 +193,42 @@ export interface InterCityTransport {
   notes?: string;
 }
 
+export interface Trip {
+  id: string;
+  tripName: string;
+  startDate: string;
+  endDate: string;
+  days: DayPlan[];
+  currentDayIndex: number;
+  totalBudget: number;
+  expenses: TripExpense[];
+  restaurantComments: TripRestaurantComment[];
+  customDestinations: Destination[];
+  immigrationSchedules: ImmigrationSchedule[];
+  interCityTransports: InterCityTransport[];
+  owners: ExpenseOwnerConfig[];
+  pendingCameraExpense: { amount: number; currency: string } | null;
+  createdAt: string;
+  updatedAt: string;
+  emoji?: string;
+}
+
+export interface TripExpense {
+  id: string;
+  dayId?: string;
+  category: 'accommodation' | 'food' | 'transport' | 'attraction' | 'shopping' | 'entertainment' | 'other';
+  amount: number;
+  currency: 'EUR';
+  description: string;
+  date: string;
+  owner: ExpenseOwner;
+}
+
+export interface TripRestaurantComment {
+  id: string;
+  restaurantId: string;
+  text: string;
+  rating?: number;
+  date: string;
+}
+

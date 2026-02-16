@@ -3,7 +3,8 @@ import { X, Check, MapPin, Search } from 'lucide-react';
 import { GoogleMap, MarkerF } from '@react-google-maps/api';
 import { useEscKey } from '../hooks/useEscKey.ts';
 import { useTripStore } from '../store/useTripStore.ts';
-import { useI18n } from '../i18n/useI18n.ts';
+import { useTripData } from '../store/useCurrentTrip.ts';
+import { useI18n, type TranslationKey } from '../i18n/useI18n.ts';
 import { useGoogleMaps } from '../hooks/useGoogleMaps.ts';
 import type { Destination, DayPlan } from '../types/index.ts';
 
@@ -12,7 +13,8 @@ interface Props {
 }
 
 export function DestinationFormModal({ onClose }: Props) {
-  const { addCustomDestination, addDay, days } = useTripStore();
+  const days = useTripData((t) => t.days);
+  const { addCustomDestination, addDay } = useTripStore();
   const { t } = useI18n();
   const { isLoaded, apiKey } = useGoogleMaps();
   const mapAvailable = apiKey && isLoaded;
@@ -161,14 +163,14 @@ export function DestinationFormModal({ onClose }: Props) {
           {mapAvailable && (
             <div className="space-y-2">
               <label className="block text-xs font-medium text-gray-500">
-                도시 검색
+                {t('place.citySearch' as TranslationKey)}
               </label>
               <div className="relative">
                 <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-emerald-400" />
                 <input
                   ref={searchInputRef}
                   type="text"
-                  placeholder="도시 이름을 검색하세요..."
+                  placeholder={t('place.citySearchPlaceholder' as TranslationKey)}
                   className="w-full pl-9 pr-3.5 py-2.5 border border-emerald-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/40 outline-none bg-emerald-50/30 focus:bg-white transition-colors"
                   autoFocus
                 />
@@ -201,7 +203,7 @@ export function DestinationFormModal({ onClose }: Props) {
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="예: 세비야, 톨레도, 발렌시아..."
+              placeholder={t('place.namePlaceholder' as TranslationKey)}
               className="w-full text-sm px-3.5 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/40 outline-none bg-gray-50/30 focus:bg-white transition-colors"
               autoFocus={!mapAvailable}
             />
@@ -213,7 +215,7 @@ export function DestinationFormModal({ onClose }: Props) {
               type="text"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="장소에 대한 설명..."
+              placeholder={t('place.descriptionPlaceholder' as TranslationKey)}
               className="w-full text-sm px-3.5 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/40 outline-none bg-gray-50/30 focus:bg-white transition-colors"
             />
           </div>

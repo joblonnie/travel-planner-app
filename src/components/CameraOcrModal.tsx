@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react';
 import { Camera, X, RotateCcw, Plus, Loader2, AlertCircle, Edit3 } from 'lucide-react';
 import { useCurrency } from '../hooks/useCurrency.ts';
-import { useI18n } from '../i18n/useI18n.ts';
+import { useI18n, type TranslationKey } from '../i18n/useI18n.ts';
 
 type DetectedCurrency = 'EUR' | 'USD' | 'JPY';
 
@@ -268,7 +268,7 @@ export function CameraOcrModal({ onClose, onAddExpense }: Props) {
               {/* OCR detected text */}
               {ocrText && (
                 <div className="text-xs">
-                  <p className="text-gray-400 font-medium mb-1">OCR 인식 결과</p>
+                  <p className="text-gray-400 font-medium mb-1">{t('camera.ocrResult' as TranslationKey)}</p>
                   <pre className="p-2.5 bg-gray-50 rounded-lg text-gray-600 whitespace-pre-wrap break-all max-h-24 overflow-y-auto border border-gray-100 leading-relaxed">{ocrText}</pre>
                 </div>
               )}

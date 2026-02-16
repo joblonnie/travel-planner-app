@@ -118,10 +118,16 @@ export function BookingModal({ activity, dayId, onClose }: Props) {
           </div>
         </div>
 
-        <div className="p-4 border-t border-gray-100/80 bg-gray-50/30 rounded-b-3xl">
+        <div className="p-4 border-t border-gray-100/80 bg-gray-50/30 rounded-b-3xl flex gap-2">
+          <button
+            onClick={onClose}
+            className="flex-1 bg-gray-100 text-gray-600 py-3 rounded-xl font-bold hover:bg-gray-200 transition-colors min-h-[44px]"
+          >
+            {t('activity.cancel')}
+          </button>
           <button
             onClick={handleSave}
-            className="w-full bg-gradient-to-r from-spain-red to-rose-500 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-spain-red/20 transition-all active:scale-[0.98]"
+            className="flex-1 bg-gradient-to-r from-spain-red to-rose-500 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-spain-red/20 transition-all active:scale-[0.98] min-h-[44px]"
           >
             <Save size={16} /> {t('booking.save')}
           </button>

@@ -1,11 +1,12 @@
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { MapPin, Clock, Check, CheckCircle2, Circle, FileText, Ticket, Pencil, Trash2, SkipForward, MoreHorizontal, Plus, X, Receipt, Copy, GripVertical } from 'lucide-react';
+import { MapPin, CheckCircle2, Circle, FileText, Ticket, Pencil, Trash2, SkipForward, MoreHorizontal, Plus, X, Receipt, Copy, GripVertical } from 'lucide-react';
 import type { ScheduledActivity, ExpenseOwner } from '../types/index.ts';
 import { useState, useRef, useEffect } from 'react';
 import { useTripStore } from '../store/useTripStore.ts';
 import { useCurrency } from '../hooks/useCurrency.ts';
 import { useI18n, type TranslationKey } from '../i18n/useI18n.ts';
+import { translations } from '../i18n/translations.ts';
 import { BookingModal } from './BookingModal.tsx';
 import { ActivityFormModal } from './ActivityFormModal.tsx';
 import { ActivityDetailModal } from './ActivityDetailModal.tsx';
@@ -24,6 +25,7 @@ interface Props {
   dayId: string;
   index?: number;
   totalCount?: number;
+  reorderMode?: boolean;
 }
 
 // Calculate end time from start time + duration string
@@ -47,7 +49,7 @@ function calcEndTime(startTime: string, duration: string): string | null {
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 }
 
-export function ActivityCard({ activity, dayId }: Props) {
+export function ActivityCard({ activity, dayId, reorderMode }: Props) {
   const [showBooking, setShowBooking] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -70,16 +72,19 @@ export function ActivityCard({ activity, dayId }: Props) {
   const addActivityExpense = useTripStore((s) => s.addActivityExpense);
   const removeActivityExpense = useTripStore((s) => s.removeActivityExpense);
 
-  const { format } = useCurrency();
+  const { format, currency: currentCurrency, symbol: currencySymbol, convert, DEFAULT_RATES } = useCurrency();
   const { t } = useI18n();
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+  const sortable = useSortable({
     id: activity.id,
+    disabled: !reorderMode,
   });
 
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition,
-  };
+  const style = reorderMode ? {
+    transform: CSS.Transform.toString(sortable.transform),
+    transition: sortable.transition,
+  } : undefined;
+
+  const isDragging = reorderMode ? sortable.isDragging : false;
 
   // Close actions menu on outside click
   useEffect(() => {
@@ -109,11 +114,14 @@ export function ActivityCard({ activity, dayId }: Props) {
   };
 
   const handleAddExpense = () => {
-    const amount = parseFloat(expenseAmount);
-    if (!isNaN(amount) && amount > 0 && expenseDesc.trim()) {
+    const inputAmount = parseFloat(expenseAmount);
+    if (!isNaN(inputAmount) && inputAmount > 0 && expenseDesc.trim()) {
+      // Convert input amount from current display currency to EUR for storage
+      const rate = currentCurrency === 'EUR' ? 1 : (DEFAULT_RATES[currentCurrency] ?? 1);
+      const amountInEur = currentCurrency === 'EUR' ? inputAmount : inputAmount / rate;
       addActivityExpense(dayId, activity.id, {
         id: crypto.randomUUID(),
-        amount,
+        amount: Math.round(amountInEur * 100) / 100,
         currency: 'EUR',
         description: expenseDesc.trim(),
         createdAt: new Date().toISOString(),
@@ -134,14 +142,15 @@ export function ActivityCard({ activity, dayId }: Props) {
     setShowDeleteConfirm(false);
   };
 
-  const typeLabel = t(`type.${activity.type}` as TranslationKey);
+  const typeKey = `type.${activity.type}` as TranslationKey;
+  const typeLabel = translations[typeKey] ? t(typeKey) : activity.type;
   const isCompleted = activity.isCompleted;
   const isSkipped = activity.isSkipped;
 
   return (
     <>
       <div
-        ref={setNodeRef}
+        ref={sortable.setNodeRef}
         style={style}
         className={`group relative rounded-2xl border transition-all duration-300 ease-out ${
           showActions ? 'z-30' : isDragging ? 'z-20' : ''
@@ -155,33 +164,42 @@ export function ActivityCard({ activity, dayId }: Props) {
             : 'border-white/60 bg-white/70 backdrop-blur-xl shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:bg-white/90 hover:-translate-y-0.5'
         }`}
       >
-        {/* Drag handle - 48px touch target */}
-        <div
-          {...attributes}
-          {...listeners}
-          className="absolute left-0 top-0 bottom-0 w-12 flex items-center justify-center cursor-grab active:cursor-grabbing text-gray-300 active:text-spain-red transition-colors z-10"
-          style={{ touchAction: 'none' }}
-        >
-          <GripVertical size={16} />
-        </div>
-        <div className="pl-12 p-3.5 sm:p-4 sm:pl-14" onClick={() => { if (!isDragging) setShowDetail(true); }}>
-          {/* Top row: type badge + time + cost + actions */}
-          <div className="flex items-center gap-1.5 mb-2">
-            {/* Status toggle */}
+        {/* Drag handle - only visible in reorder mode */}
+        {reorderMode && (
+          <div
+            {...sortable.attributes}
+            {...sortable.listeners}
+            className="absolute left-0 top-0 bottom-0 w-12 flex items-center justify-center cursor-grab active:cursor-grabbing text-gray-300 active:text-spain-red transition-colors z-10"
+            style={{ touchAction: 'none' }}
+          >
+            <GripVertical size={16} />
+          </div>
+        )}
+        <div className={`${reorderMode ? 'pl-12' : ''} p-3.5 sm:p-4 ${reorderMode ? 'sm:pl-14' : ''} cursor-pointer`} onClick={() => { if (!isDragging) setShowDetail(true); }}>
+          {/* Row 1: Name */}
+          <div className={`mb-1.5 ${isCompleted || isSkipped ? 'opacity-50' : ''}`}>
+            <h3 className={`font-bold text-gray-800 text-[15px] leading-snug ${isCompleted ? 'line-through decoration-emerald-400/60 decoration-2' : ''} ${isSkipped ? 'line-through decoration-amber-400/60 decoration-2' : ''}`}>
+              {activity.nameKo}
+            </h3>
+            {activity.name && activity.name !== activity.nameKo && (
+              <p className="text-xs text-gray-400 mt-0.5">{activity.name}</p>
+            )}
+          </div>
+
+          {/* Row 2: Status toggles + Type + Time + Status badges */}
+          <div className="flex items-center gap-1.5 flex-wrap mb-1">
             <button
               onClick={(e) => { e.stopPropagation(); toggleCompleted(dayId, activity.id); }}
               onPointerDown={(e) => e.stopPropagation()}
-              className={`flex-shrink-0 p-1 transition-all duration-200 ${
+              className={`flex-shrink-0 p-1 -ml-1 transition-all duration-200 ${
                 isCompleted
                   ? 'text-emerald-500 hover:text-emerald-600'
                   : 'text-gray-400 hover:text-emerald-400'
               }`}
               title={isCompleted ? t('activity.undoDone') : t('activity.markDone')}
             >
-              {isCompleted ? <CheckCircle2 size={18} /> : <Circle size={18} strokeWidth={1.5} />}
+              {isCompleted ? <CheckCircle2 size={16} /> : <Circle size={16} strokeWidth={1.5} />}
             </button>
-
-            {/* Skip button */}
             <button
               onClick={(e) => { e.stopPropagation(); toggleSkipped(dayId, activity.id); }}
               onPointerDown={(e) => e.stopPropagation()}
@@ -192,67 +210,39 @@ export function ActivityCard({ activity, dayId }: Props) {
               }`}
               title={isSkipped ? t('activity.undoSkipped') : t('activity.markSkipped')}
             >
-              <SkipForward size={16} />
+              <SkipForward size={14} />
             </button>
-
-            <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${typeColors[activity.type] || 'bg-gray-500/10 text-gray-600 border-gray-200/50'}`}>
-              {typeLabel}
-            </span>
-            {/* Time: start ~ end (duration) */}
-            <span className="text-xs text-gray-600 font-mono tabular-nums font-medium ml-0.5 flex items-center gap-1">
-              {activity.time}
-              {calcEndTime(activity.time, activity.duration) && (
-                <span className="text-gray-400">~{calcEndTime(activity.time, activity.duration)}</span>
-              )}
-              {activity.duration && (
-                <span className="text-[10px] text-gray-400 font-sans">({activity.duration})</span>
-              )}
-            </span>
-
-            {activity.isBooked && (
-              <span className="flex items-center gap-0.5 text-[10px] text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-full font-medium">
-                <Check size={9} /> {t('activity.booked')}
+            {(activity.time || activity.duration) && (
+              <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${typeColors[activity.type] || 'bg-gray-500/10 text-gray-600 border-gray-200/50'}`}>
+                {typeLabel}
+              </span>
+            )}
+            {!activity.time && !activity.duration && (
+              <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full border bg-sky-500/10 text-sky-600 border-sky-200/50 flex items-center gap-0.5">
+                <MapPin size={10} />
+                {t('day.addPlace' as TranslationKey)}
+              </span>
+            )}
+            {activity.time && (
+              <span className="text-xs text-gray-600 font-mono tabular-nums font-medium flex items-center gap-1">
+                {activity.time}
+                {calcEndTime(activity.time, activity.duration) && (
+                  <span className="text-gray-400">~{calcEndTime(activity.time, activity.duration)}</span>
+                )}
+                {activity.duration && (
+                  <span className="text-[10px] text-gray-400 font-sans">({activity.duration})</span>
+                )}
               </span>
             )}
             {isCompleted && (
-              <span className="text-[10px] text-emerald-600 bg-emerald-100/60 px-1.5 py-0.5 rounded-full font-bold">
-                {t('activity.done')}
+              <span className="text-[10px] text-emerald-600 bg-emerald-100/60 px-2 py-0.5 rounded-full font-bold flex items-center gap-0.5">
+                <CheckCircle2 size={10} /> {t('activity.done')}
               </span>
             )}
             {isSkipped && (
-              <span className="text-[10px] text-amber-600 bg-amber-100/60 px-1.5 py-0.5 rounded-full font-bold">
-                {t('activity.skipped')}
+              <span className="text-[10px] text-amber-600 bg-amber-100/60 px-2 py-0.5 rounded-full font-bold flex items-center gap-0.5">
+                <SkipForward size={10} /> {t('activity.skipped')}
               </span>
-            )}
-
-            {/* Cost comparison - right aligned */}
-            <div className="ml-auto flex items-center gap-1.5">
-              {activity.estimatedCost > 0 && (
-                <span className={`text-[10px] tabular-nums ${totalExpenseAmount > 0 ? 'text-gray-400 line-through decoration-gray-300' : isSkipped ? 'text-gray-400' : 'text-spain-red font-bold text-sm'}`}>
-                  {format(activity.estimatedCost)}
-                </span>
-              )}
-              {totalExpenseAmount > 0 && (
-                <span className={`text-sm font-bold tabular-nums ${
-                  activity.estimatedCost > 0 && totalExpenseAmount > activity.estimatedCost
-                    ? 'text-red-500'
-                    : activity.estimatedCost > 0 && totalExpenseAmount <= activity.estimatedCost
-                    ? 'text-emerald-600'
-                    : 'text-spain-red'
-                }`}>
-                  {format(totalExpenseAmount)}
-                </span>
-              )}
-            </div>
-          </div>
-
-          {/* Name */}
-          <div className={`${isCompleted || isSkipped ? 'opacity-50' : ''}`}>
-            <h3 className={`font-bold text-gray-800 text-[15px] leading-snug ${isCompleted ? 'line-through decoration-emerald-400/60 decoration-2' : ''} ${isSkipped ? 'line-through decoration-amber-400/60 decoration-2' : ''}`}>
-              {activity.nameKo}
-            </h3>
-            {activity.name && activity.name !== activity.nameKo && (
-              <p className="text-xs text-gray-400 mt-0.5">{activity.name}</p>
             )}
           </div>
 
@@ -268,6 +258,7 @@ export function ActivityCard({ activity, dayId }: Props) {
                   <button
                     onClick={(e) => { e.stopPropagation(); removeMemo(dayId, activity.id, i); }}
                     className="ml-0.5 text-blue-500 hover:text-blue-600 transition-colors"
+                    aria-label={t('activity.delete')}
                   >
                     <X size={9} />
                   </button>
@@ -294,20 +285,20 @@ export function ActivityCard({ activity, dayId }: Props) {
           {/* Add memo button (when no memos and no input shown) */}
           {(!activity.memos || activity.memos.length === 0) && !showMemoInput && (
             <button
-              onClick={() => setShowMemoInput(true)}
+              onClick={(e) => { e.stopPropagation(); setShowMemoInput(true); }}
               onPointerDown={(e) => e.stopPropagation()}
-              className="mt-1.5 text-[11px] text-blue-500 hover:text-blue-600 flex items-center gap-0.5 transition-colors"
+              className="mt-1.5 text-[11px] text-blue-500 hover:text-blue-600 active:text-blue-700 flex items-center gap-1 py-1.5 px-2 -ml-2 rounded-lg hover:bg-blue-50 active:bg-blue-100 transition-colors min-h-[36px]"
             >
-              <Plus size={11} /> {t('memo.addMemo')}
+              <Plus size={13} /> {t('memo.addMemo')}
             </button>
           )}
           {activity.memos && activity.memos.length > 0 && !showMemoInput && (
             <button
-              onClick={() => setShowMemoInput(true)}
+              onClick={(e) => { e.stopPropagation(); setShowMemoInput(true); }}
               onPointerDown={(e) => e.stopPropagation()}
-              className="mt-0.5 text-[10px] text-blue-500 hover:text-blue-600 flex items-center gap-0.5 transition-colors"
+              className="mt-0.5 text-[10px] text-blue-500 hover:text-blue-600 active:text-blue-700 flex items-center gap-0.5 p-1.5 -ml-1.5 rounded-lg hover:bg-blue-50 active:bg-blue-100 transition-colors min-h-[32px] min-w-[32px] justify-center"
             >
-              <Plus size={9} />
+              <Plus size={12} />
             </button>
           )}
 
@@ -321,8 +312,9 @@ export function ActivityCard({ activity, dayId }: Props) {
                   <OwnerBadge owner={exp.owner} />
                   <span className="text-spain-red font-bold tabular-nums ml-auto flex-shrink-0">{format(exp.amount)}</span>
                   <button
-                    onClick={() => removeActivityExpense(dayId, activity.id, exp.id)}
+                    onClick={(e) => { e.stopPropagation(); removeActivityExpense(dayId, activity.id, exp.id); }}
                     className="text-gray-200 hover:text-red-400 transition-colors sm:opacity-0 sm:group-hover/expense:opacity-100 flex-shrink-0"
+                    aria-label={t('activity.delete')}
                   >
                     <X size={10} />
                   </button>
@@ -346,7 +338,7 @@ export function ActivityCard({ activity, dayId }: Props) {
                   step="0.01"
                   value={expenseAmount}
                   onChange={(e) => setExpenseAmount(e.target.value)}
-                  placeholder={t('expense.amountPlaceholder')}
+                  placeholder={`${currencySymbol} ${t('expense.amountPlaceholder')}`}
                   className="w-16 text-[10px] px-1.5 py-1 border border-gray-200 rounded-lg outline-none focus:ring-1 focus:ring-spain-red/30 bg-white"
                   autoFocus
                 />
@@ -370,6 +362,7 @@ export function ActivityCard({ activity, dayId }: Props) {
                 <button
                   onClick={() => { setShowExpenseForm(false); setExpenseAmount(''); setExpenseDesc(''); setExpenseOwner('shared'); }}
                   className="text-gray-300 hover:text-gray-500 transition-colors flex-shrink-0"
+                  aria-label={t('activity.cancel')}
                 >
                   <X size={12} />
                 </button>
@@ -378,19 +371,16 @@ export function ActivityCard({ activity, dayId }: Props) {
             </div>
           ) : (
             <button
-              onClick={() => setShowExpenseForm(true)}
+              onClick={(e) => { e.stopPropagation(); setShowExpenseForm(true); }}
               onPointerDown={(e) => e.stopPropagation()}
-              className="mt-1 text-[11px] text-gray-500 hover:text-spain-red flex items-center gap-0.5 transition-colors"
+              className="mt-1 text-[11px] text-gray-500 hover:text-spain-red active:text-spain-red-dark flex items-center gap-1 py-1.5 px-2 -ml-2 rounded-lg hover:bg-spain-red/5 active:bg-spain-red/10 transition-colors min-h-[36px]"
             >
-              <Receipt size={11} /> {t('expense.addExpense')}
+              <Receipt size={13} /> {t('expense.addExpense')}
             </button>
           )}
 
           {/* Bottom info row */}
-          <div className={`flex items-center gap-3 mt-2.5 ${isCompleted || isSkipped ? 'opacity-50' : ''}`}>
-            <span className="flex items-center gap-1 text-xs text-gray-500">
-              <Clock size={13} /> {activity.duration}
-            </span>
+          <div className={`flex items-center gap-2.5 mt-2.5 ${isCompleted || isSkipped ? 'opacity-50' : ''}`}>
             {activity.lat && activity.lng ? (
               <a
                 href={`https://www.google.com/maps/dir/?api=1&destination=${activity.lat},${activity.lng}`}
@@ -408,13 +398,34 @@ export function ActivityCard({ activity, dayId }: Props) {
               </span>
             )}
 
-            {/* Action buttons - always visible bottom-right */}
-            <div className="ml-auto flex items-center gap-0.5 relative" ref={actionsRef}>
+            {/* Cost */}
+            <div className="ml-auto flex items-center gap-1.5 flex-shrink-0">
+              {activity.estimatedCost > 0 && (
+                <span className={`text-[11px] tabular-nums ${totalExpenseAmount > 0 ? 'text-gray-400 line-through decoration-gray-300' : isSkipped ? 'text-gray-400' : 'text-spain-red font-bold'}`}>
+                  {format(activity.estimatedCost)}
+                </span>
+              )}
+              {totalExpenseAmount > 0 && (
+                <span className={`text-[13px] font-bold tabular-nums ${
+                  activity.estimatedCost > 0 && totalExpenseAmount > activity.estimatedCost
+                    ? 'text-red-500'
+                    : activity.estimatedCost > 0 && totalExpenseAmount <= activity.estimatedCost
+                    ? 'text-emerald-600'
+                    : 'text-spain-red'
+                }`}>
+                  {format(totalExpenseAmount)}
+                </span>
+              )}
+            </div>
+
+            {/* Action buttons */}
+            <div className="flex items-center gap-0.5 relative flex-shrink-0" ref={actionsRef}>
               {/* More actions toggle */}
               <button
                 onClick={(e) => { e.stopPropagation(); setShowActions(!showActions); }}
                 onPointerDown={(e) => e.stopPropagation()}
                 className="p-1 text-gray-300 hover:text-gray-500 rounded-lg hover:bg-gray-100/60 transition-colors"
+                aria-label={t('activity.edit')}
               >
                 <MoreHorizontal size={16} />
               </button>
