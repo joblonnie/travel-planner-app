@@ -82,7 +82,7 @@ function PlacesSearch({ onSelect }: { onSelect: (dest: Destination) => void }) {
           value={inputValue}
           onChange={(e) => setInputValue(e.target.value)}
           placeholder={t('citySearch.placeholder')}
-          className="w-full text-xs pl-8 pr-3 py-1.5 border border-gray-200 rounded-lg bg-white focus:ring-2 focus:ring-spain-red/20 focus:border-spain-red outline-none"
+          className="w-full text-xs pl-8 pr-3 py-1.5 border border-gray-200 rounded-lg bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
         />
       </div>
     </Autocomplete>
@@ -111,12 +111,12 @@ function ManualCityInput({ onSelect }: { onSelect: (dest: Destination) => void }
           onChange={(e) => setCityName(e.target.value)}
           onKeyDown={(e) => { if (e.key === 'Enter') handleAdd(); }}
           placeholder={t('citySearch.placeholder')}
-          className="w-full text-xs pl-8 pr-16 py-1.5 border border-gray-200 rounded-lg bg-white focus:ring-2 focus:ring-spain-red/20 focus:border-spain-red outline-none"
+          className="w-full text-xs pl-8 pr-16 py-1.5 border border-gray-200 rounded-lg bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none"
         />
         {cityName.trim() && (
           <button
             onClick={handleAdd}
-            className="absolute right-1 top-1/2 -translate-y-1/2 text-[10px] px-2 py-0.5 bg-spain-red text-white rounded font-bold hover:bg-spain-red-dark transition-colors"
+            className="absolute right-1 top-1/2 -translate-y-1/2 text-[10px] px-2 py-0.5 bg-primary text-white rounded font-bold hover:bg-primary-dark transition-colors"
           >
             {t('activityForm.add')}
           </button>

@@ -117,19 +117,19 @@ export function ActivityDetailModal({ activity, dayId, onClose }: Props) {
 
   return (
     <>
-      <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-md" onClick={onClose}>
+      <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-md animate-backdrop" onClick={onClose}>
         <div
-          className="bg-white w-full sm:max-w-lg sm:rounded-3xl rounded-t-3xl shadow-2xl border border-gray-100/50 max-h-[90vh] overflow-hidden flex flex-col"
+          className="bg-surface w-full sm:max-w-lg sm:rounded-3xl rounded-t-3xl shadow-2xl border border-gray-200/80 max-h-[90vh] overflow-hidden flex flex-col animate-sheet-up sm:animate-modal-pop"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="p-4 border-b border-gray-100/80 bg-gradient-to-r from-warm-50 to-amber-50/30 sm:rounded-t-3xl">
+          <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-warm-50 to-accent-cream/30 sm:rounded-t-3xl">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2 min-w-0">
                 <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full ${typeColors[activity.type] || 'bg-gray-500 text-white'}`}>
                   {typeLabel}
                 </span>
-                <h3 className="font-bold text-spain-dark truncate">{activity.nameKo}</h3>
+                <h3 className="font-bold text-theme-dark truncate">{activity.nameKo}</h3>
               </div>
               <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center flex-shrink-0">
                 <X size={20} />
@@ -194,7 +194,7 @@ export function ActivityDetailModal({ activity, dayId, onClose }: Props) {
                       <Receipt size={14} className="text-gray-400 flex-shrink-0" />
                       <span className="text-sm text-gray-700 flex-1 truncate">{exp.description}</span>
                       <OwnerBadge owner={exp.owner} />
-                      <span className="text-sm font-bold text-spain-red tabular-nums flex-shrink-0">{format(exp.amount)}</span>
+                      <span className="text-sm font-bold text-primary tabular-nums flex-shrink-0">{format(exp.amount)}</span>
                       <button
                         onClick={() => removeActivityExpense(dayId, activity.id, exp.id)}
                         className="p-1 text-gray-300 hover:text-red-400 transition-colors sm:opacity-0 sm:group-hover:opacity-100 flex-shrink-0"
@@ -205,7 +205,7 @@ export function ActivityDetailModal({ activity, dayId, onClose }: Props) {
                   ))}
                   <div className="flex items-center justify-between px-3 py-1.5 text-xs">
                     <span className="text-gray-400 font-medium">{t('expense.totalSpent')}</span>
-                    <span className="font-bold text-spain-red">{format(totalExpenses)}</span>
+                    <span className="font-bold text-primary">{format(totalExpenses)}</span>
                   </div>
                 </div>
               )}
@@ -219,7 +219,7 @@ export function ActivityDetailModal({ activity, dayId, onClose }: Props) {
                       value={expenseAmount}
                       onChange={(e) => setExpenseAmount(e.target.value)}
                       placeholder="0.00"
-                      className="w-24 px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-spain-red/20 outline-none min-h-[44px]"
+                      className="w-24 px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 outline-none min-h-[44px]"
                       autoFocus
                     />
                     <input
@@ -228,7 +228,7 @@ export function ActivityDetailModal({ activity, dayId, onClose }: Props) {
                       onChange={(e) => setExpenseDesc(e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && handleAddExpense()}
                       placeholder={t('expense.descPlaceholder')}
-                      className="flex-1 min-w-0 px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-spain-red/20 outline-none min-h-[44px]"
+                      className="flex-1 min-w-0 px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 outline-none min-h-[44px]"
                     />
                   </div>
                   <OwnerSelector value={expenseOwner} onChange={setExpenseOwner} size="sm" />
@@ -241,7 +241,7 @@ export function ActivityDetailModal({ activity, dayId, onClose }: Props) {
                     </button>
                     <button
                       onClick={handleAddExpense}
-                      className="flex-1 bg-spain-red text-white py-2.5 rounded-xl font-bold text-sm min-h-[44px]"
+                      className="flex-1 bg-primary text-white py-2.5 rounded-xl font-bold text-sm min-h-[44px]"
                     >
                       {t('activityForm.add')}
                     </button>
@@ -250,7 +250,7 @@ export function ActivityDetailModal({ activity, dayId, onClose }: Props) {
               ) : (
                 <button
                   onClick={() => setShowExpenseForm(true)}
-                  className="flex items-center gap-1.5 text-sm text-spain-red font-bold hover:underline min-h-[44px]"
+                  className="flex items-center gap-1.5 text-sm text-primary font-bold hover:underline min-h-[44px]"
                 >
                   <Plus size={14} /> {t('expense.addExpense')}
                 </button>
@@ -342,7 +342,7 @@ export function ActivityDetailModal({ activity, dayId, onClose }: Props) {
                   href={`https://www.google.com/maps/dir/?api=1&destination=${activity.lat},${activity.lng}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="flex items-center gap-2 bg-spain-red/5 border border-spain-red/20 rounded-xl px-4 py-3 text-spain-red font-bold text-sm hover:bg-spain-red/10 transition-colors min-h-[44px]"
+                  className="flex items-center gap-2 bg-primary/5 border border-primary/20 rounded-xl px-4 py-3 text-primary font-bold text-sm hover:bg-primary/10 transition-colors min-h-[44px]"
                 >
                   <MapPin size={16} /> {t('activity.navigate')}
                 </a>

@@ -1,11 +1,19 @@
 import { useState, useRef } from 'react';
-import { X, Settings, Globe, Download, Upload, FileSpreadsheet } from 'lucide-react';
+import { X, Settings, Globe, Download, Upload, FileSpreadsheet, Palette, Check, RefreshCw } from 'lucide-react';
 import { useTripStore } from '../store/useTripStore.ts';
 import { useTripData } from '../store/useCurrentTrip.ts';
 import { useI18n, type TranslationKey } from '../i18n/useI18n.ts';
 import { useCurrency } from '../hooks/useCurrency.ts';
+import { useExchangeRates } from '../hooks/useExchangeRates.ts';
 import { useEscKey } from '../hooks/useEscKey.ts';
 import { languageNames } from '../i18n/translations.ts';
+import type { ThemeId } from '../types/index.ts';
+
+const themes: { id: ThemeId; nameKey: TranslationKey; descKey: TranslationKey; colors: string[] }[] = [
+  { id: 'cloud-dancer', nameKey: 'theme.cloudDancer' as TranslationKey, descKey: 'theme.cloudDancerDesc' as TranslationKey, colors: ['#1E2D4F', '#8B734A', '#9E7B8A', '#F0EEE9'] },
+  { id: 'classic-spain', nameKey: 'theme.classicSpain' as TranslationKey, descKey: 'theme.classicSpainDesc' as TranslationKey, colors: ['#be123c', '#d97706', '#fb7185', '#fafaf9'] },
+  { id: 'mocha-mousse', nameKey: 'theme.mochaMousse' as TranslationKey, descKey: 'theme.mochaMousseDesc' as TranslationKey, colors: ['#6B4C3B', '#A47864', '#D4A889', '#FAF8F5'] },
+];
 
 interface Props {
   onClose: () => void;
@@ -16,6 +24,9 @@ export function TripSettingsModal({ onClose }: Props) {
   const store = useTripStore();
   const tripData = useTripData((trip) => trip);
   const { currency } = useCurrency();
+  const { refreshRates } = useExchangeRates();
+  const ratesUpdatedAt = useTripStore((s) => s.ratesUpdatedAt);
+  const [refreshing, setRefreshing] = useState(false);
   useEscKey(onClose);
 
   const [tripName, setTripName] = useState(tripData.tripName);
@@ -103,14 +114,22 @@ export function TripSettingsModal({ onClose }: Props) {
     onClose();
   };
 
+  const handleRefreshRates = async () => {
+    setRefreshing(true);
+    await refreshRates();
+    const newRate = useTripStore.getState().fetchedRates?.KRW;
+    if (newRate) setExchangeRate(newRate);
+    setRefreshing(false);
+  };
+
   const dayCount = startDate && endDate
     ? Math.max(1, Math.ceil((new Date(endDate).getTime() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1)
     : 0;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-md sm:p-4" onClick={onClose}>
-      <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl max-w-md w-full overflow-hidden border border-gray-100/50" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between p-4 border-b border-gray-100/80">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-md sm:p-4 animate-backdrop" onClick={onClose}>
+      <div className="bg-surface rounded-t-3xl sm:rounded-3xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-hidden flex flex-col border border-gray-200/80 animate-sheet-up sm:animate-modal-pop" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between p-4 border-b border-gray-200">
           <div className="flex items-center gap-2.5">
             <div className="w-7 h-7 bg-gradient-to-br from-gray-600 to-gray-700 rounded-lg flex items-center justify-center shadow-sm">
               <Settings size={14} className="text-white" />
@@ -122,14 +141,14 @@ export function TripSettingsModal({ onClose }: Props) {
           </button>
         </div>
 
-        <div className="p-4 space-y-4">
+        <div className="p-4 space-y-4 overflow-y-auto flex-1">
           <div>
             <label className="block text-xs font-medium text-gray-500 mb-1">{t('settings.tripName')}</label>
             <input
               type="text"
               value={tripName}
               onChange={(e) => setTripName(e.target.value)}
-              className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-spain-red/20 focus:border-spain-red/40 outline-none bg-gray-50/30 focus:bg-white transition-colors"
+              className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary/40 outline-none bg-gray-50/30 focus:bg-white transition-colors"
             />
           </div>
 
@@ -140,7 +159,7 @@ export function TripSettingsModal({ onClose }: Props) {
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-spain-red/20 focus:border-spain-red/40 outline-none bg-gray-50/30 focus:bg-white transition-colors"
+                className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary/40 outline-none bg-gray-50/30 focus:bg-white transition-colors"
               />
             </div>
             <div>
@@ -149,7 +168,7 @@ export function TripSettingsModal({ onClose }: Props) {
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-spain-red/20 focus:border-spain-red/40 outline-none bg-gray-50/30 focus:bg-white transition-colors"
+                className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary/40 outline-none bg-gray-50/30 focus:bg-white transition-colors"
               />
             </div>
           </div>
@@ -166,18 +185,34 @@ export function TripSettingsModal({ onClose }: Props) {
                 value={totalBudget}
                 onChange={(e) => setTotalBudget(Number(e.target.value))}
                 min={0}
-                className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-spain-red/20 focus:border-spain-red/40 outline-none bg-gray-50/30 focus:bg-white transition-colors"
+                className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary/40 outline-none bg-gray-50/30 focus:bg-white transition-colors"
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">{t('currency.rate')} (1 EUR = ? KRW)</label>
+              <label className="block text-xs font-medium text-gray-500 mb-1">{t('currency.rate')} (₩/€)</label>
               <input
                 type="number"
                 value={exchangeRate}
                 onChange={(e) => setExchangeRate(Number(e.target.value))}
                 min={1}
-                className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-spain-red/20 focus:border-spain-red/40 outline-none bg-gray-50/30 focus:bg-white transition-colors"
+                className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary/40 outline-none bg-gray-50/30 focus:bg-white transition-colors"
               />
+              <div className="flex items-center justify-between mt-1.5">
+                <span className="text-[10px] text-gray-400">
+                  {ratesUpdatedAt
+                    ? `${t('currency.lastUpdated' as TranslationKey)}: ${new Date(ratesUpdatedAt).toLocaleString()}`
+                    : ''}
+                </span>
+                <button
+                  type="button"
+                  onClick={handleRefreshRates}
+                  disabled={refreshing}
+                  className="flex items-center gap-1 text-[10px] text-primary hover:text-primary-dark transition-colors disabled:opacity-50"
+                >
+                  <RefreshCw size={10} className={refreshing ? 'animate-spin' : ''} />
+                  {t('currency.refresh' as TranslationKey)}
+                </button>
+              </div>
             </div>
           </div>
 
@@ -219,12 +254,52 @@ export function TripSettingsModal({ onClose }: Props) {
               ))}
             </div>
           </div>
+
+          {/* Theme Selector */}
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1.5 flex items-center gap-1">
+              <Palette size={12} /> {t('theme.title' as TranslationKey)}
+            </label>
+            <div className="grid grid-cols-3 gap-2">
+              {themes.map((theme) => {
+                const isActive = store.theme === theme.id;
+                return (
+                  <button
+                    key={theme.id}
+                    onClick={() => store.setTheme(theme.id)}
+                    className={`relative flex flex-col items-center gap-1.5 p-3 rounded-xl border transition-all ${
+                      isActive
+                        ? 'border-primary bg-primary/5 shadow-sm ring-1 ring-primary/20'
+                        : 'border-gray-300/80 hover:border-gray-300 hover:bg-gray-50'
+                    }`}
+                  >
+                    {isActive && (
+                      <div className="absolute top-1.5 right-1.5 w-4 h-4 bg-primary rounded-full flex items-center justify-center">
+                        <Check size={10} className="text-white" />
+                      </div>
+                    )}
+                    <div className="flex gap-0.5">
+                      {theme.colors.map((color, i) => (
+                        <div
+                          key={i}
+                          className="w-5 h-5 rounded-full border border-gray-300/70"
+                          style={{ backgroundColor: color }}
+                        />
+                      ))}
+                    </div>
+                    <span className="text-[11px] font-bold text-gray-700 leading-tight text-center">{t(theme.nameKey)}</span>
+                    <span className="text-[9px] text-gray-400 leading-tight text-center">{t(theme.descKey)}</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </div>
 
-        <div className="p-4 border-t border-gray-100/80 bg-gray-50/30 rounded-b-3xl">
+        <div className="p-4 border-t border-gray-200 bg-gray-50/30 rounded-b-3xl">
           <button
             onClick={handleSave}
-            className="w-full bg-gradient-to-r from-spain-red to-rose-500 text-white py-2.5 rounded-xl font-bold hover:shadow-lg hover:shadow-spain-red/20 transition-all active:scale-[0.98]"
+            className="w-full bg-gradient-to-r from-primary to-cta-end text-white py-2.5 rounded-xl font-bold hover:shadow-lg hover:shadow-primary/20 transition-all active:scale-[0.98]"
           >
             {t('settings.save')}
           </button>

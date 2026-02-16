@@ -1,14 +1,15 @@
 import { useTripStore } from '../store/useTripStore.ts';
 
-export type Currency = 'EUR' | 'KRW' | 'USD' | 'JPY';
+export type Currency = 'EUR' | 'KRW' | 'USD' | 'JPY' | 'CNY';
 
-export const CURRENCIES: Currency[] = ['EUR', 'KRW', 'USD', 'JPY'];
+export const CURRENCIES: Currency[] = ['EUR', 'KRW', 'USD', 'JPY', 'CNY'];
 
 export const currencySymbols: Record<Currency, string> = {
   EUR: '€',
   KRW: '₩',
   USD: '$',
   JPY: '¥',
+  CNY: '¥',
 };
 
 export const currencyLabels: Record<Currency, string> = {
@@ -16,6 +17,7 @@ export const currencyLabels: Record<Currency, string> = {
   KRW: 'KRW',
   USD: 'USD',
   JPY: 'JPY',
+  CNY: 'CNY',
 };
 
 // Default rates: 1 EUR = X units
@@ -24,6 +26,7 @@ const DEFAULT_RATES: Record<Currency, number> = {
   KRW: 1450,
   USD: 1.08,
   JPY: 165,
+  CNY: 7.8,
 };
 
 export function useCurrency() {
@@ -31,12 +34,22 @@ export function useCurrency() {
   const exchangeRate = useTripStore((s) => s.exchangeRate);
   const setCurrency = useTripStore((s) => s.setCurrency);
   const setExchangeRate = useTripStore((s) => s.setExchangeRate);
+  const fetchedRates = useTripStore((s) => s.fetchedRates);
 
-  const rate = currency === 'EUR' ? 1 : (DEFAULT_RATES[currency] ?? exchangeRate);
+  const rates: Record<Currency, number> = {
+    ...DEFAULT_RATES,
+    ...(fetchedRates as Partial<Record<Currency, number>>),
+  };
+  const rate = currency === 'EUR' ? 1 : (rates[currency] ?? exchangeRate);
 
   const convert = (amountEur: number): number => {
     if (currency === 'EUR') return amountEur;
     return Math.round(amountEur * rate);
+  };
+
+  const toEur = (amountLocal: number): number => {
+    if (currency === 'EUR') return amountLocal;
+    return amountLocal / rate;
   };
 
   const format = (amountEur: number): string => {
@@ -45,10 +58,10 @@ export function useCurrency() {
       const hasDecimal = amountEur % 1 !== 0;
       return `${sym}${amountEur.toLocaleString('en', { minimumFractionDigits: 0, maximumFractionDigits: hasDecimal ? 2 : 0 })}`;
     }
-    if (currency === 'USD') {
-      const usd = amountEur * rate;
-      const hasDecimal = usd % 1 !== 0;
-      return `${sym}${usd.toLocaleString('en', { minimumFractionDigits: 0, maximumFractionDigits: hasDecimal ? 2 : 0 })}`;
+    if (currency === 'USD' || currency === 'CNY') {
+      const val = amountEur * rate;
+      const hasDecimal = val % 1 !== 0;
+      return `${sym}${val.toLocaleString('en', { minimumFractionDigits: 0, maximumFractionDigits: hasDecimal ? 2 : 0 })}`;
     }
     // KRW, JPY — no decimals
     const converted = Math.round(amountEur * rate);
@@ -75,10 +88,11 @@ export function useCurrency() {
     setCurrency,
     setExchangeRate,
     convert,
+    toEur,
     format,
     formatWithBoth,
     symbol,
     nextCurrency,
-    DEFAULT_RATES,
+    rate,
   };
 }

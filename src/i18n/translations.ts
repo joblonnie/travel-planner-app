@@ -30,6 +30,7 @@ export const translations = {
   'day.notes': { ko: '메모', en: 'Notes', es: 'Notas' },
   'day.walkAbout': { ko: '도보 약 ', en: '~', es: '~' },
   'day.minutes': { ko: '분', en: 'min', es: 'min' },
+  'day.hours': { ko: '시간', en: 'h', es: 'h' },
   'day.remaining': { ko: '남은 거리 ', en: 'left ', es: 'restante ' },
 
   // Activity Types
@@ -43,6 +44,7 @@ export const translations = {
   'activity.booked': { ko: '예약완료', en: 'Booked', es: 'Reservado' },
   'activity.viewMap': { ko: '길찾기', en: 'Navigate', es: 'Navegar' },
   'activity.edit': { ko: '일정 수정', en: 'Edit', es: 'Editar' },
+  'activity.moreActions': { ko: '더보기', en: 'More actions', es: 'Más acciones' },
   'activity.delete': { ko: '일정 삭제', en: 'Delete', es: 'Eliminar' },
   'activity.deleteConfirm': { ko: '일정을 삭제하시겠습니까?', en: 'Delete this activity?', es: '¿Eliminar esta actividad?' },
   'activity.cancel': { ko: '취소', en: 'Cancel', es: 'Cancelar' },
@@ -53,6 +55,7 @@ export const translations = {
   'activity.undoDone': { ko: '완료 취소', en: 'Undo done', es: 'Deshacer hecho' },
   'activity.undoSkipped': { ko: '스킵 취소', en: 'Undo skip', es: 'Deshacer omitido' },
   'activity.noLocation': { ko: '위치 없음', en: 'No location', es: 'Sin ubicación' },
+  'activity.addLocation': { ko: '위치 추가', en: 'Add location', es: 'Añadir ubicación' },
   'activity.navigate': { ko: '길찾기', en: 'Navigate', es: 'Navegar' },
 
   // Booking Modal
@@ -134,6 +137,8 @@ export const translations = {
   'currency.krw': { ko: 'KRW (원)', en: 'KRW (Won)', es: 'KRW (Won)' },
   'currency.toggle': { ko: '통화 전환', en: 'Toggle Currency', es: 'Cambiar Moneda' },
   'currency.rate': { ko: '환율', en: 'Exchange Rate', es: 'Tipo de Cambio' },
+  'currency.lastUpdated': { ko: '마지막 업데이트', en: 'Last updated', es: 'Última actualización' },
+  'currency.refresh': { ko: '새로고침', en: 'Refresh', es: 'Actualizar' },
 
   // Settings
   'settings.language': { ko: '언어', en: 'Language', es: 'Idioma' },
@@ -283,8 +288,10 @@ export const translations = {
   'settlement.owes': { ko: '정산 필요', en: 'owes', es: 'debe' },
   'settlement.settled': { ko: '정산 완료', en: 'Settled', es: 'Liquidado' },
 
-  // Camera OCR
-  'camera.title': { ko: '카메라 환율 변환', en: 'Camera Currency', es: 'Cámara Moneda' },
+  // Camera OCR / Currency Calculator
+  'camera.title': { ko: '환율 계산기', en: 'Currency Calc', es: 'Calculadora' },
+  'camera.tabCalc': { ko: '계산기', en: 'Calculator', es: 'Calculadora' },
+  'camera.tabOcr': { ko: 'OCR 촬영', en: 'OCR Scan', es: 'Escaneo OCR' },
   'camera.capture': { ko: '촬영', en: 'Capture', es: 'Capturar' },
   'camera.retake': { ko: '다시 촬영', en: 'Retake', es: 'Repetir' },
   'camera.detecting': { ko: '금액 인식 중...', en: 'Detecting...', es: 'Detectando...' },
@@ -351,6 +358,8 @@ export const translations = {
 
   // Place
   'day.addPlace': { ko: '장소 추가', en: 'Add Place', es: 'Agregar Lugar' },
+  'day.addActivityDesc': { ko: '시간·비용 포함', en: 'With time & cost', es: 'Con hora y costo' },
+  'day.addPlaceDesc': { ko: '위치만 등록', en: 'Location only', es: 'Solo ubicación' },
   'addPlace.title': { ko: '장소 추가', en: 'Add Place', es: 'Agregar Lugar' },
 
   // Accommodation
@@ -427,6 +436,16 @@ export const translations = {
 
   // Camera OCR
   'camera.ocrResult': { ko: 'OCR 인식 결과', en: 'OCR Result', es: 'Resultado OCR' },
+
+  // Theme
+  'theme.title': { ko: '테마', en: 'Theme', es: 'Tema' },
+  'theme.cloudDancer': { ko: 'Cloud Dancer', en: 'Cloud Dancer', es: 'Cloud Dancer' },
+  'theme.cloudDancerDesc': { ko: '2026 팬톤 올해의 색', en: '2026 Pantone COTY', es: 'Pantone COTY 2026' },
+  'theme.classicSpain': { ko: 'Classic Spain', en: 'Classic Spain', es: 'España Clásica' },
+  'theme.classicSpainDesc': { ko: '열정의 빨강과 금색', en: 'Passionate red & gold', es: 'Rojo y dorado apasionado' },
+  'theme.mochaMousse': { ko: 'Mocha Mousse', en: 'Mocha Mousse', es: 'Mocha Mousse' },
+  'theme.mochaMousseDesc': { ko: '2025 팬톤 올해의 색', en: '2025 Pantone COTY', es: 'Pantone COTY 2025' },
+  'theme.scrollToTop': { ko: '맨 위로', en: 'Top', es: 'Arriba' },
 } as const;
 
 export type TranslationKey = keyof typeof translations;

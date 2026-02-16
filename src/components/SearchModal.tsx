@@ -49,22 +49,25 @@ export function SearchModal({ onClose }: Props) {
         .filter(Boolean) as { day: typeof days[number]; dayIndex: number; activities: typeof days[number]['activities'] }[]
     : [];
 
+  const setCurrentPage = useTripStore((s) => s.setCurrentPage);
+
   const handleSelect = (dayIndex: number) => {
     setCurrentDay(dayIndex);
+    setCurrentPage('planner');
     onClose();
   };
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-md sm:p-4"
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-md sm:p-4 animate-backdrop"
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl max-w-lg w-full max-h-[85vh] sm:max-h-[90vh] flex flex-col border border-gray-100/50"
+        className="bg-surface rounded-t-3xl sm:rounded-3xl shadow-2xl max-w-lg w-full h-[92vh] sm:h-auto sm:max-h-[90vh] flex flex-col border border-card-border animate-sheet-up sm:animate-modal-pop"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-100/80">
+        <div className="flex items-center justify-between p-4 border-b border-gray-200">
           <h3 className="font-bold text-gray-800">{t('feature.search' as TranslationKey)}</h3>
           <button onClick={onClose} className="p-1.5 hover:bg-gray-100 rounded-xl transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center">
             <X size={18} className="text-gray-400" />
@@ -72,8 +75,8 @@ export function SearchModal({ onClose }: Props) {
         </div>
 
         {/* Search input */}
-        <div className="p-4 border-b border-gray-100/80">
-          <div className="flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-2.5 border border-gray-200/60">
+        <div className="p-4 border-b border-gray-200">
+          <div className="flex items-center gap-2 bg-gray-50 rounded-xl px-3 py-2.5 border border-gray-300/80">
             <Search size={16} className="text-gray-400 shrink-0" />
             <input
               ref={inputRef}

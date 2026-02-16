@@ -51,8 +51,8 @@ export function FlightFormModal({ dayId, flight, onClose }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-md sm:p-4" onClick={onClose}>
-      <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto border border-blue-100/30" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-md sm:p-4 animate-backdrop" onClick={onClose}>
+      <div className="bg-surface rounded-t-3xl sm:rounded-3xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto border border-blue-100/30 animate-sheet-up sm:animate-modal-pop" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-blue-100/50 sticky top-0 bg-gradient-to-r from-white to-blue-50/30 backdrop-blur-sm z-10 rounded-t-3xl">
           <h3 className="font-bold text-gray-800 flex items-center gap-2.5">
@@ -164,7 +164,7 @@ export function FlightFormModal({ dayId, flight, onClose }: Props) {
         </div>
 
         {/* Save */}
-        <div className="p-4 border-t border-gray-100/80 bg-gray-50/30 rounded-b-3xl">
+        <div className="p-4 border-t border-gray-200 bg-gray-50/30 rounded-b-3xl">
           <button
             onClick={handleSave}
             disabled={!airline.trim() && !flightNumber.trim()}

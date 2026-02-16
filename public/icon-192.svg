@@ -1,5 +1,37 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192">
-  <rect width="192" height="192" rx="32" fill="#c60b1e"/>
-  <rect y="64" width="192" height="64" fill="#ffc400"/>
-  <text x="96" y="108" text-anchor="middle" font-size="64" font-family="Arial">✈️</text>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#1E2D4F"/>
+      <stop offset="100%" stop-color="#2A3F6A"/>
+    </linearGradient>
+    <linearGradient id="plane" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="100%" stop-color="#E8E4DF"/>
+    </linearGradient>
+    <linearGradient id="heart" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FF6B8A"/>
+      <stop offset="100%" stop-color="#E8456B"/>
+    </linearGradient>
+    <linearGradient id="trail" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#8B734A" stop-opacity="0.8"/>
+      <stop offset="100%" stop-color="#8B734A" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <!-- Background -->
+  <rect width="192" height="192" rx="40" fill="url(#bg)"/>
+  <!-- Subtle globe circle -->
+  <circle cx="96" cy="100" r="52" fill="none" stroke="#FFFFFF" stroke-opacity="0.06" stroke-width="1.5"/>
+  <ellipse cx="96" cy="100" rx="28" ry="52" fill="none" stroke="#FFFFFF" stroke-opacity="0.06" stroke-width="1"/>
+  <line x1="44" y1="100" x2="148" y2="100" stroke="#FFFFFF" stroke-opacity="0.05" stroke-width="1"/>
+  <!-- Dotted trail -->
+  <path d="M 40 130 Q 70 110 96 100 Q 122 90 152 70" fill="none" stroke="url(#trail)" stroke-width="2" stroke-dasharray="4 4" stroke-linecap="round"/>
+  <!-- Airplane -->
+  <g transform="translate(96, 82) rotate(-30)">
+    <path d="M0-6 L24-2 L28 0 L24 2 L0 6 L2 2 L-10 8 L-8 2 L-16 4 L-12 0 L-16-4 L-8-2 L-10-8 L2-2 Z" fill="url(#plane)" opacity="0.95"/>
+  </g>
+  <!-- Small heart -->
+  <path d="M96 136 C93 132 84 126 84 120 C84 116 87 113 91 113 C93.5 113 95.5 114.5 96 116 C96.5 114.5 98.5 113 101 113 C105 113 108 116 108 120 C108 126 99 132 96 136Z" fill="url(#heart)"/>
+  <!-- Location pin dot -->
+  <circle cx="140" cy="78" r="3.5" fill="#8B734A" opacity="0.7"/>
+  <circle cx="140" cy="78" r="1.5" fill="#FFFFFF" opacity="0.9"/>
 </svg>

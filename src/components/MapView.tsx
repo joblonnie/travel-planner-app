@@ -25,17 +25,17 @@ function FallbackMap({ activities }: { activities: ScheduledActivity[] }) {
   );
 
   return (
-    <div className="bg-gradient-to-br from-warm-50 to-spain-yellow/10 rounded-2xl h-auto min-h-[200px] flex items-center justify-center border border-spain-yellow/20 p-6">
+    <div className="bg-gradient-to-br from-warm-50 to-secondary/10 rounded-2xl h-auto min-h-[200px] flex items-center justify-center border border-secondary/20 p-6">
       <div className="text-center w-full">
-        <div className="w-12 h-12 bg-spain-red/10 rounded-xl flex items-center justify-center mx-auto mb-3">
-          <MapPin size={24} className="text-spain-red" />
+        <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center mx-auto mb-3">
+          <MapPin size={24} className="text-primary" />
         </div>
-        <p className="text-sm text-spain-dark font-bold">{t('day.todayRoute')}</p>
+        <p className="text-sm text-theme-dark font-bold">{t('day.todayRoute')}</p>
         <p className="text-[11px] text-gray-400 mt-0.5 mb-4">{t('day.showMapWithKey')}</p>
         <div className="space-y-1.5 max-w-sm mx-auto">
           {markers.map((m, i) => (
-            <div key={m.id} className="text-xs text-gray-600 flex items-center gap-2 bg-white/80 rounded-lg px-3 py-1.5 border border-spain-yellow/10">
-              <span className="w-5 h-5 bg-spain-red text-white rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0">{i + 1}</span>
+            <div key={m.id} className="text-xs text-gray-600 flex items-center gap-2 bg-white/80 rounded-lg px-3 py-1.5 border border-secondary/25">
+              <span className="w-5 h-5 bg-primary text-white rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0">{i + 1}</span>
               <span className="truncate font-medium">{m.nameKo}</span>
               <span className="text-gray-300 ml-auto text-[10px] font-mono">{m.time}</span>
             </div>
@@ -44,8 +44,8 @@ function FallbackMap({ activities }: { activities: ScheduledActivity[] }) {
             <div className="flex items-center gap-1 justify-center mt-2">
               {markers.map((_, i) => (
                 <div key={i} className="flex items-center">
-                  <div className="w-2 h-2 rounded-full bg-spain-red" />
-                  {i < markers.length - 1 && <div className="w-6 h-0.5 bg-spain-yellow" />}
+                  <div className="w-2 h-2 rounded-full bg-primary" />
+                  {i < markers.length - 1 && <div className="w-6 h-0.5 bg-secondary" />}
                 </div>
               ))}
             </div>
@@ -92,7 +92,7 @@ export function MapView({ activities, centerLat, centerLng }: Props) {
   }
 
   return (
-    <div className="relative rounded-2xl overflow-hidden border-2 border-spain-yellow/20 h-64 md:h-80 shadow-sm">
+    <div className="relative rounded-2xl overflow-hidden border-2 border-secondary/20 h-64 md:h-80 shadow-sm">
       <GoogleMap
         mapContainerStyle={{ width: '100%', height: '100%' }}
         center={{ lat: centerLat, lng: centerLng }}
@@ -120,7 +120,7 @@ export function MapView({ activities, centerLat, centerLng }: Props) {
               className="bg-white/95 backdrop-blur-sm rounded-lg px-2 py-0.5 shadow-md border border-gray-200 whitespace-nowrap pointer-events-none"
               style={{ transform: 'translate(-50%, -48px)' }}
             >
-              <span className="text-[10px] font-bold text-spain-red mr-1">{i + 1}</span>
+              <span className="text-[10px] font-bold text-primary mr-1">{i + 1}</span>
               <span className="text-[10px] font-medium text-gray-700">{m.nameKo}</span>
             </div>
           </OverlayViewF>

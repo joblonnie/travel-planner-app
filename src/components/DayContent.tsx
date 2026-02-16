@@ -13,8 +13,8 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { Calendar, Navigation, Plus, Clock, Compass, Hotel, ChevronLeft, ChevronRight, AlertTriangle, ArrowUpDown, Footprints, MapPin } from 'lucide-react';
-import { useState } from 'react';
+import { Calendar, Navigation, Plus, Clock, Compass, Hotel, ChevronLeft, ChevronRight, ChevronUp, AlertTriangle, ArrowUpDown, Footprints, MapPin } from 'lucide-react';
+import { useState, useMemo, memo, useEffect, useCallback } from 'react';
 import { useTripStore } from '../store/useTripStore.ts';
 import { useTripData } from '../store/useCurrentTrip.ts';
 import { ActivityCard } from './ActivityCard.tsx';
@@ -31,16 +31,16 @@ import { useI18n, type TranslationKey } from '../i18n/useI18n.ts';
 function InsertButton({ onClick, label }: { onClick: () => void; label: string }) {
   return (
     <div className="group/insert flex items-center py-0.5">
-      <div className="flex-1 h-px bg-gradient-to-r from-transparent via-gray-200/40 to-transparent group-hover/insert:via-spain-red/15 transition-colors" />
+      <div className="flex-1 h-px bg-gradient-to-r from-transparent via-gray-200/40 to-transparent group-hover/insert:via-primary/15 transition-colors" />
       <button
         onClick={onClick}
-        className="flex items-center gap-1 px-2.5 py-0.5 text-[10px] text-gray-300 hover:text-spain-red hover:bg-spain-red/5 rounded-full transition-all opacity-40 group-hover/insert:opacity-100 focus:opacity-100 backdrop-blur-sm"
+        className="flex items-center gap-1 px-2.5 py-0.5 text-[10px] text-gray-300 hover:text-primary hover:bg-primary/5 rounded-full transition-all opacity-40 group-hover/insert:opacity-100 focus:opacity-100 backdrop-blur-sm"
         aria-label={label}
       >
         <Plus size={10} strokeWidth={2.5} />
         <span className="hidden sm:inline font-medium tracking-wide">{label}</span>
       </button>
-      <div className="flex-1 h-px bg-gradient-to-r from-transparent via-gray-200/40 to-transparent group-hover/insert:via-spain-red/15 transition-colors" />
+      <div className="flex-1 h-px bg-gradient-to-r from-transparent via-gray-200/40 to-transparent group-hover/insert:via-primary/15 transition-colors" />
     </div>
   );
 }
@@ -68,107 +68,39 @@ function calcWalkMinutes(meters: number): number {
   return Math.round((meters * 1.3) / 80);
 }
 
-/** Clamp progress 0~1: how far the user is from A toward B */
-function calcWalkProgress(
-  fromLat: number, fromLng: number,
-  toLat: number, toLng: number,
-  userLat: number, userLng: number,
-): number {
-  const total = calcDistanceMeters(fromLat, fromLng, toLat, toLng);
-  if (total < 1) return 0;
-  const walked = calcDistanceMeters(fromLat, fromLng, userLat, userLng);
-  const remaining = calcDistanceMeters(userLat, userLng, toLat, toLng);
-  // Only count as "on this segment" if user is roughly between the two points
-  if (walked + remaining > total * 1.5) return -1; // too far off route
-  return Math.max(0, Math.min(1, walked / total));
+
+/** Compact distance label for the left timeline column */
+function formatWalkTime(minutes: number, tFn: (k: TranslationKey) => string): string {
+  if (minutes < 60) return `${minutes}${tFn('day.minutes' as TranslationKey)}`;
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  if (m === 0) return `${h}${tFn('day.hours' as TranslationKey)}`;
+  return `${h}${tFn('day.hours' as TranslationKey)} ${m}${tFn('day.minutes' as TranslationKey)}`;
 }
 
-const FOOTSTEP_COUNT = 5;
-
-interface DistanceIndicatorProps {
-  fromLat: number;
-  fromLng: number;
-  toLat: number;
-  toLng: number;
-  gpsPosition?: { lat: number; lng: number } | null;
-  gpsEnabled?: boolean;
-}
-
-function DistanceIndicator({ fromLat, fromLng, toLat, toLng, gpsPosition, gpsEnabled }: DistanceIndicatorProps) {
+const DistanceLabel = memo(function DistanceLabel({ fromLat, fromLng, toLat, toLng }: { fromLat: number; fromLng: number; toLat: number; toLng: number }) {
   const straight = calcDistanceMeters(fromLat, fromLng, toLat, toLng);
   const walkMin = calcWalkMinutes(straight);
   const { t } = useI18n();
-
-  // Calculate GPS walking progress
-  const progress = gpsEnabled && gpsPosition
-    ? calcWalkProgress(fromLat, fromLng, toLat, toLng, gpsPosition.lat, gpsPosition.lng)
-    : -1;
-  const isOnSegment = progress >= 0;
-  const activeSteps = isOnSegment ? Math.round(progress * FOOTSTEP_COUNT) : 0;
-  const remainingMeters = isOnSegment ? calcDistanceMeters(gpsPosition!.lat, gpsPosition!.lng, toLat, toLng) : 0;
-
   return (
-    <div className="py-1">
-      {/* Footstep trail (GPS active + on this segment) */}
-      {isOnSegment && (
-        <div className="flex items-center gap-[3px] mb-1">
-          {Array.from({ length: FOOTSTEP_COUNT }).map((_, i) => {
-            const isWalked = i < activeSteps;
-            const isCurrent = i === activeSteps - 1;
-            return (
-              <Footprints
-                key={i}
-                size={10}
-                className={`flex-shrink-0 transition-all duration-300 ${
-                  isWalked
-                    ? isCurrent
-                      ? 'text-spain-red'
-                      : 'text-spain-red/60'
-                    : 'text-gray-200'
-                }`}
-                style={
-                  isCurrent
-                    ? { animation: 'footstep-pulse 1.5s ease-in-out infinite' }
-                    : isWalked
-                    ? { animation: `footstep-walk 2s ease-in-out ${i * 0.3}s infinite` }
-                    : undefined
-                }
-              />
-            );
-          })}
-          <span className="text-[10px] font-bold text-spain-red ml-1 tabular-nums font-mono">
-            {Math.round(progress * 100)}%
-          </span>
-        </div>
-      )}
-
-      {/* Distance info row */}
-      <div className="flex items-center gap-1.5 text-[10px] text-gray-400">
-        {!isOnSegment && (
-          <Footprints size={11} className="text-gray-300 flex-shrink-0" />
-        )}
-        <span className="font-mono tabular-nums font-medium">{formatDistance(straight)}</span>
-        <span className="text-gray-300">·</span>
-        <span className="font-medium">{t('day.walkAbout' as TranslationKey)} {walkMin}{t('day.minutes' as TranslationKey)}</span>
-        {isOnSegment && (
-          <>
-            <span className="text-gray-300">·</span>
-            <span className="font-medium text-spain-red">{t('day.remaining' as TranslationKey)} {formatDistance(remainingMeters)}</span>
-          </>
-        )}
+    <div className="flex flex-col items-center py-1.5 gap-1.5 whitespace-nowrap">
+      <span className="text-[11px] font-bold text-gray-500 font-mono tabular-nums leading-none">{formatDistance(straight)}</span>
+      <div className="flex items-center gap-1">
+        <Footprints size={10} className="text-gray-400 flex-shrink-0" />
+        <span className="text-[10px] font-medium text-gray-400 leading-none">{formatWalkTime(walkMin, t)}</span>
       </div>
     </div>
   );
-}
+});
 
 const destAccentColors: Record<string, string> = {
-  barcelona: 'border-l-spain-red',
+  barcelona: 'border-l-primary',
   cordoba: 'border-l-amber-500',
   granada: 'border-l-emerald-500',
   nerja: 'border-l-cyan-500',
   frigiliana: 'border-l-sky-400',
   ronda: 'border-l-purple-500',
-  malaga: 'border-l-spain-yellow-dark',
+  malaga: 'border-l-secondary-dark',
 };
 
 export function DayContent() {
@@ -185,7 +117,17 @@ export function DayContent() {
   const [showAddPlace, setShowAddPlace] = useState(false);
   const [insertAtIndex, setInsertAtIndex] = useState<number | undefined>(undefined);
   const [reorderMode, setReorderMode] = useState(false);
+  const [showScrollTop, setShowScrollTop] = useState(false);
   const { format } = useCurrency();
+
+  const handleScroll = useCallback(() => {
+    setShowScrollTop(window.scrollY > 300);
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [handleScroll]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -216,12 +158,14 @@ export function DayContent() {
     reorderActivities(currentDay.id, oldIndex, newIndex);
   };
 
-  const accentBorder = destAccentColors[currentDay.destinationId] || 'border-l-spain-red';
+  const accentBorder = destAccentColors[currentDay.destinationId] || 'border-l-primary';
 
   // Activity stats
-  const completedCount = currentDay.activities.filter((a) => a.isCompleted).length;
-  const skippedCount = currentDay.activities.filter((a) => a.isSkipped).length;
-  const totalCount = currentDay.activities.length;
+  const { completedCount, skippedCount, totalCount } = useMemo(() => ({
+    completedCount: currentDay.activities.filter((a) => a.isCompleted).length,
+    skippedCount: currentDay.activities.filter((a) => a.isSkipped).length,
+    totalCount: currentDay.activities.length,
+  }), [currentDay.activities]);
 
   return (
     <main className="flex-1 bg-gradient-to-br from-gray-50/80 via-white/40 to-gray-100/50">
@@ -242,7 +186,7 @@ export function DayContent() {
                   <span className="text-[10px] font-bold tracking-widest text-white/80 uppercase drop-shadow-sm bg-white/10 backdrop-blur-sm px-2 py-0.5 rounded-full">
                     {t('day.day')} {currentDay.dayNumber}
                   </span>
-                  <span className="text-[10px] text-white/60 font-mono drop-shadow-sm">{currentDay.date}</span>
+                  <span className="text-[10px] text-white/90 font-mono drop-shadow-sm">{currentDay.date}</span>
                 </div>
                 <h1 className="text-lg sm:text-xl md:text-2xl font-black text-white tracking-tight drop-shadow-lg truncate">
                   {currentDay.destination}
@@ -270,16 +214,21 @@ export function DayContent() {
                 </div>
 
                 {gpsEnabled ? (
-                  watching && position && (
+                  watching && position ? (
                     <div className="hidden sm:flex items-center gap-1 bg-emerald-400/20 backdrop-blur-md rounded-xl px-2.5 py-1.5 text-[11px] text-white font-medium border border-emerald-400/20">
                       <Navigation size={13} />
                       GPS
+                    </div>
+                  ) : (
+                    <div className="hidden sm:flex items-center gap-1 bg-amber-400/20 backdrop-blur-md rounded-xl px-2.5 py-1.5 text-[11px] text-white/80 font-medium border border-amber-400/20">
+                      <Navigation size={13} className="animate-pulse" />
+                      GPS...
                     </div>
                   )
                 ) : (
                   <button
                     onClick={enableGps}
-                    className="hidden sm:flex items-center gap-1 bg-white/10 backdrop-blur-md rounded-xl px-2.5 py-1.5 text-[11px] text-white/70 font-medium hover:bg-white/20 transition-colors border border-white/10"
+                    className="hidden sm:flex items-center gap-1 bg-white/10 backdrop-blur-md rounded-xl px-2.5 py-1.5 text-[11px] text-white/70 font-medium hover:bg-white/20 transition-colors border border-white/10 cursor-pointer"
                   >
                     <Navigation size={13} />
                     GPS
@@ -300,20 +249,11 @@ export function DayContent() {
                   <span className="text-amber-400 font-bold">({skippedCount})</span>
                 )}
               </div>
-              {/* Day cost: estimated vs actual */}
+              {/* Day cost: estimated only */}
               <div className="text-[10px] sm:text-[11px] text-white backdrop-blur-md px-2.5 sm:px-3 py-1 rounded-full border border-white/10 flex items-center gap-1.5 bg-white/10">
                 <span className="opacity-70">{t('budget.estimated')}</span>
                 <span className="font-bold">{format(getDayCost(currentDay.id))}</span>
               </div>
-              {getDayActualCost(currentDay.id) > 0 && (
-                <div className={`text-[10px] sm:text-[11px] font-bold backdrop-blur-md px-2.5 sm:px-3 py-1 rounded-full border ${
-                  getDayActualCost(currentDay.id) > getDayCost(currentDay.id)
-                    ? 'text-red-200 bg-red-500/30 border-red-400/20'
-                    : 'text-emerald-200 bg-emerald-500/30 border-emerald-400/20'
-                }`}>
-                  {t('budget.actual')} {format(getDayActualCost(currentDay.id))}
-                </div>
-              )}
               <div className="hidden sm:flex items-center gap-1.5 text-[11px] text-white/80 bg-white/10 backdrop-blur-md px-3 py-1 rounded-full border border-white/10">
                 <span>{t('day.total')}</span>
                 <span>{format(getTotalCost())}</span>
@@ -330,7 +270,7 @@ export function DayContent() {
                 <button
                   onClick={goToPrevDay}
                   disabled={currentDayIndex <= 0}
-                  className="flex items-center gap-0.5 text-[11px] text-white font-medium bg-white/15 hover:bg-white/25 backdrop-blur-md px-2 py-1.5 rounded-full border border-white/15 transition-all disabled:opacity-30 disabled:cursor-default min-w-[36px] min-h-[36px] justify-center"
+                  className="flex items-center gap-0.5 text-[11px] text-white font-medium bg-white/15 hover:bg-white/25 backdrop-blur-md px-2 py-1.5 rounded-full border border-white/15 transition-all disabled:opacity-30 disabled:cursor-default min-w-[44px] min-h-[44px] justify-center cursor-pointer focus-visible:ring-2 focus-visible:ring-white/50"
                   aria-label={t('day.prevDay' as TranslationKey)}
                 >
                   <ChevronLeft size={14} />
@@ -338,7 +278,7 @@ export function DayContent() {
                 <button
                   onClick={goToNextDay}
                   disabled={currentDayIndex >= days.length - 1}
-                  className="flex items-center gap-0.5 text-[11px] text-white font-medium bg-white/15 hover:bg-white/25 backdrop-blur-md px-2 py-1.5 rounded-full border border-white/15 transition-all disabled:opacity-30 disabled:cursor-default min-w-[36px] min-h-[36px] justify-center"
+                  className="flex items-center gap-0.5 text-[11px] text-white font-medium bg-white/15 hover:bg-white/25 backdrop-blur-md px-2 py-1.5 rounded-full border border-white/15 transition-all disabled:opacity-30 disabled:cursor-default min-w-[44px] min-h-[44px] justify-center cursor-pointer focus-visible:ring-2 focus-visible:ring-white/50"
                   aria-label={t('day.nextDay' as TranslationKey)}
                 >
                   <ChevronRight size={14} />
@@ -381,7 +321,7 @@ export function DayContent() {
           if (pct < 90) return null;
           const isOver = pct >= 100;
           return (
-            <div className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border ${
+            <div className={`flex items-center gap-2 px-3 py-2.5 rounded-xl border animate-section ${
               isOver
                 ? 'bg-red-50 border-red-200 text-red-700'
                 : 'bg-amber-50 border-amber-200 text-amber-700'
@@ -408,7 +348,7 @@ export function DayContent() {
 
         {/* ── Accommodation info ── */}
         {currentDay.accommodation?.name && (
-          <div className="bg-purple-50/40 backdrop-blur-xl rounded-2xl border border-purple-200/30 px-4 py-3.5 shadow-[0_2px_10px_rgba(139,92,246,0.06)]">
+          <div className="bg-purple-50/40 backdrop-blur-xl rounded-2xl border border-purple-200/30 px-4 py-3.5 shadow-[0_2px_10px_rgba(139,92,246,0.06)] animate-section">
             <div className="flex items-center gap-2 mb-1.5">
               <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-purple-500 to-violet-500 flex items-center justify-center shadow-sm">
                 <Hotel size={12} className="text-white" />
@@ -440,8 +380,8 @@ export function DayContent() {
                 onClick={() => setReorderMode(!reorderMode)}
                 className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all border ${
                   reorderMode
-                    ? 'bg-spain-red text-white border-spain-red shadow-sm shadow-spain-red/20'
-                    : 'bg-gray-100/80 text-gray-500 border-gray-200/50 hover:bg-gray-200/60 hover:text-gray-700'
+                    ? 'bg-primary text-white border-primary shadow-sm shadow-primary/20'
+                    : 'bg-gray-100/80 text-gray-500 border-gray-300/70 hover:bg-gray-200/60 hover:text-gray-700'
                 }`}
               >
                 <ArrowUpDown size={12} />
@@ -449,6 +389,41 @@ export function DayContent() {
               </button>
             )}
           </div>
+
+          {/* Day cost summary: estimated vs actual — above activity list for visibility */}
+          {getDayActualCost(currentDay.id) > 0 && (
+            <div className={`flex items-center justify-between px-4 py-3 rounded-xl border mb-3 ${
+              getDayActualCost(currentDay.id) > getDayCost(currentDay.id)
+                ? 'bg-red-50/60 border-red-200/50'
+                : 'bg-emerald-50/60 border-emerald-200/50'
+            }`}>
+              <div className="flex items-center gap-3 text-xs">
+                <div>
+                  <span className="text-gray-400 block text-[10px]">{t('budget.estimated')}</span>
+                  <span className="font-bold text-gray-600">{format(getDayCost(currentDay.id))}</span>
+                </div>
+                <span className="text-gray-300">→</span>
+                <div>
+                  <span className="text-gray-400 block text-[10px]">{t('budget.actual')}</span>
+                  <span className={`font-bold ${getDayActualCost(currentDay.id) > getDayCost(currentDay.id) ? 'text-red-600' : 'text-emerald-600'}`}>
+                    {format(getDayActualCost(currentDay.id))}
+                  </span>
+                </div>
+              </div>
+              {getDayCost(currentDay.id) > 0 && (
+                <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full ${
+                  getDayActualCost(currentDay.id) > getDayCost(currentDay.id)
+                    ? 'text-red-600 bg-red-100/80'
+                    : 'text-emerald-600 bg-emerald-100/80'
+                }`}>
+                  {getDayActualCost(currentDay.id) > getDayCost(currentDay.id)
+                    ? `+${format(getDayActualCost(currentDay.id) - getDayCost(currentDay.id))} ${t('budget.overBudget' as TranslationKey)}`
+                    : `-${format(getDayCost(currentDay.id) - getDayActualCost(currentDay.id))} ${t('budget.saved' as TranslationKey)}`
+                  }
+                </span>
+              )}
+            </div>
+          )}
 
           {currentDay.activities.length === 0 ? (
             <div className="text-center py-8 text-gray-400">
@@ -462,45 +437,48 @@ export function DayContent() {
               <div className="space-y-1">
                 {/* Insert button before first activity */}
                 {!reorderMode && <InsertButton onClick={() => { setInsertAtIndex(0); setShowAdd(true); }} label={t('day.insertHere' as TranslationKey)} />}
-                {currentDay.activities.map((activity, index) => (
+                {currentDay.activities.map((activity, index) => {
+                  const next = index < currentDay.activities.length - 1 ? currentDay.activities[index + 1] : null;
+                  const hasCoords = !!(next && activity.lat && activity.lng && next.lat && next.lng);
+                  return (
                   <div key={activity.id}>
-                    <div className="flex items-start gap-2.5">
-                      {/* Order number */}
-                      <div className="flex flex-col items-center pt-4 flex-shrink-0 w-7">
-                        <span className="w-6 h-6 rounded-full bg-gradient-to-br from-spain-red to-spain-red-light text-white text-[11px] font-bold flex items-center justify-center shadow-sm shadow-spain-red/20">
+                    <div className="flex items-start gap-2">
+                      {/* Order number + distance column */}
+                      <div className="flex flex-col items-center pt-4 flex-shrink-0 w-16">
+                        <span className="w-7 h-7 rounded-full bg-gradient-to-br from-primary to-primary-light text-white text-xs font-bold flex items-center justify-center shadow-sm shadow-primary/20">
                           {index + 1}
                         </span>
                         {index < currentDay.activities.length - 1 && (
-                          <div className="w-px flex-1 bg-gradient-to-b from-spain-red/20 to-transparent mt-1 min-h-[20px]" />
+                          <>
+                            <div className="w-px bg-primary/15 mt-1 min-h-[8px]" />
+                            {hasCoords ? (
+                              <DistanceLabel fromLat={activity.lat!} fromLng={activity.lng!} toLat={next!.lat!} toLng={next!.lng!} />
+                            ) : (
+                              <div className="w-px bg-primary/10 min-h-[12px]" />
+                            )}
+                            <div className="w-px bg-primary/10 min-h-[8px]" />
+                          </>
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
                         <ActivityCard activity={activity} dayId={currentDay.id} index={index} totalCount={currentDay.activities.length} reorderMode={reorderMode} />
                       </div>
                     </div>
-                    {/* Distance indicator + Insert button between activities */}
-                    {!reorderMode && index < currentDay.activities.length - 1 && (() => {
-                      const next = currentDay.activities[index + 1];
-                      const hasCoords = activity.lat && activity.lng && next.lat && next.lng;
-                      return (
-                        <div className="pl-9">
-                          {hasCoords && (
-                            <div className="flex items-center py-0.5">
-                              <DistanceIndicator fromLat={activity.lat!} fromLng={activity.lng!} toLat={next.lat!} toLng={next.lng!} gpsPosition={position} gpsEnabled={gpsEnabled && watching} />
-                            </div>
-                          )}
-                          <InsertButton onClick={() => { setInsertAtIndex(index + 1); setShowAdd(true); }} label={t('day.insertHere' as TranslationKey)} />
-                        </div>
-                      );
-                    })()}
+                    {/* Insert button between activities */}
+                    {!reorderMode && index < currentDay.activities.length - 1 && (
+                      <div className="pl-[72px]">
+                        <InsertButton onClick={() => { setInsertAtIndex(index + 1); setShowAdd(true); }} label={t('day.insertHere' as TranslationKey)} />
+                      </div>
+                    )}
                     {/* Insert button after last activity */}
                     {!reorderMode && index === currentDay.activities.length - 1 && (
-                      <div className="pl-9">
+                      <div className="pl-[72px]">
                         <InsertButton onClick={() => { setInsertAtIndex(index + 1); setShowAdd(true); }} label={t('day.insertHere' as TranslationKey)} />
                       </div>
                     )}
                   </div>
-                ))}
+                  );
+                })}
               </div>
             </SortableContext>
           </DndContext>
@@ -510,17 +488,23 @@ export function DayContent() {
           <div className="flex gap-2 mt-2">
             <button
               onClick={() => { setInsertAtIndex(undefined); setShowAdd(true); }}
-              className="flex-1 py-2.5 border border-dashed border-gray-200/60 rounded-xl text-gray-400 hover:border-spain-red/30 hover:text-spain-red transition-all flex items-center justify-center gap-1.5 text-xs hover:bg-red-50/20"
+              className="flex-1 py-2.5 border border-dashed border-gray-300/80 rounded-xl text-gray-400 hover:border-primary/30 hover:text-primary transition-all flex flex-col items-center justify-center gap-0.5 hover:bg-primary/5"
             >
-              <Plus size={14} />
-              {t('day.addActivity')}
+              <span className="flex items-center gap-1.5 text-xs">
+                <Plus size={14} />
+                {t('day.addActivity')}
+              </span>
+              <span className="text-[9px] opacity-50">{t('day.addActivityDesc' as TranslationKey)}</span>
             </button>
             <button
               onClick={() => { setInsertAtIndex(undefined); setShowAddPlace(true); }}
-              className="py-2.5 px-4 border border-dashed border-blue-200/60 rounded-xl text-blue-400 hover:border-blue-400/50 hover:text-blue-500 transition-all flex items-center justify-center gap-1.5 text-xs hover:bg-blue-50/20"
+              className="flex-1 py-2.5 border border-dashed border-blue-200/60 rounded-xl text-blue-400 hover:border-blue-400/50 hover:text-blue-500 transition-all flex flex-col items-center justify-center gap-0.5 hover:bg-blue-50/20"
             >
-              <MapPin size={14} />
-              {t('day.addPlace' as TranslationKey)}
+              <span className="flex items-center gap-1.5 text-xs">
+                <MapPin size={14} />
+                {t('day.addPlace' as TranslationKey)}
+              </span>
+              <span className="text-[9px] opacity-50">{t('day.addPlaceDesc' as TranslationKey)}</span>
             </button>
           </div>
         </div>
@@ -546,6 +530,16 @@ export function DayContent() {
         />
       )}
 
+      {/* Scroll to top */}
+      <button
+        onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+        className={`fixed bottom-20 sm:bottom-6 right-4 z-20 w-10 h-10 bg-white/80 backdrop-blur-xl border border-gray-300/80 rounded-full shadow-lg flex items-center justify-center text-gray-500 hover:text-primary hover:border-primary/30 transition-all duration-300 ${
+          showScrollTop ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'
+        }`}
+        aria-label={t('theme.scrollToTop' as TranslationKey)}
+      >
+        <ChevronUp size={20} />
+      </button>
 
     </main>
   );

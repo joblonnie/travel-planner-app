@@ -37,18 +37,18 @@ export function WeatherWidget({ weather, cityName, compact }: Props) {
   }
 
   return (
-    <div className="bg-gradient-to-br from-sky-50 via-amber-50/20 to-orange-50/30 rounded-2xl p-4 border border-gray-100/80 shadow-sm">
+    <div className="bg-gradient-to-br from-sky-50 via-amber-50/20 to-orange-50/30 rounded-2xl p-4 border border-gray-200 shadow-sm">
       <div className="flex items-center justify-between">
         <div>
           <p className="text-[10px] text-gray-500 font-semibold uppercase tracking-wider">{cityName} {t('weather.weather')}</p>
           <div className="flex items-baseline gap-1 mt-1.5">
-            <Thermometer size={16} className="text-spain-red" />
+            <Thermometer size={16} className="text-primary" />
             <span className="text-3xl font-black text-gray-700 tracking-tight">{weather.avgTempLow}°</span>
             <span className="text-gray-300 text-lg">~</span>
-            <span className="text-3xl font-black text-spain-red tracking-tight">{weather.avgTempHigh}°</span>
+            <span className="text-3xl font-black text-primary tracking-tight">{weather.avgTempHigh}°</span>
           </div>
         </div>
-        <div className="bg-gradient-to-br from-white to-amber-50/50 p-3 rounded-2xl shadow-sm border border-gray-100/50">
+        <div className="bg-gradient-to-br from-surface to-accent-cream/50 p-3 rounded-2xl shadow-sm border border-gray-200/80">
           {getWeatherIcon(32)}
         </div>
       </div>

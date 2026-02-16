@@ -14,6 +14,7 @@ interface Props {
 
 export function DestinationFormModal({ onClose }: Props) {
   const days = useTripData((t) => t.days);
+  const startDate = useTripData((t) => t.startDate);
   const { addCustomDestination, addDay } = useTripStore();
   const { t } = useI18n();
   const { isLoaded, apiKey } = useGoogleMaps();
@@ -86,7 +87,7 @@ export function DestinationFormModal({ onClose }: Props) {
   // Calculate next available date based on existing days
   const getNextDate = (): string => {
     if (days.length === 0) {
-      return useTripStore.getState().startDate || new Date().toISOString().split('T')[0];
+      return startDate || new Date().toISOString().split('T')[0];
     }
     const lastDay = [...days].sort((a, b) => a.date.localeCompare(b.date)).pop();
     if (lastDay?.date) {
@@ -145,10 +146,10 @@ export function DestinationFormModal({ onClose }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-md sm:p-4" onClick={onClose}>
-      <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto border border-gray-100/50" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-md sm:p-4 animate-backdrop" onClick={onClose}>
+      <div className="bg-surface rounded-t-3xl sm:rounded-3xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto border border-gray-200/80 animate-sheet-up sm:animate-modal-pop" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-100/80 sticky top-0 bg-white/95 backdrop-blur-sm z-10 rounded-t-3xl">
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 sticky top-0 bg-white/95 backdrop-blur-sm z-10 rounded-t-3xl">
           <h3 className="font-bold text-gray-800 flex items-center gap-2">
             <MapPin size={16} className="text-emerald-500" />
             {t('place.addPlace')}
@@ -180,7 +181,7 @@ export function DestinationFormModal({ onClose }: Props) {
 
           {/* Map */}
           {mapAvailable && (
-            <div className="rounded-xl overflow-hidden border border-gray-200/50 h-40">
+            <div className="rounded-xl overflow-hidden border border-gray-300/70 h-40">
               <GoogleMap
                 mapContainerStyle={{ width: '100%', height: '100%' }}
                 center={mapCenter}
@@ -260,7 +261,7 @@ export function DestinationFormModal({ onClose }: Props) {
         </div>
 
         {/* Save button */}
-        <div className="p-4 border-t border-gray-100/80 bg-gray-50/30 rounded-b-3xl sticky bottom-0">
+        <div className="p-4 border-t border-gray-200 bg-gray-50/30 rounded-b-3xl sticky bottom-0">
           <button
             onClick={handleSave}
             disabled={!name.trim() || lat === '' || lng === ''}

@@ -15,6 +15,7 @@ interface Props {
   insertAtIndex?: number;
   activity?: ScheduledActivity; // If provided, edit mode
   placeOnly?: boolean; // Simplified mode: name + type + location only (for route checking)
+  locationOnly?: boolean; // Only update location of existing activity
 }
 
 const typeConfig: { value: ScheduledActivity['type']; labelKey: string; icon: React.ReactNode; color: string }[] = [
@@ -27,7 +28,7 @@ const typeConfig: { value: ScheduledActivity['type']; labelKey: string; icon: Re
 
 const durationPresetKeys = ['duration.30min', 'duration.1h', 'duration.1h30', 'duration.2h', 'duration.3h', 'duration.halfDay'] as const;
 
-export function ActivityFormModal({ dayId, onClose, insertAtIndex, activity, placeOnly }: Props) {
+export function ActivityFormModal({ dayId, onClose, insertAtIndex, activity, placeOnly, locationOnly }: Props) {
   const addActivity = useTripStore((s) => s.addActivity);
   const updateActivity = useTripStore((s) => s.updateActivity);
   const removeActivity = useTripStore((s) => s.removeActivity);
@@ -35,8 +36,7 @@ export function ActivityFormModal({ dayId, onClose, insertAtIndex, activity, pla
   const getAllDestinations = useTripStore((s) => s.getAllDestinations);
   const { t } = useI18n();
   const { isLoaded, apiKey } = useGoogleMaps();
-  const { currency, symbol, convert, DEFAULT_RATES } = useCurrency();
-  const rate = DEFAULT_RATES[currency] ?? 1;
+  const { currency, symbol, convert, rate } = useCurrency();
 
   useEscKey(onClose);
   const allDestinations = getAllDestinations();
@@ -59,7 +59,7 @@ export function ActivityFormModal({ dayId, onClose, insertAtIndex, activity, pla
   const [lat, setLat] = useState(activity?.lat?.toString() ?? '');
   const [lng, setLng] = useState(activity?.lng?.toString() ?? '');
   const [notes, setNotes] = useState(activity?.booking?.notes ?? '');
-  const [showMap, setShowMap] = useState(true);
+  const showMap = true;
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showContentSuggestions, setShowContentSuggestions] = useState(false);
 
@@ -108,7 +108,12 @@ export function ActivityFormModal({ dayId, onClose, insertAtIndex, activity, pla
     });
 
     autocompleteRef.current = autocomplete;
-  }, [mapAvailable]);
+
+    // Pre-fill search input with activity name when editing (but not in locationOnly mode)
+    if (activity?.nameKo && searchInputRef.current && !locationOnly) {
+      searchInputRef.current.value = activity.nameKo;
+    }
+  }, [mapAvailable, locationOnly]); // activity is stable for modal lifecycle
 
   const accommodation = currentDay?.accommodation;
   const hasAccommodationLocation = !!(accommodation?.name && accommodation?.lat && accommodation?.lng);
@@ -142,6 +147,15 @@ export function ActivityFormModal({ dayId, onClose, insertAtIndex, activity, pla
   }, []);
 
   const handleSubmit = () => {
+    // locationOnly: only update lat/lng
+    if (locationOnly && activity) {
+      updateActivity(dayId, activity.id, {
+        ...(lat && lng ? { lat: parseFloat(lat), lng: parseFloat(lng) } : {}),
+      });
+      onClose();
+      return;
+    }
+
     if (!nameKo.trim()) return;
 
     // Convert input cost back to EUR for storage
@@ -190,18 +204,22 @@ export function ActivityFormModal({ dayId, onClose, insertAtIndex, activity, pla
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-md sm:p-4" onClick={onClose}>
-      <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl max-w-lg w-full max-h-[85vh] sm:max-h-[90vh] overflow-y-auto border border-gray-100/50" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between p-4 border-b border-gray-100/80">
-          <h3 className="font-bold text-gray-800">{isEdit ? t('editActivity.title') : placeOnly ? t('addPlace.title' as TranslationKey) : t('addActivity.title')}</h3>
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-md sm:p-4 animate-backdrop" onClick={onClose}>
+      <div className="bg-surface rounded-t-3xl sm:rounded-3xl shadow-2xl max-w-lg w-full max-h-[85vh] sm:max-h-[90vh] overflow-y-auto border border-gray-200/80 animate-sheet-up sm:animate-modal-pop" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between p-4 border-b border-gray-200">
+          <h3 className="font-bold text-gray-800">
+            {locationOnly ? (
+              <>{t('activity.addLocation' as TranslationKey)}{activity?.nameKo && <span className="text-sm font-normal text-gray-400 ml-1.5">— {activity.nameKo}</span>}</>
+            ) : isEdit ? t('editActivity.title') : placeOnly ? t('addPlace.title' as TranslationKey) : t('addActivity.title')}
+          </h3>
           <button onClick={onClose} className="p-1.5 hover:bg-gray-100 rounded-xl transition-colors">
             <X size={18} className="text-gray-400" />
           </button>
         </div>
 
         <div className="p-4 space-y-5">
-          {/* ── placeOnly mode: search + map first ── */}
-          {placeOnly && (
+          {/* ── placeOnly / locationOnly mode: search + map first ── */}
+          {(placeOnly || locationOnly) && (
             <>
               {/* Place search — top */}
               {mapAvailable && (
@@ -220,7 +238,7 @@ export function ActivityFormModal({ dayId, onClose, insertAtIndex, activity, pla
                     <GoogleMap
                       mapContainerStyle={{ width: '100%', height: '100%' }}
                       center={mapCenter}
-                      zoom={14}
+                      zoom={lat && lng ? 16 : 14}
                       onClick={handleMapClick}
                       options={{ disableDefaultUI: true, zoomControl: true }}
                       onLoad={(map) => { mapRef.current = map; }}
@@ -236,18 +254,20 @@ export function ActivityFormModal({ dayId, onClose, insertAtIndex, activity, pla
                 </div>
               )}
 
-              {/* Name input (auto-filled from search) */}
-              <div>
-                <label className="block text-xs font-medium text-gray-500 mb-1.5">{t('place.name' as TranslationKey)} *</label>
-                <input
-                  type="text"
-                  value={nameKo}
-                  onChange={(e) => setNameKo(e.target.value)}
-                  placeholder={t('addActivity.namePlaceholder')}
-                  autoFocus={!mapAvailable}
-                  className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/40 outline-none bg-gray-50/30 focus:bg-white transition-colors"
-                />
-              </div>
+              {/* Name input (auto-filled from search) — hidden in locationOnly */}
+              {!locationOnly && (
+                <div>
+                  <label className="block text-xs font-medium text-gray-500 mb-1.5">{t('place.name' as TranslationKey)} *</label>
+                  <input
+                    type="text"
+                    value={nameKo}
+                    onChange={(e) => setNameKo(e.target.value)}
+                    placeholder={t('addActivity.namePlaceholder')}
+                    autoFocus={!mapAvailable}
+                    className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/40 outline-none bg-gray-50/30 focus:bg-white transition-colors"
+                  />
+                </div>
+              )}
 
               {/* Lat/Lng (manual fallback) */}
               {!mapAvailable && (
@@ -256,21 +276,18 @@ export function ActivityFormModal({ dayId, onClose, insertAtIndex, activity, pla
                   <input type="text" value={lng} onChange={(e) => setLng(e.target.value)} placeholder={t('activityForm.lng')} className="w-full px-3.5 py-2 border border-gray-200 rounded-xl text-xs focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/40 outline-none bg-gray-50/30 focus:bg-white transition-colors" />
                 </div>
               )}
-              {lat && lng && (
-                <p className="text-[10px] text-emerald-600 font-mono">{lat}, {lng}</p>
-              )}
             </>
           )}
 
           {/* ── Normal mode below ── */}
-          {!placeOnly && (
+          {!placeOnly && !locationOnly && (
             <>
               {/* Quick-add from destination content */}
               {!isEdit && destination && destination.contents.length > 0 && (
                 <div>
                   <button
                     onClick={() => setShowContentSuggestions(!showContentSuggestions)}
-                    className="flex items-center gap-1.5 text-xs text-spain-red font-bold hover:underline mb-1.5"
+                    className="flex items-center gap-1.5 text-xs text-primary font-bold hover:underline mb-1.5"
                   >
                     <Zap size={13} /> {t('feature.quickAdd' as TranslationKey)} ({destination.contents.length})
                   </button>
@@ -299,9 +316,44 @@ export function ActivityFormModal({ dayId, onClose, insertAtIndex, activity, pla
                             {t(`type.${c.type}` as TranslationKey)}
                           </span>
                           <span className="text-xs font-medium text-gray-700 truncate flex-1">{c.nameKo}</span>
-                          {c.estimatedCost > 0 && <span className="text-[10px] text-spain-red font-bold flex-shrink-0">{symbol}{convert(c.estimatedCost).toLocaleString()}</span>}
+                          {c.estimatedCost > 0 && <span className="text-[10px] text-primary font-bold flex-shrink-0">{symbol}{convert(c.estimatedCost).toLocaleString()}</span>}
                         </button>
                       ))}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Place search — top in normal mode too */}
+              {mapAvailable && (
+                <div className="space-y-2">
+                  <div className="relative">
+                    <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-primary/40" />
+                    <input
+                      ref={searchInputRef}
+                      type="text"
+                      placeholder={t('addActivity.placeSearch')}
+                      autoFocus
+                      className="w-full pl-9 pr-3.5 py-2.5 border border-primary/20 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary/40 outline-none bg-primary/[0.03] focus:bg-white transition-colors"
+                    />
+                  </div>
+                  {showMap && (
+                    <div className="rounded-xl overflow-hidden border border-gray-200 h-40">
+                      <GoogleMap
+                        mapContainerStyle={{ width: '100%', height: '100%' }}
+                        center={mapCenter}
+                        zoom={lat && lng ? 16 : 14}
+                        onClick={handleMapClick}
+                        options={{ disableDefaultUI: true, zoomControl: true }}
+                        onLoad={(map) => { mapRef.current = map; }}
+                      >
+                        {lat && lng && (
+                          <MarkerF
+                            position={{ lat: parseFloat(lat), lng: parseFloat(lng) }}
+                            animation={google.maps.Animation.DROP}
+                          />
+                        )}
+                      </GoogleMap>
                     </div>
                   )}
                 </div>
@@ -315,8 +367,8 @@ export function ActivityFormModal({ dayId, onClose, insertAtIndex, activity, pla
                   value={nameKo}
                   onChange={(e) => setNameKo(e.target.value)}
                   placeholder={t('addActivity.namePlaceholder')}
-                  autoFocus
-                  className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-spain-red/20 focus:border-spain-red/40 outline-none bg-gray-50/30 focus:bg-white transition-colors"
+                  autoFocus={!mapAvailable}
+                  className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary/40 outline-none bg-gray-50/30 focus:bg-white transition-colors"
                 />
               </div>
 
@@ -344,7 +396,7 @@ export function ActivityFormModal({ dayId, onClose, insertAtIndex, activity, pla
           )}
 
           {/* Time Conflict Warning */}
-          {!placeOnly && conflictingActivities.length > 0 && (
+          {!placeOnly && !locationOnly && conflictingActivities.length > 0 && (
             <div className="flex items-start gap-2 p-3 bg-amber-50 border border-amber-200/60 rounded-xl">
               <AlertTriangle size={16} className="text-amber-500 flex-shrink-0 mt-0.5" />
               <div>
@@ -358,8 +410,8 @@ export function ActivityFormModal({ dayId, onClose, insertAtIndex, activity, pla
             </div>
           )}
 
-          {/* Time, Duration & End Time — hidden in placeOnly mode */}
-          {!placeOnly && (
+          {/* Time, Duration & End Time — hidden in placeOnly/locationOnly mode */}
+          {!placeOnly && !locationOnly && (
           <div>
             <label className="block text-xs font-medium text-gray-500 mb-1.5">{t('activityForm.time')} / {t('activityForm.duration')}</label>
             <div className="flex items-center gap-2 mb-2">
@@ -367,7 +419,7 @@ export function ActivityFormModal({ dayId, onClose, insertAtIndex, activity, pla
                 type="time"
                 value={time}
                 onChange={(e) => setTime(e.target.value)}
-                className="flex-1 px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-spain-red/20 focus:border-spain-red/40 outline-none bg-gray-50/30 focus:bg-white transition-colors"
+                className="flex-1 px-3 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary/40 outline-none bg-gray-50/30 focus:bg-white transition-colors"
               />
               <span className="text-gray-300 text-sm">~</span>
               <span className="flex-1 px-3 py-2.5 border border-gray-100 rounded-xl text-sm text-gray-500 bg-gray-50/50 text-center font-mono">
@@ -391,7 +443,7 @@ export function ActivityFormModal({ dayId, onClose, insertAtIndex, activity, pla
                   onClick={() => setDuration(label)}
                   className={`text-[10px] px-2.5 py-1 rounded-full border transition-all ${
                     duration === label
-                      ? 'bg-gradient-to-r from-spain-red to-rose-500 text-white border-spain-red shadow-sm'
+                      ? 'bg-gradient-to-r from-primary to-cta-end text-white border-primary shadow-sm'
                       : 'bg-gray-50/80 text-gray-500 border-gray-100 hover:bg-gray-100 hover:border-gray-200'
                   }`}
                 >
@@ -402,8 +454,8 @@ export function ActivityFormModal({ dayId, onClose, insertAtIndex, activity, pla
           </div>
           )}
 
-          {/* Cost — hidden in placeOnly mode */}
-          {!placeOnly && (
+          {/* Cost — hidden in placeOnly/locationOnly mode */}
+          {!placeOnly && !locationOnly && (
           <div>
             <label className="block text-xs font-medium text-gray-500 mb-1.5">{t('activityForm.cost')} ({currency})</label>
             <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
@@ -414,18 +466,18 @@ export function ActivityFormModal({ dayId, onClose, insertAtIndex, activity, pla
                   value={costInput}
                   onChange={(e) => setCostInput(Number(e.target.value))}
                   min={0}
-                  className="flex-1 px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-spain-red/20 focus:border-spain-red/40 outline-none bg-gray-50/30 focus:bg-white transition-colors min-w-0"
+                  className="flex-1 px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary/40 outline-none bg-gray-50/30 focus:bg-white transition-colors min-w-0"
                 />
               </div>
               {/* Quick cost buttons */}
               <div className="flex gap-1">
-                {(currency === 'KRW' ? [0, 10000, 30000, 50000] : currency === 'JPY' ? [0, 1000, 3000, 5000] : currency === 'USD' ? [0, 10, 25, 50] : [0, 10, 20, 50]).map((v) => (
+                {(currency === 'KRW' ? [0, 10000, 30000, 50000] : currency === 'JPY' ? [0, 1000, 3000, 5000] : currency === 'USD' ? [0, 10, 25, 50] : currency === 'CNY' ? [0, 50, 100, 300] : [0, 10, 20, 50]).map((v) => (
                   <button
                     key={v}
                     onClick={() => setCostInput(v)}
                     className={`text-[10px] px-2.5 py-1 rounded-full border transition-all ${
                       costInput === v
-                        ? 'bg-gradient-to-r from-spain-red to-rose-500 text-white border-spain-red shadow-sm'
+                        ? 'bg-gradient-to-r from-primary to-cta-end text-white border-primary shadow-sm'
                         : 'bg-gray-50/80 text-gray-400 border-gray-100 hover:bg-gray-100 hover:border-gray-200'
                     }`}
                   >
@@ -437,8 +489,8 @@ export function ActivityFormModal({ dayId, onClose, insertAtIndex, activity, pla
           </div>
           )}
 
-          {/* Notes (edit mode) */}
-          {isEdit && (
+          {/* Notes (edit mode, not locationOnly) */}
+          {isEdit && !locationOnly && (
             <div>
               <label className="block text-xs font-medium text-gray-500 mb-1.5">{t('day.notes')}</label>
               <textarea
@@ -446,102 +498,53 @@ export function ActivityFormModal({ dayId, onClose, insertAtIndex, activity, pla
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder={t('addActivity.notesPlaceholder')}
                 rows={3}
-                className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-spain-red/20 focus:border-spain-red/40 outline-none resize-none bg-gray-50/30 focus:bg-white transition-colors"
+                className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary/40 outline-none resize-none bg-gray-50/30 focus:bg-white transition-colors"
               />
             </div>
           )}
 
-          {/* Location — only in normal mode (placeOnly has it above) */}
-          {!placeOnly && (
+          {/* Accommodation location shortcut + manual fallback when no map */}
+          {!placeOnly && !locationOnly && !mapAvailable && (
           <div>
             <div className="flex items-center justify-between mb-1.5">
               <label className="text-xs font-medium text-gray-500 flex items-center gap-1">
                 <MapPin size={11} />
                 {t('activityForm.lat')} / {t('activityForm.lng')}
               </label>
-              <div className="flex items-center gap-2">
-                {hasAccommodationLocation && (
-                  <button
-                    type="button"
-                    onClick={applyAccommodationLocation}
-                    className="flex items-center gap-1 text-[11px] text-purple-600 bg-purple-50 hover:bg-purple-100 px-2 py-0.5 rounded-full font-medium transition-colors border border-purple-200/50"
-                  >
-                    <Hotel size={10} />
-                    {accommodation!.name}
-                  </button>
-                )}
-                {mapAvailable && (
-                  <button
-                    type="button"
-                    onClick={() => setShowMap(!showMap)}
-                    className="text-[11px] text-spain-red hover:underline font-medium"
-                  >
-                    {showMap ? t('activity.cancel') : t('addActivity.map')}
-                  </button>
-                )}
-              </div>
+              {hasAccommodationLocation && (
+                <button
+                  type="button"
+                  onClick={applyAccommodationLocation}
+                  className="flex items-center gap-1 text-[11px] text-purple-600 bg-purple-50 hover:bg-purple-100 px-2 py-0.5 rounded-full font-medium transition-colors border border-purple-200/50"
+                >
+                  <Hotel size={10} />
+                  {accommodation!.name}
+                </button>
+              )}
             </div>
-
-            {showMap && mapAvailable && (
-              <div className="space-y-2 mb-2">
-                {/* Place search input */}
-                <div className="relative">
-                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
-                  <input
-                    ref={searchInputRef}
-                    type="text"
-                    placeholder={t('addActivity.placeSearch')}
-                    className="w-full pl-9 pr-3.5 py-2 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-spain-red/20 focus:border-spain-red/40 outline-none bg-gray-50/30 focus:bg-white transition-colors"
-                  />
-                </div>
-                <div className="rounded-xl overflow-hidden border border-gray-200 h-48">
-                  <GoogleMap
-                    mapContainerStyle={{ width: '100%', height: '100%' }}
-                    center={mapCenter}
-                    zoom={14}
-                    onClick={handleMapClick}
-                    options={{ disableDefaultUI: true, zoomControl: true }}
-                    onLoad={(map) => { mapRef.current = map; }}
-                  >
-                    {lat && lng && (
-                      <MarkerF
-                        position={{ lat: parseFloat(lat), lng: parseFloat(lng) }}
-                        animation={google.maps.Animation.DROP}
-                      />
-                    )}
-                  </GoogleMap>
-                </div>
-              </div>
-            )}
-
             {!apiKey && (
-              <p className="text-[10px] text-gray-300 mb-1">{t('addActivity.mapKeyHint')}</p>
+              <p className="text-[10px] text-gray-400 mb-1">{t('addActivity.mapKeyHint')}</p>
             )}
-
             <div className="grid grid-cols-2 gap-2">
-              <input
-                type="text"
-                value={lat}
-                onChange={(e) => setLat(e.target.value)}
-                placeholder={t('activityForm.lat')}
-                className="w-full px-3.5 py-2 border border-gray-200 rounded-xl text-xs focus:ring-2 focus:ring-spain-red/20 focus:border-spain-red/40 outline-none bg-gray-50/30 focus:bg-white transition-colors"
-              />
-              <input
-                type="text"
-                value={lng}
-                onChange={(e) => setLng(e.target.value)}
-                placeholder={t('activityForm.lng')}
-                className="w-full px-3.5 py-2 border border-gray-200 rounded-xl text-xs focus:ring-2 focus:ring-spain-red/20 focus:border-spain-red/40 outline-none bg-gray-50/30 focus:bg-white transition-colors"
-              />
+              <input type="text" value={lat} onChange={(e) => setLat(e.target.value)} placeholder={t('activityForm.lat')} className="w-full px-3.5 py-2 border border-gray-200 rounded-xl text-xs focus:ring-2 focus:ring-primary/20 focus:border-primary/40 outline-none bg-gray-50/30 focus:bg-white transition-colors" />
+              <input type="text" value={lng} onChange={(e) => setLng(e.target.value)} placeholder={t('activityForm.lng')} className="w-full px-3.5 py-2 border border-gray-200 rounded-xl text-xs focus:ring-2 focus:ring-primary/20 focus:border-primary/40 outline-none bg-gray-50/30 focus:bg-white transition-colors" />
             </div>
-            {lat && lng && (
-              <p className="text-[10px] text-emerald-600 mt-1 font-mono">{lat}, {lng}</p>
-            )}
           </div>
+          )}
+          {/* Accommodation shortcut when map is available */}
+          {!placeOnly && !locationOnly && mapAvailable && hasAccommodationLocation && (
+            <button
+              type="button"
+              onClick={applyAccommodationLocation}
+              className="flex items-center gap-1 text-[11px] text-purple-600 bg-purple-50 hover:bg-purple-100 px-2 py-1 rounded-full font-medium transition-colors border border-purple-200/50"
+            >
+              <Hotel size={10} />
+              {accommodation!.name} {t('activityForm.lat' as TranslationKey)}
+            </button>
           )}
         </div>
 
-        <div className="p-4 border-t border-gray-100/80 bg-gray-50/30 rounded-b-3xl space-y-2">
+        <div className="p-4 border-t border-gray-200 bg-gray-50/30 rounded-b-3xl space-y-2">
           <div className="flex gap-2">
             <button
               onClick={onClose}
@@ -551,14 +554,14 @@ export function ActivityFormModal({ dayId, onClose, insertAtIndex, activity, pla
             </button>
             <button
               onClick={handleSubmit}
-              disabled={!nameKo.trim()}
-              className="flex-[2] bg-gradient-to-r from-spain-red to-rose-500 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-spain-red/20 transition-all disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98]"
+              disabled={locationOnly ? !(lat && lng) : !nameKo.trim()}
+              className="flex-[2] bg-gradient-to-r from-primary to-cta-end text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-primary/20 transition-all disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98]"
             >
               {isEdit ? <><Save size={16} /> {t('activityForm.save')}</> : <><PlusCircle size={16} /> {t('activityForm.add')}</>}
             </button>
           </div>
 
-          {isEdit && (
+          {isEdit && !locationOnly && (
             <>
               {!showDeleteConfirm ? (
                 <button

@@ -1,9 +1,10 @@
+import { memo } from 'react';
 import { Users, User } from 'lucide-react';
 import type { ExpenseOwner } from '../types/index.ts';
 import { useTripData } from '../store/useCurrentTrip.ts';
 
 export const ownerColorMap: Record<string, { text: string; bg: string; active: string; badge: string }> = {
-  gray:    { text: 'text-gray-500',    bg: 'bg-gray-100',    active: 'bg-gray-700 text-white border-gray-700',       badge: 'bg-gray-50 text-gray-600 border-gray-200/50' },
+  gray:    { text: 'text-gray-500',    bg: 'bg-gray-100',    active: 'bg-gray-700 text-white border-gray-700',       badge: 'bg-gray-50 text-gray-600 border-gray-300/70' },
   blue:    { text: 'text-blue-500',    bg: 'bg-blue-100',    active: 'bg-blue-500 text-white border-blue-500',       badge: 'bg-blue-50 text-blue-600 border-blue-200/50' },
   pink:    { text: 'text-pink-500',    bg: 'bg-pink-100',    active: 'bg-pink-500 text-white border-pink-500',       badge: 'bg-pink-50 text-pink-600 border-pink-200/50' },
   emerald: { text: 'text-emerald-500', bg: 'bg-emerald-100', active: 'bg-emerald-500 text-white border-emerald-500', badge: 'bg-emerald-50 text-emerald-600 border-emerald-200/50' },
@@ -20,7 +21,7 @@ interface Props {
   size?: 'sm' | 'md';
 }
 
-export function OwnerSelector({ value, onChange, size = 'md' }: Props) {
+export const OwnerSelector = memo(function OwnerSelector({ value, onChange, size = 'md' }: Props) {
   const owners = useTripData((t) => t.owners);
   const isSmall = size === 'sm';
 
@@ -53,9 +54,9 @@ export function OwnerSelector({ value, onChange, size = 'md' }: Props) {
       })}
     </div>
   );
-}
+});
 
-export function OwnerBadge({ owner, size = 'sm' }: { owner: ExpenseOwner; size?: 'sm' | 'md' }) {
+export const OwnerBadge = memo(function OwnerBadge({ owner, size = 'sm' }: { owner: ExpenseOwner; size?: 'sm' | 'md' }) {
   const owners = useTripData((t) => t.owners);
   if (owner === 'shared') return null;
 
@@ -72,4 +73,4 @@ export function OwnerBadge({ owner, size = 'sm' }: { owner: ExpenseOwner; size?:
       {ownerConfig.name}
     </span>
   );
-}
+});

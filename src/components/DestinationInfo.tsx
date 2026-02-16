@@ -75,12 +75,12 @@ function RestaurantComments({ restaurantId }: { restaurantId: string }) {
           onChange={(e) => setText(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleSubmit()}
           placeholder={t('restaurant.commentPlaceholder')}
-          className="flex-1 text-[11px] px-2 py-1 border border-gray-100 rounded-lg focus:ring-1 focus:ring-spain-red/30 focus:border-spain-red/30 outline-none min-w-0"
+          className="flex-1 text-[11px] px-2 py-1 border border-gray-100 rounded-lg focus:ring-1 focus:ring-primary/30 focus:border-primary/30 outline-none min-w-0"
         />
         <button
           onClick={handleSubmit}
           disabled={!text.trim()}
-          className="px-2 bg-spain-red text-white rounded-lg disabled:opacity-30 hover:bg-spain-red-dark transition-colors flex-shrink-0"
+          className="px-2 bg-primary text-white rounded-lg disabled:opacity-30 hover:bg-primary-dark transition-colors flex-shrink-0"
         >
           <Send size={10} />
         </button>
@@ -106,7 +106,7 @@ export function DestinationInfo({ destination }: Props) {
       {/* Guide open button */}
       <button
         onClick={() => setOpen(true)}
-        className="w-full flex items-center justify-center gap-2 py-3 bg-white/70 backdrop-blur-xl rounded-2xl border border-gray-100/80 shadow-sm text-sm font-bold text-gray-500 hover:text-spain-red hover:border-spain-red/20 hover:bg-spain-red/5 transition-all min-h-[44px]"
+        className="w-full flex items-center justify-center gap-2 py-3 bg-white/70 backdrop-blur-xl rounded-2xl border border-gray-200 shadow-sm text-sm font-bold text-gray-500 hover:text-primary hover:border-primary/20 hover:bg-primary/5 transition-all min-h-[44px]"
       >
         <BookOpen size={18} />
         {destination.nameKo} {t('dest.guide')}
@@ -116,14 +116,14 @@ export function DestinationInfo({ destination }: Props) {
       {open && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-md" onClick={() => setOpen(false)}>
           <div
-            className="bg-white w-full sm:max-w-lg sm:rounded-3xl rounded-t-3xl shadow-2xl border border-gray-100/50 max-h-[85vh] overflow-hidden flex flex-col"
+            className="bg-surface w-full sm:max-w-lg sm:rounded-3xl rounded-t-3xl shadow-2xl border border-gray-200/80 max-h-[85vh] overflow-hidden flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header */}
-            <div className="p-4 border-b border-gray-100/80 bg-gradient-to-r from-warm-50 to-amber-50/30 sm:rounded-t-3xl flex items-center justify-between flex-shrink-0">
+            <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-warm-50 to-accent-cream/30 sm:rounded-t-3xl flex items-center justify-between flex-shrink-0">
               <div className="flex items-center gap-2.5">
-                <BookOpen size={18} className="text-spain-red" />
-                <h3 className="font-bold text-spain-dark text-sm">
+                <BookOpen size={18} className="text-primary" />
+                <h3 className="font-bold text-theme-dark text-sm">
                   {destination.nameKo} {t('dest.guide')}
                 </h3>
               </div>
@@ -158,7 +158,7 @@ export function DestinationInfo({ destination }: Props) {
                 <ul className="space-y-2">
                   {destination.tips.map((tip, i) => (
                     <li key={i} className="flex gap-2.5 text-sm text-gray-600">
-                      <span className="text-spain-yellow flex-shrink-0 mt-0.5">
+                      <span className="text-secondary flex-shrink-0 mt-0.5">
                         <Lightbulb size={12} />
                       </span>
                       {tip}
@@ -170,10 +170,10 @@ export function DestinationInfo({ destination }: Props) {
               {activeTab === 'phrases' && (
                 <div className="space-y-2">
                   {destination.phrases.map((phrase, i) => (
-                    <div key={i} className="bg-gray-50/60 rounded-xl p-3.5 border border-gray-100/80">
+                    <div key={i} className="bg-gray-50/60 rounded-xl p-3.5 border border-gray-200">
                       <p className="text-[11px] text-gray-400 font-semibold uppercase tracking-wider">{phrase.situation}</p>
                       <p className="font-bold text-gray-800 mt-0.5">{phrase.spanish}</p>
-                      <p className="text-sm text-spain-red font-medium">{phrase.pronunciation}</p>
+                      <p className="text-sm text-primary font-medium">{phrase.pronunciation}</p>
                       <p className="text-xs text-gray-500 mt-0.5">{phrase.korean}</p>
                     </div>
                   ))}
@@ -183,7 +183,7 @@ export function DestinationInfo({ destination }: Props) {
               {activeTab === 'restaurants' && (
                 <div className="space-y-3">
                   {destination.restaurants.map((r) => (
-                    <div key={r.id} className="border border-gray-100/80 rounded-xl p-3.5 hover:bg-gray-50/30 transition-colors hover:shadow-sm">
+                    <div key={r.id} className="border border-gray-200 rounded-xl p-3.5 hover:bg-gray-50/30 transition-colors hover:shadow-sm">
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
                           <h4 className="font-bold text-sm text-gray-800 line-clamp-1">{r.name}</h4>
@@ -200,7 +200,7 @@ export function DestinationInfo({ destination }: Props) {
                       </div>
                       <div className="mt-2 flex flex-wrap gap-1">
                         {r.mustTry.map((item, i) => (
-                          <span key={i} className="text-[10px] bg-red-50 text-spain-red px-2 py-0.5 rounded-full font-medium">
+                          <span key={i} className="text-[10px] bg-red-50 text-primary px-2 py-0.5 rounded-full font-medium">
                             {item}
                           </span>
                         ))}
@@ -216,7 +216,7 @@ export function DestinationInfo({ destination }: Props) {
               {activeTab === 'transport' && (
                 <div className="space-y-2">
                   {destination.transportation.map((tr, i) => (
-                    <div key={i} className="border border-gray-100/80 rounded-xl p-3.5 hover:bg-gray-50/50 transition-colors hover:shadow-sm">
+                    <div key={i} className="border border-gray-200 rounded-xl p-3.5 hover:bg-gray-50/50 transition-colors hover:shadow-sm">
                       <div className="flex items-center gap-2">
                         <div className="w-7 h-7 bg-gray-100/80 rounded-lg flex items-center justify-center">
                           <Train size={14} className="text-gray-500" />
@@ -228,11 +228,11 @@ export function DestinationInfo({ destination }: Props) {
                           {t(`transport.${tr.type}` as keyof typeof import('../i18n/translations.ts').translations)}
                         </span>
                         <span>{tr.duration}</span>
-                        <span className="text-spain-red font-bold">€{tr.estimatedCost}</span>
+                        <span className="text-primary font-bold">€{tr.estimatedCost}</span>
                       </div>
                       <p className="text-xs text-gray-500 mt-1 ml-8">{tr.notes}</p>
                       {tr.bookingUrl && (
-                        <a href={tr.bookingUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-xs text-spain-red mt-1 ml-8 hover:underline font-medium">
+                        <a href={tr.bookingUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-xs text-primary mt-1 ml-8 hover:underline font-medium">
                           <ExternalLink size={13} /> {t('dest.book')}
                         </a>
                       )}

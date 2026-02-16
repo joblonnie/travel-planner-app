@@ -4,6 +4,7 @@ import type {
   DayPlan, ScheduledActivity, BookingInfo, Destination, FlightInfo,
   ImmigrationSchedule, InterCityTransport, ActivityExpense, ExpenseOwner,
   MediaItem, ExpenseOwnerConfig, Trip, TripExpense, TripRestaurantComment,
+  ThemeId,
 } from '../types/index.ts';
 import { defaultTripPlan } from '../data/tripPlan.ts';
 import { destinations } from '../data/destinations.ts';
@@ -43,6 +44,9 @@ interface TripStore {
   language: Language;
   currency: Currency;
   exchangeRate: number;
+  theme: ThemeId;
+  fetchedRates: Record<string, number> | null;
+  ratesUpdatedAt: string | null;
 
   // ── Trip CRUD ──
   createTrip: (trip: Omit<Trip, 'createdAt' | 'updatedAt'>) => void;
@@ -55,6 +59,8 @@ interface TripStore {
   setLanguage: (lang: Language) => void;
   setCurrency: (currency: Currency) => void;
   setExchangeRate: (rate: number) => void;
+  setTheme: (theme: ThemeId) => void;
+  setFetchedRates: (rates: Record<string, number>) => void;
 
   // ── Per-trip actions (operate on currentTrip) ──
   setTripName: (name: string) => void;
@@ -94,6 +100,7 @@ interface TripStore {
   addMemo: (dayId: string, activityId: string, text: string) => void;
   removeMemo: (dayId: string, activityId: string, memoIndex: number) => void;
   addActivityExpense: (dayId: string, activityId: string, expense: ActivityExpense) => void;
+  updateActivityExpense: (dayId: string, activityId: string, expenseId: string, updates: Partial<ActivityExpense>) => void;
   removeActivityExpense: (dayId: string, activityId: string, expenseId: string) => void;
   addImmigrationSchedule: (schedule: ImmigrationSchedule) => void;
   updateImmigrationSchedule: (id: string, updates: Partial<ImmigrationSchedule>) => void;
@@ -165,6 +172,9 @@ export const useTripStore = create<TripStore>()(
       language: 'ko' as Language,
       currency: 'EUR' as Currency,
       exchangeRate: 1450,
+      theme: 'cloud-dancer' as ThemeId,
+      fetchedRates: null,
+      ratesUpdatedAt: null,
 
       // ── Trip CRUD ──
       createTrip: (trip) =>
@@ -225,6 +235,12 @@ export const useTripStore = create<TripStore>()(
       setLanguage: (language) => set({ language }),
       setCurrency: (currency) => set({ currency }),
       setExchangeRate: (exchangeRate) => set({ exchangeRate }),
+      setTheme: (theme) => {
+        document.documentElement.dataset.theme = theme;
+        set({ theme });
+      },
+      setFetchedRates: (rates) =>
+        set({ fetchedRates: rates, ratesUpdatedAt: new Date().toISOString() }),
 
       // ── Per-trip actions ──
       setTripName: (tripName) =>
@@ -424,6 +440,15 @@ export const useTripStore = create<TripStore>()(
         set((state) => updateCurrentTrip(state, (trip) =>
           mapActivities(trip, dayId, (a) =>
             a.id === activityId ? { ...a, expenses: [...(a.expenses || []), expense] } : a
+          )
+        )),
+
+      updateActivityExpense: (dayId, activityId, expenseId, updates) =>
+        set((state) => updateCurrentTrip(state, (trip) =>
+          mapActivities(trip, dayId, (a) =>
+            a.id === activityId
+              ? { ...a, expenses: (a.expenses || []).map((e) => e.id === expenseId ? { ...e, ...updates } : e) }
+              : a
           )
         )),
 
@@ -687,7 +712,7 @@ export const useTripStore = create<TripStore>()(
     }),
     {
       name: 'honeymoon-trip-store',
-      version: 5,
+      version: 6,
       migrate: (_persistedState, version) => {
         const state = _persistedState as Record<string, unknown>;
 
@@ -734,6 +759,11 @@ export const useTripStore = create<TripStore>()(
           delete state.groomBudget;
           delete state.brideBudget;
           state.owners = owners;
+        }
+
+        // v5 → v6: Add theme setting
+        if (version >= 5 && version < 6) {
+          state.theme = state.theme || 'cloud-dancer';
         }
 
         // v4 → v5: Multi-trip support — wrap existing data into first Trip

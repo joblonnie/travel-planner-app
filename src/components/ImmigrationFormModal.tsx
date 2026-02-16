@@ -69,10 +69,10 @@ export function ImmigrationFormModal({ type, schedule, onClose }: Props) {
   const inputClass = `w-full text-sm px-3 py-2.5 border border-gray-200 rounded-xl ${ringColor} outline-none bg-gray-50/30 focus:bg-white transition-colors focus:ring-2`;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-md sm:p-4" onClick={onClose}>
-      <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto border border-gray-100/30" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-md sm:p-4 animate-backdrop" onClick={onClose}>
+      <div className="bg-surface rounded-t-3xl sm:rounded-3xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto border border-gray-300/80 animate-sheet-up sm:animate-modal-pop" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-100/50 sticky top-0 bg-white/95 backdrop-blur-sm z-10 rounded-t-3xl">
+        <div className="flex items-center justify-between p-4 border-b border-gray-200/80 sticky top-0 bg-white/95 backdrop-blur-sm z-10 rounded-t-3xl">
           <h3 className="font-bold text-gray-800 flex items-center gap-2.5">
             <div className={`w-7 h-7 bg-gradient-to-br ${gradientFrom} ${gradientTo} rounded-lg flex items-center justify-center shadow-sm`}>
               <Icon size={14} className="text-white" />
@@ -141,7 +141,7 @@ export function ImmigrationFormModal({ type, schedule, onClose }: Props) {
         </div>
 
         {/* Save */}
-        <div className="p-4 border-t border-gray-100/80 bg-gray-50/30 rounded-b-3xl">
+        <div className="p-4 border-t border-gray-200 bg-gray-50/30 rounded-b-3xl">
           <button
             onClick={handleSave}
             disabled={!airport.trim() || !date}

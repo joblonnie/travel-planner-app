@@ -2,14 +2,14 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { MapPin, CheckCircle2, Circle, FileText, Ticket, Pencil, Trash2, SkipForward, MoreHorizontal, Plus, X, Receipt, Copy, GripVertical } from 'lucide-react';
 import type { ScheduledActivity, ExpenseOwner } from '../types/index.ts';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, memo, lazy, Suspense } from 'react';
 import { useTripStore } from '../store/useTripStore.ts';
 import { useCurrency } from '../hooks/useCurrency.ts';
 import { useI18n, type TranslationKey } from '../i18n/useI18n.ts';
 import { translations } from '../i18n/translations.ts';
-import { BookingModal } from './BookingModal.tsx';
-import { ActivityFormModal } from './ActivityFormModal.tsx';
-import { ActivityDetailModal } from './ActivityDetailModal.tsx';
+const BookingModal = lazy(() => import('./BookingModal.tsx').then(m => ({ default: m.BookingModal })));
+const ActivityFormModal = lazy(() => import('./ActivityFormModal.tsx').then(m => ({ default: m.ActivityFormModal })));
+const ActivityDetailModal = lazy(() => import('./ActivityDetailModal.tsx').then(m => ({ default: m.ActivityDetailModal })));
 import { OwnerSelector, OwnerBadge } from './OwnerSelector.tsx';
 
 const typeColors: Record<string, string> = {
@@ -49,7 +49,7 @@ function calcEndTime(startTime: string, duration: string): string | null {
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 }
 
-export function ActivityCard({ activity, dayId, reorderMode }: Props) {
+export const ActivityCard = memo(function ActivityCard({ activity, dayId, reorderMode }: Props) {
   const [showBooking, setShowBooking] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -60,7 +60,9 @@ export function ActivityCard({ activity, dayId, reorderMode }: Props) {
   const [expenseAmount, setExpenseAmount] = useState('');
   const [expenseDesc, setExpenseDesc] = useState('');
   const [expenseOwner, setExpenseOwner] = useState<ExpenseOwner>('shared');
+  const [editingExpenseId, setEditingExpenseId] = useState<string | null>(null);
   const [showDetail, setShowDetail] = useState(false);
+  const [showLocationEdit, setShowLocationEdit] = useState(false);
   const actionsRef = useRef<HTMLDivElement>(null);
   const memoInputRef = useRef<HTMLInputElement>(null);
   const removeActivity = useTripStore((s) => s.removeActivity);
@@ -70,9 +72,10 @@ export function ActivityCard({ activity, dayId, reorderMode }: Props) {
   const addMemo = useTripStore((s) => s.addMemo);
   const removeMemo = useTripStore((s) => s.removeMemo);
   const addActivityExpense = useTripStore((s) => s.addActivityExpense);
+  const updateActivityExpense = useTripStore((s) => s.updateActivityExpense);
   const removeActivityExpense = useTripStore((s) => s.removeActivityExpense);
 
-  const { format, currency: currentCurrency, symbol: currencySymbol, convert, DEFAULT_RATES } = useCurrency();
+  const { format, convert, symbol: currencySymbol, toEur } = useCurrency();
   const { t } = useI18n();
   const sortable = useSortable({
     id: activity.id,
@@ -86,16 +89,23 @@ export function ActivityCard({ activity, dayId, reorderMode }: Props) {
 
   const isDragging = reorderMode ? sortable.isDragging : false;
 
-  // Close actions menu on outside click
+  // Close actions menu on outside click or ESC
   useEffect(() => {
     if (!showActions) return;
-    const handler = (e: MouseEvent) => {
+    const handleClick = (e: MouseEvent) => {
       if (actionsRef.current && !actionsRef.current.contains(e.target as Node)) {
         setShowActions(false);
       }
     };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setShowActions(false);
+    };
+    document.addEventListener('mousedown', handleClick);
+    document.addEventListener('keydown', handleKey);
+    return () => {
+      document.removeEventListener('mousedown', handleClick);
+      document.removeEventListener('keydown', handleKey);
+    };
   }, [showActions]);
 
   useEffect(() => {
@@ -116,22 +126,38 @@ export function ActivityCard({ activity, dayId, reorderMode }: Props) {
   const handleAddExpense = () => {
     const inputAmount = parseFloat(expenseAmount);
     if (!isNaN(inputAmount) && inputAmount > 0 && expenseDesc.trim()) {
-      // Convert input amount from current display currency to EUR for storage
-      const rate = currentCurrency === 'EUR' ? 1 : (DEFAULT_RATES[currentCurrency] ?? 1);
-      const amountInEur = currentCurrency === 'EUR' ? inputAmount : inputAmount / rate;
-      addActivityExpense(dayId, activity.id, {
-        id: crypto.randomUUID(),
-        amount: Math.round(amountInEur * 100) / 100,
-        currency: 'EUR',
-        description: expenseDesc.trim(),
-        createdAt: new Date().toISOString(),
-        owner: expenseOwner,
-      });
+      const amountInEur = toEur(inputAmount);
+      if (editingExpenseId) {
+        updateActivityExpense(dayId, activity.id, editingExpenseId, {
+          amount: Math.round(amountInEur * 1000000) / 1000000,
+          description: expenseDesc.trim(),
+          owner: expenseOwner,
+        });
+        setEditingExpenseId(null);
+      } else {
+        addActivityExpense(dayId, activity.id, {
+          id: crypto.randomUUID(),
+          amount: Math.round(amountInEur * 1000000) / 1000000,
+          currency: 'EUR',
+          description: expenseDesc.trim(),
+          createdAt: new Date().toISOString(),
+          owner: expenseOwner,
+        });
+      }
       setExpenseAmount('');
       setExpenseDesc('');
       setExpenseOwner('shared');
       setShowExpenseForm(false);
     }
+  };
+
+  const handleEditExpense = (exp: typeof activityExpenses[number]) => {
+    const displayAmount = convert(exp.amount);
+    setExpenseAmount(String(Math.round(displayAmount * 100) / 100));
+    setExpenseDesc(exp.description);
+    setExpenseOwner(exp.owner);
+    setEditingExpenseId(exp.id);
+    setShowExpenseForm(true);
   };
 
   const activityExpenses = activity.expenses || [];
@@ -156,12 +182,12 @@ export function ActivityCard({ activity, dayId, reorderMode }: Props) {
           showActions ? 'z-30' : isDragging ? 'z-20' : ''
         } ${
           isDragging
-            ? 'border-spain-red/50 shadow-2xl shadow-spain-red/15 scale-[1.02] bg-white'
+            ? 'border-primary/50 shadow-2xl shadow-primary/15 scale-[1.02] bg-white'
             : isCompleted
             ? 'border-emerald-200/50 bg-emerald-50/30 backdrop-blur-md'
             : isSkipped
             ? 'border-amber-200/50 bg-amber-50/30 backdrop-blur-md'
-            : 'border-white/60 bg-white/70 backdrop-blur-xl shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:bg-white/90 hover:-translate-y-0.5'
+            : 'border-card-border bg-surface-alt backdrop-blur-xl shadow-[0_1px_3px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_30px_rgba(0,0,0,0.08)] hover:bg-surface/90 hover:-translate-y-0.5'
         }`}
       >
         {/* Drag handle - only visible in reorder mode */}
@@ -169,7 +195,7 @@ export function ActivityCard({ activity, dayId, reorderMode }: Props) {
           <div
             {...sortable.attributes}
             {...sortable.listeners}
-            className="absolute left-0 top-0 bottom-0 w-12 flex items-center justify-center cursor-grab active:cursor-grabbing text-gray-300 active:text-spain-red transition-colors z-10"
+            className="absolute left-0 top-0 bottom-0 w-12 flex items-center justify-center cursor-grab active:cursor-grabbing text-gray-300 active:text-primary transition-colors z-10"
             style={{ touchAction: 'none' }}
           >
             <GripVertical size={16} />
@@ -213,7 +239,7 @@ export function ActivityCard({ activity, dayId, reorderMode }: Props) {
               <SkipForward size={14} />
             </button>
             {(activity.time || activity.duration) && (
-              <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${typeColors[activity.type] || 'bg-gray-500/10 text-gray-600 border-gray-200/50'}`}>
+              <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${typeColors[activity.type] || 'bg-gray-500/10 text-gray-600 border-gray-300/70'}`}>
                 {typeLabel}
               </span>
             )}
@@ -287,7 +313,7 @@ export function ActivityCard({ activity, dayId, reorderMode }: Props) {
             <button
               onClick={(e) => { e.stopPropagation(); setShowMemoInput(true); }}
               onPointerDown={(e) => e.stopPropagation()}
-              className="mt-1.5 text-[11px] text-blue-500 hover:text-blue-600 active:text-blue-700 flex items-center gap-1 py-1.5 px-2 -ml-2 rounded-lg hover:bg-blue-50 active:bg-blue-100 transition-colors min-h-[36px]"
+              className="mt-1.5 text-[11px] text-blue-500 hover:text-blue-600 active:text-blue-700 flex items-center gap-1 py-1.5 px-2 -ml-2 rounded-lg hover:bg-blue-50 active:bg-blue-100 transition-colors min-h-[44px] cursor-pointer"
             >
               <Plus size={13} /> {t('memo.addMemo')}
             </button>
@@ -296,34 +322,67 @@ export function ActivityCard({ activity, dayId, reorderMode }: Props) {
             <button
               onClick={(e) => { e.stopPropagation(); setShowMemoInput(true); }}
               onPointerDown={(e) => e.stopPropagation()}
-              className="mt-0.5 text-[10px] text-blue-500 hover:text-blue-600 active:text-blue-700 flex items-center gap-0.5 p-1.5 -ml-1.5 rounded-lg hover:bg-blue-50 active:bg-blue-100 transition-colors min-h-[32px] min-w-[32px] justify-center"
+              className="mt-0.5 text-[10px] text-blue-500 hover:text-blue-600 active:text-blue-700 flex items-center gap-0.5 p-1.5 -ml-1.5 rounded-lg hover:bg-blue-50 active:bg-blue-100 transition-colors min-h-[44px] min-w-[44px] justify-center cursor-pointer"
             >
               <Plus size={12} />
             </button>
           )}
 
-          {/* Activity expenses */}
-          {activityExpenses.length > 0 && (
+          {/* Activity expenses + estimated cost */}
+          {(activityExpenses.length > 0 || activity.estimatedCost > 0) && (
             <div className="mt-2 space-y-1" onPointerDown={(e) => e.stopPropagation()}>
               {activityExpenses.map((exp) => (
                 <div key={exp.id} className="flex items-center gap-1.5 text-[10px] group/expense">
                   <Receipt size={10} className="text-gray-300 flex-shrink-0" />
                   <span className="text-gray-500 truncate">{exp.description}</span>
                   <OwnerBadge owner={exp.owner} />
-                  <span className="text-spain-red font-bold tabular-nums ml-auto flex-shrink-0">{format(exp.amount)}</span>
+                  <span className="text-primary font-bold tabular-nums ml-auto flex-shrink-0">{format(exp.amount)}</span>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleEditExpense(exp); }}
+                    className="text-gray-400 hover:text-primary transition-colors sm:opacity-0 sm:group-hover/expense:opacity-100 flex-shrink-0 p-1.5 -m-1 min-w-[28px] min-h-[28px] flex items-center justify-center"
+                    aria-label={t('activity.edit')}
+                  >
+                    <Pencil size={11} />
+                  </button>
                   <button
                     onClick={(e) => { e.stopPropagation(); removeActivityExpense(dayId, activity.id, exp.id); }}
-                    className="text-gray-200 hover:text-red-400 transition-colors sm:opacity-0 sm:group-hover/expense:opacity-100 flex-shrink-0"
+                    className="text-gray-400 hover:text-red-400 transition-colors sm:opacity-0 sm:group-hover/expense:opacity-100 flex-shrink-0 p-1.5 -m-1 min-w-[28px] min-h-[28px] flex items-center justify-center"
                     aria-label={t('activity.delete')}
                   >
-                    <X size={10} />
+                    <X size={11} />
                   </button>
                 </div>
               ))}
-              {totalExpenseAmount > 0 && (
-                <div className="flex items-center justify-between text-[10px] pt-0.5 border-t border-gray-100">
-                  <span className="text-gray-400 font-medium">{t('expense.totalSpent')}</span>
-                  <span className="text-spain-red font-bold tabular-nums">{format(totalExpenseAmount)}</span>
+              {/* Cost summary */}
+              {activity.estimatedCost > 0 && (
+                <div className={`${activityExpenses.length > 0 ? 'pt-0.5 border-t border-gray-100' : ''} space-y-0.5`}>
+                  {totalExpenseAmount > 0 && (
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="text-gray-500 font-medium">{t('expense.totalSpent')}</span>
+                      <span className="text-primary font-bold tabular-nums">{format(totalExpenseAmount)}</span>
+                    </div>
+                  )}
+                  <div className="flex items-center justify-between text-[11px]">
+                    <span className="text-gray-400">{t('budget.estimated')}</span>
+                    <span className={`tabular-nums ${totalExpenseAmount > 0 ? 'text-gray-400 line-through decoration-gray-300' : 'text-primary font-bold'}`}>{format(activity.estimatedCost)}</span>
+                  </div>
+                  {totalExpenseAmount > 0 && (
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="text-gray-500">{totalExpenseAmount > activity.estimatedCost ? t('budget.overBudget' as TranslationKey) : t('budget.saved' as TranslationKey)}</span>
+                      <span className={`font-bold tabular-nums ${totalExpenseAmount > activity.estimatedCost ? 'text-red-500' : 'text-emerald-600'}`}>
+                        {totalExpenseAmount > activity.estimatedCost ? '+' : '-'}{format(Math.abs(totalExpenseAmount - activity.estimatedCost))}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              )}
+              {/* Total only (no estimated cost) */}
+              {activity.estimatedCost <= 0 && totalExpenseAmount > 0 && (
+                <div className="pt-0.5 border-t border-gray-100">
+                  <div className="flex items-center justify-between text-[11px]">
+                    <span className="text-gray-500 font-medium">{t('expense.totalSpent')}</span>
+                    <span className="text-primary font-bold tabular-nums">{format(totalExpenseAmount)}</span>
+                  </div>
                 </div>
               )}
             </div>
@@ -333,47 +392,57 @@ export function ActivityCard({ activity, dayId, reorderMode }: Props) {
           {showExpenseForm ? (
             <div className="mt-2 space-y-1.5" onPointerDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>
               <div className="flex items-center gap-1.5">
+                <span className="text-[10px] font-bold text-primary/80 flex-shrink-0">{currencySymbol}</span>
+                <label className="sr-only" htmlFor={`expense-amount-${activity.id}`}>{t('expense.amountPlaceholder' as TranslationKey)}</label>
                 <input
+                  id={`expense-amount-${activity.id}`}
                   type="number"
                   step="0.01"
                   value={expenseAmount}
                   onChange={(e) => setExpenseAmount(e.target.value)}
-                  placeholder={`${currencySymbol} ${t('expense.amountPlaceholder')}`}
-                  className="w-16 text-[10px] px-1.5 py-1 border border-gray-200 rounded-lg outline-none focus:ring-1 focus:ring-spain-red/30 bg-white"
+                  placeholder="0"
+                  className="w-20 text-[10px] px-1.5 py-1 border border-gray-200 rounded-lg outline-none focus:ring-1 focus:ring-primary/30 bg-white tabular-nums"
                   autoFocus
                 />
+                <label className="sr-only" htmlFor={`expense-desc-${activity.id}`}>{t('expense.descPlaceholder' as TranslationKey)}</label>
                 <input
+                  id={`expense-desc-${activity.id}`}
                   type="text"
                   value={expenseDesc}
                   onChange={(e) => setExpenseDesc(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter') handleAddExpense();
-                    if (e.key === 'Escape') { setShowExpenseForm(false); setExpenseAmount(''); setExpenseDesc(''); setExpenseOwner('shared'); }
+                    if (e.key === 'Escape') { setShowExpenseForm(false); setExpenseAmount(''); setExpenseDesc(''); setExpenseOwner('shared'); setEditingExpenseId(null); }
                   }}
                   placeholder={t('expense.descPlaceholder')}
-                  className="flex-1 min-w-0 text-[10px] px-1.5 py-1 border border-gray-200 rounded-lg outline-none focus:ring-1 focus:ring-spain-red/30 bg-white"
+                  className="flex-1 min-w-0 text-[10px] px-1.5 py-1 border border-gray-200 rounded-lg outline-none focus:ring-1 focus:ring-primary/30 bg-white"
                 />
-                <button
-                  onClick={handleAddExpense}
-                  className="text-[10px] text-white bg-spain-red px-2 py-1 rounded-lg font-bold hover:bg-spain-red-dark transition-colors flex-shrink-0"
-                >
-                  {t('activityForm.add')}
-                </button>
-                <button
-                  onClick={() => { setShowExpenseForm(false); setExpenseAmount(''); setExpenseDesc(''); setExpenseOwner('shared'); }}
-                  className="text-gray-300 hover:text-gray-500 transition-colors flex-shrink-0"
-                  aria-label={t('activity.cancel')}
-                >
-                  <X size={12} />
-                </button>
               </div>
-              <OwnerSelector value={expenseOwner} onChange={setExpenseOwner} size="sm" />
+              <div className="flex items-center gap-1.5">
+                <OwnerSelector value={expenseOwner} onChange={setExpenseOwner} size="sm" />
+                <div className="flex items-center gap-1 ml-auto flex-shrink-0">
+                  <button
+                    onClick={handleAddExpense}
+                    disabled={!expenseAmount || !expenseDesc.trim()}
+                    className="text-[10px] text-white bg-primary px-2.5 py-1 rounded-lg font-bold hover:bg-primary-dark transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                  >
+                    {editingExpenseId ? t('activityForm.save') : t('activityForm.add')}
+                  </button>
+                  <button
+                    onClick={() => { setShowExpenseForm(false); setExpenseAmount(''); setExpenseDesc(''); setExpenseOwner('shared'); setEditingExpenseId(null); }}
+                    className="text-gray-400 hover:text-gray-600 transition-colors p-1"
+                    aria-label={t('activity.cancel')}
+                  >
+                    <X size={12} />
+                  </button>
+                </div>
+              </div>
             </div>
           ) : (
             <button
               onClick={(e) => { e.stopPropagation(); setShowExpenseForm(true); }}
               onPointerDown={(e) => e.stopPropagation()}
-              className="mt-1 text-[11px] text-gray-500 hover:text-spain-red active:text-spain-red-dark flex items-center gap-1 py-1.5 px-2 -ml-2 rounded-lg hover:bg-spain-red/5 active:bg-spain-red/10 transition-colors min-h-[36px]"
+              className="mt-1 text-[11px] text-gray-500 hover:text-primary active:text-primary-dark flex items-center gap-1 py-1.5 px-2 -ml-2 rounded-lg hover:bg-primary/5 active:bg-primary/10 transition-colors min-h-[44px] cursor-pointer"
             >
               <Receipt size={13} /> {t('expense.addExpense')}
             </button>
@@ -382,57 +451,50 @@ export function ActivityCard({ activity, dayId, reorderMode }: Props) {
           {/* Bottom info row */}
           <div className={`flex items-center gap-2.5 mt-2.5 ${isCompleted || isSkipped ? 'opacity-50' : ''}`}>
             {activity.lat && activity.lng ? (
-              <a
-                href={`https://www.google.com/maps/dir/?api=1&destination=${activity.lat},${activity.lng}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={(e) => e.stopPropagation()}
-                onPointerDown={(e) => e.stopPropagation()}
-                className="flex items-center gap-1 text-xs text-spain-red font-medium hover:underline"
-              >
-                <MapPin size={13} /> {t('activity.viewMap')}
-              </a>
+              <div className="flex items-center gap-2">
+                <a
+                  href={`https://www.google.com/maps/dir/?api=1&destination=${activity.lat},${activity.lng}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  onPointerDown={(e) => e.stopPropagation()}
+                  className="flex items-center gap-1 text-xs text-primary font-medium hover:underline min-h-[44px]"
+                >
+                  <MapPin size={13} /> {t('activity.viewMap')}
+                </a>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setShowEdit(true); }}
+                  onPointerDown={(e) => e.stopPropagation()}
+                  className="flex items-center gap-0.5 text-[11px] text-gray-400 hover:text-primary font-medium cursor-pointer transition-colors min-h-[44px]"
+                >
+                  <Pencil size={10} /> {t('activity.edit')}
+                </button>
+              </div>
             ) : (
-              <span className="flex items-center gap-1 text-[11px] text-amber-600">
-                <MapPin size={12} /> {t('activity.noLocation')}
-              </span>
+              <button
+                onClick={(e) => { e.stopPropagation(); setShowLocationEdit(true); }}
+                onPointerDown={(e) => e.stopPropagation()}
+                className="flex items-center gap-1 text-[11px] text-amber-600 hover:text-amber-700 font-medium hover:underline cursor-pointer min-h-[44px]"
+              >
+                <MapPin size={12} /> {t('activity.addLocation' as TranslationKey)}
+              </button>
             )}
 
-            {/* Cost */}
-            <div className="ml-auto flex items-center gap-1.5 flex-shrink-0">
-              {activity.estimatedCost > 0 && (
-                <span className={`text-[11px] tabular-nums ${totalExpenseAmount > 0 ? 'text-gray-400 line-through decoration-gray-300' : isSkipped ? 'text-gray-400' : 'text-spain-red font-bold'}`}>
-                  {format(activity.estimatedCost)}
-                </span>
-              )}
-              {totalExpenseAmount > 0 && (
-                <span className={`text-[13px] font-bold tabular-nums ${
-                  activity.estimatedCost > 0 && totalExpenseAmount > activity.estimatedCost
-                    ? 'text-red-500'
-                    : activity.estimatedCost > 0 && totalExpenseAmount <= activity.estimatedCost
-                    ? 'text-emerald-600'
-                    : 'text-spain-red'
-                }`}>
-                  {format(totalExpenseAmount)}
-                </span>
-              )}
-            </div>
-
             {/* Action buttons */}
-            <div className="flex items-center gap-0.5 relative flex-shrink-0" ref={actionsRef}>
+            <div className="flex items-center gap-0.5 relative flex-shrink-0 ml-auto" ref={actionsRef}>
               {/* More actions toggle */}
               <button
                 onClick={(e) => { e.stopPropagation(); setShowActions(!showActions); }}
                 onPointerDown={(e) => e.stopPropagation()}
-                className="p-1 text-gray-300 hover:text-gray-500 rounded-lg hover:bg-gray-100/60 transition-colors"
-                aria-label={t('activity.edit')}
+                className="p-1.5 text-gray-300 hover:text-gray-500 rounded-lg hover:bg-gray-100/60 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center cursor-pointer focus-visible:ring-2 focus-visible:ring-primary/30"
+                aria-label={t('activity.moreActions' as TranslationKey)}
               >
                 <MoreHorizontal size={16} />
               </button>
 
               {/* Dropdown actions */}
               {showActions && (
-                <div className="absolute right-0 bottom-full mb-1 bg-white rounded-xl shadow-lg shadow-black/10 border border-gray-200/60 py-1 z-30 min-w-[140px] animate-fade-in" onPointerDown={(e) => e.stopPropagation()}>
+                <div className="absolute right-0 bottom-full mb-1 bg-surface rounded-xl shadow-lg shadow-black/10 border border-gray-300/80 py-1 z-30 min-w-[140px] animate-fade-in" onPointerDown={(e) => e.stopPropagation()}>
                   <button
                     onClick={(e) => { e.stopPropagation(); setShowEdit(true); setShowActions(false); }}
                     className="w-full flex items-center gap-2 px-3 py-2 text-xs text-gray-600 hover:bg-gray-50 transition-colors"
@@ -467,8 +529,8 @@ export function ActivityCard({ activity, dayId, reorderMode }: Props) {
       </div>
 
       {showDeleteConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-md p-4" onClick={() => setShowDeleteConfirm(false)}>
-          <div className="bg-white/95 backdrop-blur-xl rounded-3xl shadow-2xl max-w-sm w-full p-6 border border-white/60" onClick={(e) => e.stopPropagation()}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-md p-4 animate-backdrop" onClick={() => setShowDeleteConfirm(false)}>
+          <div className="bg-surface/95 backdrop-blur-xl rounded-3xl shadow-2xl max-w-sm w-full p-6 border border-white/60 animate-modal-pop" onClick={(e) => e.stopPropagation()}>
             <h3 className="font-bold text-lg text-gray-800 mb-2">{t('activity.delete')}</h3>
             <p className="text-sm text-gray-500 mb-4">
               <span className="font-bold text-gray-700">{activity.nameKo}</span> {t('activity.deleteConfirm')}
@@ -491,29 +553,40 @@ export function ActivityCard({ activity, dayId, reorderMode }: Props) {
         </div>
       )}
 
-      {showEdit && (
-        <ActivityFormModal
-          activity={activity}
-          dayId={dayId}
-          onClose={() => setShowEdit(false)}
-        />
-      )}
+      <Suspense fallback={null}>
+        {showEdit && (
+          <ActivityFormModal
+            activity={activity}
+            dayId={dayId}
+            onClose={() => setShowEdit(false)}
+          />
+        )}
 
-      {showBooking && (
-        <BookingModal
-          activity={activity}
-          dayId={dayId}
-          onClose={() => setShowBooking(false)}
-        />
-      )}
+        {showBooking && (
+          <BookingModal
+            activity={activity}
+            dayId={dayId}
+            onClose={() => setShowBooking(false)}
+          />
+        )}
 
-      {showDetail && (
-        <ActivityDetailModal
-          activity={activity}
-          dayId={dayId}
-          onClose={() => setShowDetail(false)}
-        />
-      )}
+        {showDetail && (
+          <ActivityDetailModal
+            activity={activity}
+            dayId={dayId}
+            onClose={() => setShowDetail(false)}
+          />
+        )}
+
+        {showLocationEdit && (
+          <ActivityFormModal
+            activity={activity}
+            dayId={dayId}
+            locationOnly
+            onClose={() => setShowLocationEdit(false)}
+          />
+        )}
+      </Suspense>
     </>
   );
-}
+});

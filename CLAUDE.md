@@ -14,7 +14,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Single-page React PWA for honeymoon trip planning. Korean is the primary UI language with English and Spanish support.
 
-**State management:** Single Zustand store (`src/store/useTripStore.ts`) with `persist` middleware, stored in localStorage as `honeymoon-trip-store` (version 4). The store holds all trip data: days, activities, expenses, owners, immigration schedules, inter-city transports, and UI state. Store migrations handle version upgrades (v2→v3→v4).
+**State management:** Single Zustand store (`src/store/useTripStore.ts`) with `persist` middleware, stored in localStorage as `honeymoon-trip-store` (version 6). The store holds all trip data: days, activities, expenses, owners, immigration schedules, inter-city transports, theme, and UI state. Store migrations handle version upgrades (v2→v3→v4→v5→v6).
 
 **Data flow:** Static destination/trip data lives in `src/data/` and seeds the store's initial state. Custom destinations are appended at runtime via `addCustomDestination()`. All mutations go through Zustand actions — components use `useTripStore((s) => s.someField)` selectors.
 
@@ -32,7 +32,7 @@ All in `src/types/index.ts`. The 5 activity/content types: `'attraction' | 'shop
 
 ## Styling
 
-Tailwind CSS 4 with custom theme tokens in `src/index.css` (`spain-red`, `spain-yellow`, `warm-*`, etc.). Glassmorphism pattern: `backdrop-blur-xl`, `bg-white/70`, `rounded-2xl/3xl`. Mobile-first with `sm:` breakpoint for desktop. Bottom-sheet modals use `items-end` on mobile, `items-center` on `sm+`. Minimum touch targets: 44px.
+Tailwind CSS 4 with CSS variable-based theming in `src/index.css`. Three themes: Cloud Dancer (default, Pantone 2026), Classic Spain, Mocha Mousse — switched via `data-theme` attribute on `<html>`. Token names: `primary`, `primary-dark`, `primary-light`, `secondary`, `secondary-dark`, `secondary-light`, `theme-dark`, `theme-navy`, `warm-*`. Theme stored in Zustand (`theme: ThemeId`) and synced to DOM via `useTheme()` hook in App.tsx. Glassmorphism pattern: `backdrop-blur-xl`, `bg-white/70`, `rounded-2xl/3xl`. Mobile-first with `sm:` breakpoint for desktop. Bottom-sheet modals use `items-end` on mobile, `items-center` on `sm+`. Minimum touch targets: 44px.
 
 ## Gotchas
 
@@ -42,7 +42,7 @@ Tailwind CSS 4 with custom theme tokens in `src/index.css` (`spain-red`, `spain-
 - Minimum icon sizes: 12px info, 14px actions, 16px primary
 - Base64 media in localStorage has ~5-10MB limit; warn users at 3MB
 - Accommodation syncs across all days with the same `destinationId` via `updateAccommodationByDestination()`
-- Store version is 4 — add migrations when changing persisted state shape
+- Store version is 6 — add migrations when changing persisted state shape
 
 ## Deployment
 

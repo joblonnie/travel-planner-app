@@ -90,10 +90,10 @@ export function TripListPage() {
           return (
             <div
               key={trip.id}
-              className={`relative bg-white rounded-2xl border transition-all ${
+              className={`relative bg-surface rounded-2xl border transition-all ${
                 isCurrent
                   ? 'border-emerald-300 shadow-lg shadow-emerald-500/10 ring-1 ring-emerald-200/50'
-                  : 'border-gray-200/60 shadow-sm hover:shadow-md hover:border-gray-300'
+                  : 'border-gray-300/80 shadow-sm hover:shadow-md hover:border-gray-300'
               }`}
             >
               {/* Current badge */}
@@ -108,9 +108,13 @@ export function TripListPage() {
                 className="w-full text-left p-4 pt-5 cursor-pointer"
               >
                 <div className="flex items-start gap-3">
-                  {/* Emoji */}
-                  <div className="w-12 h-12 bg-gray-50 rounded-xl flex items-center justify-center text-2xl border border-gray-100 flex-shrink-0">
-                    {trip.emoji || '✈️'}
+                  {/* Trip icon */}
+                  <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${
+                    trip.emoji
+                      ? 'bg-gray-50 border border-gray-100 text-2xl'
+                      : 'bg-gradient-to-br from-primary to-cta-end shadow-sm shadow-primary/20'
+                  }`}>
+                    {trip.emoji || <MapPin size={20} className="text-white" />}
                   </div>
 
                   <div className="flex-1 min-w-0">
@@ -203,21 +207,22 @@ export function TripListPage() {
 
       {/* Delete confirmation */}
       {confirmDeleteId && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-md p-4" onClick={() => setConfirmDeleteId(null)}>
-          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-5 border border-gray-100/50" onClick={(e) => e.stopPropagation()}>
-            <p className="text-sm text-gray-800 font-medium mb-4">{t('trips.deleteConfirm' as TranslationKey)}</p>
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-md p-4 animate-backdrop" onClick={() => setConfirmDeleteId(null)} onKeyDown={(e) => e.key === 'Escape' && setConfirmDeleteId(null)}>
+          <div className="bg-surface/95 backdrop-blur-xl w-full sm:max-w-sm sm:rounded-2xl rounded-t-2xl shadow-2xl p-5 border border-gray-200/80 animate-sheet-up sm:animate-modal-pop" onClick={(e) => e.stopPropagation()}>
+            <h3 className="font-bold text-lg text-gray-800 mb-2">{t('trips.delete' as TranslationKey)}</h3>
+            <p className="text-sm text-gray-500 mb-4">{t('trips.deleteConfirm' as TranslationKey)}</p>
             <div className="flex gap-2">
               <button
                 onClick={() => setConfirmDeleteId(null)}
-                className="flex-1 py-2.5 bg-gray-100 text-gray-600 rounded-xl text-sm font-bold hover:bg-gray-200 transition-colors"
+                className="flex-1 py-2.5 bg-gray-100 text-gray-600 rounded-xl text-sm font-bold hover:bg-gray-200 transition-colors min-h-[44px]"
               >
                 {t('activity.cancel' as TranslationKey)}
               </button>
               <button
                 onClick={confirmDelete}
-                className="flex-1 py-2.5 bg-red-500 text-white rounded-xl text-sm font-bold hover:bg-red-600 transition-colors"
+                className="flex-1 py-2.5 bg-red-500 text-white rounded-xl text-sm font-bold hover:bg-red-600 transition-colors flex items-center justify-center gap-2 min-h-[44px]"
               >
-                {t('trips.delete' as TranslationKey)}
+                <Trash2 size={14} /> {t('trips.delete' as TranslationKey)}
               </button>
             </div>
           </div>

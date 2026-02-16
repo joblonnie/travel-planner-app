@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, Check, Train } from 'lucide-react';
+import { X, Train, Pencil, Plus } from 'lucide-react';
 import { useEscKey } from '../hooks/useEscKey.ts';
 import { useTripStore } from '../store/useTripStore.ts';
 import { useI18n, type TranslationKey } from '../i18n/useI18n.ts';
@@ -62,15 +62,15 @@ export function TransportFormModal({ fromDayId, toDayId, fromCity, toCity, trans
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-md sm:p-4" onClick={onClose}>
-      <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto border border-gray-100/30" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-md sm:p-4 animate-backdrop" onClick={onClose}>
+      <div className="bg-surface rounded-t-3xl sm:rounded-3xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto border border-gray-300/80 animate-sheet-up sm:animate-modal-pop" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-100/50 sticky top-0 bg-white/95 backdrop-blur-sm z-10 rounded-t-3xl">
+        <div className="flex items-center justify-between p-4 border-b border-gray-200/80 sticky top-0 bg-white/95 backdrop-blur-sm z-10 rounded-t-3xl">
           <h3 className="font-bold text-gray-800 flex items-center gap-2.5">
             <div className="w-7 h-7 bg-gradient-to-br from-amber-500 to-orange-600 rounded-lg flex items-center justify-center shadow-sm">
-              <Train size={14} className="text-white" />
+              {isEdit ? <Pencil size={14} className="text-white" /> : <Train size={14} className="text-white" />}
             </div>
-            {isEdit ? t('activityForm.save') : t('intercity.add')}
+            {isEdit ? t('activity.edit') : t('intercity.add')}
           </h3>
           <button onClick={onClose} className="p-1.5 hover:bg-gray-100 rounded-xl transition-colors">
             <X size={18} className="text-gray-400" />
@@ -148,12 +148,12 @@ export function TransportFormModal({ fromDayId, toDayId, fromCity, toCity, trans
         </div>
 
         {/* Save */}
-        <div className="p-4 border-t border-gray-100/80 bg-gray-50/30 rounded-b-3xl">
+        <div className="p-4 border-t border-gray-200 bg-gray-50/30 rounded-b-3xl">
           <button
             onClick={handleSave}
             className="w-full bg-gradient-to-r from-amber-500 to-orange-600 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:shadow-lg transition-all active:scale-[0.98]"
           >
-            <Check size={16} />
+            {isEdit ? <Pencil size={16} /> : <Plus size={16} />}
             {isEdit ? t('activityForm.save') : t('activityForm.add')}
           </button>
         </div>

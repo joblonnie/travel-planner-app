@@ -224,6 +224,8 @@ export interface TripExpense {
   owner: ExpenseOwner;
 }
 
+export type ThemeId = 'cloud-dancer' | 'classic-spain' | 'mocha-mousse';
+
 export interface TripRestaurantComment {
   id: string;
   restaurantId: string;

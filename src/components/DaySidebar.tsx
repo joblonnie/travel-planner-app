@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Plus, Pencil, Trash2, GripVertical, CheckCircle2, Calendar, ChevronDown, ChevronUp, Plane, Hotel, PlaneTakeoff, PlaneLanding, Train, Bus, Car, MapPin, X, Copy } from 'lucide-react';
 import {
   DndContext,
@@ -110,21 +110,21 @@ function ImmigrationCard({ schedule, onEdit, onDelete }: ImmigrationCardProps) {
         )}
       </div>
 
-      {/* Hover actions */}
-      <div className="flex items-center justify-end gap-0.5 px-2 pb-1.5 opacity-0 group-hover/imm:opacity-100 transition-all duration-200">
+      {/* Action buttons - always visible on mobile, hover on desktop */}
+      <div className="flex items-center justify-end gap-1 px-2.5 pb-2 sm:opacity-0 sm:group-hover/imm:opacity-100 transition-all duration-200">
         <button
           onClick={(e) => { e.stopPropagation(); onEdit(); }}
-          className={`p-1 text-gray-400 hover:${labelColorClass} hover:bg-white/60 rounded-lg transition-all`}
+          className={`p-2 ${labelColorClass} sm:text-gray-400 sm:hover:${labelColorClass} hover:bg-white/60 rounded-lg transition-all focus-visible:ring-2 focus-visible:ring-blue-300 min-w-[44px] min-h-[44px] flex items-center justify-center cursor-pointer`}
           aria-label={t('activity.edit')}
         >
-          <Pencil size={12} />
+          <Pencil size={14} />
         </button>
         <button
           onClick={(e) => { e.stopPropagation(); onDelete(); }}
-          className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50/60 rounded-lg transition-all"
+          className="p-2 text-red-400 sm:text-gray-400 hover:text-red-500 hover:bg-red-50/60 rounded-lg transition-all focus-visible:ring-2 focus-visible:ring-red-300 min-w-[44px] min-h-[44px] flex items-center justify-center cursor-pointer"
           aria-label={t('activity.delete')}
         >
-          <Trash2 size={12} />
+          <Trash2 size={14} />
         </button>
       </div>
     </div>
@@ -151,7 +151,7 @@ function InterCityIndicator({ fromCity, toCity, transports, onAdd, onEdit, onDel
 
         {/* Existing transports */}
         {transports.map((tr) => (
-          <div key={tr.id} className="group/tr relative mx-2 my-1 bg-gradient-to-r from-amber-50/80 to-orange-50/60 rounded-xl border border-amber-200/40 px-2.5 py-1.5 flex items-center gap-2">
+          <div key={tr.id} className="group/tr relative mx-2 my-1 bg-gradient-to-r from-amber-50/80 to-orange-50/60 rounded-xl border border-amber-200/60 px-2.5 py-1.5 flex items-center gap-2 cursor-pointer hover:border-amber-300 transition-all" onClick={() => onEdit(tr)}>
             <TransportIcon type={tr.type} />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1">
@@ -165,19 +165,15 @@ function InterCityIndicator({ fromCity, toCity, transports, onAdd, onEdit, onDel
                 {tr.departureTime && <span className="text-[11px] text-amber-600 font-mono ml-1">{tr.departureTime}</span>}
               </div>
             </div>
+            <div className="p-1.5 text-amber-500 rounded-lg min-w-[36px] min-h-[36px] flex items-center justify-center">
+              <Pencil size={13} />
+            </div>
             <button
-              onClick={() => onEdit(tr)}
-              className="p-0.5 text-gray-300 hover:text-amber-600 rounded opacity-0 group-hover/tr:opacity-100 transition-all"
-              aria-label={t('activity.edit')}
-            >
-              <Pencil size={14} />
-            </button>
-            <button
-              onClick={() => onDelete(tr.id)}
-              className="p-0.5 text-gray-300 hover:text-red-500 rounded opacity-0 group-hover/tr:opacity-100 transition-all"
+              onClick={(e) => { e.stopPropagation(); onDelete(tr.id); }}
+              className="p-1.5 text-red-400 sm:text-gray-300 hover:text-red-500 rounded-lg sm:opacity-0 sm:group-hover/tr:opacity-100 transition-all focus-visible:ring-2 focus-visible:ring-red-300 min-w-[36px] min-h-[36px] flex items-center justify-center cursor-pointer"
               aria-label={t('activity.delete')}
             >
-              <Trash2 size={14} />
+              <Trash2 size={13} />
             </button>
           </div>
         ))}
@@ -267,21 +263,21 @@ function FlightCard({ flight, onEdit, onDelete }: FlightCardProps) {
         </div>
       </div>
 
-      {/* Hover action bar */}
-      <div className="flex items-center justify-end gap-0.5 px-2 pb-1.5 opacity-0 group-hover/flight:opacity-100 transition-all duration-200">
+      {/* Action buttons - always visible on mobile, hover on desktop */}
+      <div className="flex items-center justify-end gap-1 px-2.5 pb-2 sm:opacity-0 sm:group-hover/flight:opacity-100 transition-all duration-200">
         <button
           onClick={(e) => { e.stopPropagation(); onEdit(); }}
-          className="p-1 text-gray-400 hover:text-blue-600 hover:bg-blue-100/60 rounded-lg transition-all"
+          className="p-2 text-blue-500 sm:text-gray-400 hover:text-blue-600 hover:bg-blue-100/60 rounded-lg transition-all focus-visible:ring-2 focus-visible:ring-blue-300 min-w-[44px] min-h-[44px] flex items-center justify-center cursor-pointer"
           aria-label={t('activity.edit')}
         >
-          <Pencil size={12} />
+          <Pencil size={14} />
         </button>
         <button
           onClick={(e) => { e.stopPropagation(); onDelete(); }}
-          className="p-1 text-gray-400 hover:text-red-500 hover:bg-red-50/60 rounded-lg transition-all"
+          className="p-2 text-red-400 sm:text-gray-400 hover:text-red-500 hover:bg-red-50/60 rounded-lg transition-all focus-visible:ring-2 focus-visible:ring-red-300 min-w-[44px] min-h-[44px] flex items-center justify-center cursor-pointer"
           aria-label={t('activity.delete')}
         >
-          <Trash2 size={12} />
+          <Trash2 size={14} />
         </button>
       </div>
     </div>
@@ -329,7 +325,7 @@ function SortableDayItem({
           onClick={onSelect}
           className={`w-full text-left rounded-2xl transition-all duration-300 cursor-pointer ${
             isActive
-              ? 'bg-white shadow-[0_4px_24px_rgba(0,0,0,0.08)] ring-1 ring-spain-red/10'
+              ? 'bg-white shadow-[0_4px_24px_rgba(0,0,0,0.08)] ring-1 ring-primary/10'
               : 'bg-white/40 hover:bg-white/70 hover:shadow-[0_2px_12px_rgba(0,0,0,0.05)]'
           }`}
         >
@@ -342,7 +338,7 @@ function SortableDayItem({
               </div>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <span className={`text-[10px] font-bold uppercase tracking-wider ${isActive ? 'text-spain-red' : 'text-gray-600'}`}>
+                  <span className={`text-[10px] font-bold uppercase tracking-wider ${isActive ? 'text-primary' : 'text-gray-600'}`}>
                     {t('day.day')} {day.dayNumber}
                   </span>
                   <span className="text-[10px] text-gray-500 font-mono">{day.date}</span>
@@ -356,6 +352,7 @@ function SortableDayItem({
                 {...attributes}
                 {...listeners}
                 className="cursor-grab active:cursor-grabbing text-gray-200 hover:text-gray-400 touch-none opacity-0 group-hover:opacity-100 transition-opacity"
+                aria-label={t('day.reorderMode')}
                 onClick={(e) => e.stopPropagation()}
               >
                 <GripVertical size={16} />
@@ -382,7 +379,7 @@ function SortableDayItem({
               )}
               {hasAccom && <Hotel size={10} className="text-purple-500" />}
               {dayCost > 0 && (
-                <span className="text-[10px] text-spain-red font-bold ml-auto">{format(dayCost)}</span>
+                <span className="text-[10px] text-primary font-bold ml-auto">{format(dayCost)}</span>
               )}
             </div>
 
@@ -391,7 +388,7 @@ function SortableDayItem({
               <div className="mt-2 ml-9 h-1 bg-gray-100/80 rounded-full overflow-hidden">
                 <div
                   className={`h-full rounded-full transition-all duration-700 ease-out ${
-                    progress === 100 ? 'bg-gradient-to-r from-emerald-500 to-emerald-400' : 'bg-gradient-to-r from-spain-red to-spain-yellow'
+                    progress === 100 ? 'bg-gradient-to-r from-emerald-500 to-emerald-400' : 'bg-gradient-to-r from-primary to-secondary'
                   }`}
                   style={{ width: `${progress}%` }}
                 />
@@ -400,14 +397,14 @@ function SortableDayItem({
           </div>
         </button>
 
-        {/* Action bar - slides in on hover/active */}
+        {/* Action bar - always visible on mobile, hover/active on desktop */}
         <div className={`flex items-center gap-0.5 px-3.5 pb-2 ml-9 transition-all duration-200 ${
-          isActive ? 'opacity-100' : 'opacity-0 group-hover:opacity-100 max-h-0 group-hover:max-h-10 overflow-hidden'
+          isActive ? 'opacity-100' : 'sm:opacity-0 sm:group-hover:opacity-100 sm:max-h-0 sm:group-hover:max-h-10 sm:overflow-hidden'
         }`}>
           <button
             onClick={(e) => { e.stopPropagation(); onMoveUp(); }}
             disabled={!canMoveUp}
-            className={`p-1.5 rounded-md transition-all ${canMoveUp ? 'text-gray-500 hover:text-gray-700 hover:bg-gray-100/80' : 'text-gray-200'}`}
+            className={`p-2 rounded-lg transition-all min-w-[36px] min-h-[36px] flex items-center justify-center ${canMoveUp ? 'text-gray-500 hover:text-gray-700 hover:bg-gray-100/80' : 'text-gray-200'}`}
             aria-label={t('day.prevDay' as TranslationKey)}
           >
             <ChevronUp size={14} />
@@ -415,7 +412,7 @@ function SortableDayItem({
           <button
             onClick={(e) => { e.stopPropagation(); onMoveDown(); }}
             disabled={!canMoveDown}
-            className={`p-1.5 rounded-md transition-all ${canMoveDown ? 'text-gray-500 hover:text-gray-700 hover:bg-gray-100/80' : 'text-gray-200'}`}
+            className={`p-2 rounded-lg transition-all min-w-[36px] min-h-[36px] flex items-center justify-center ${canMoveDown ? 'text-gray-500 hover:text-gray-700 hover:bg-gray-100/80' : 'text-gray-200'}`}
             aria-label={t('day.nextDay' as TranslationKey)}
           >
             <ChevronDown size={14} />
@@ -423,21 +420,21 @@ function SortableDayItem({
           <div className="flex-1" />
           <button
             onClick={(e) => { e.stopPropagation(); onDuplicate(); }}
-            className="p-1.5 text-gray-500 hover:text-blue-600 hover:bg-blue-50/80 rounded-md transition-all"
+            className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50/80 rounded-lg transition-all min-w-[36px] min-h-[36px] flex items-center justify-center"
             aria-label={t('feature.duplicate' as TranslationKey)}
           >
             <Copy size={14} />
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); onEdit(); }}
-            className="p-1.5 text-gray-500 hover:text-spain-red hover:bg-red-50/80 rounded-md transition-all"
+            className="p-2 text-gray-500 hover:text-primary hover:bg-red-50/80 rounded-lg transition-all min-w-[36px] min-h-[36px] flex items-center justify-center"
             aria-label={t('activity.edit')}
           >
             <Pencil size={14} />
           </button>
           <button
             onClick={(e) => { e.stopPropagation(); onDelete(); }}
-            className="p-1.5 text-gray-500 hover:text-red-500 hover:bg-red-50/80 rounded-md transition-all"
+            className="p-2 text-gray-500 hover:text-red-500 hover:bg-red-50/80 rounded-lg transition-all min-w-[36px] min-h-[36px] flex items-center justify-center"
             aria-label={t('activity.delete')}
           >
             <Trash2 size={14} />
@@ -513,18 +510,25 @@ export function DaySidebar({ onClose }: { onClose: () => void }) {
   };
 
   // Immigration schedules
-  const departureSchedules = immigrationSchedules.filter((s) => s.type === 'departure');
-  const arrivalSchedules = immigrationSchedules.filter((s) => s.type === 'arrival');
+  const departureSchedules = useMemo(() => immigrationSchedules.filter((s) => s.type === 'departure'), [immigrationSchedules]);
+  const arrivalSchedules = useMemo(() => immigrationSchedules.filter((s) => s.type === 'arrival'), [immigrationSchedules]);
 
   // Helper: find inter-city transports between two days
   const getTransportsBetween = (fromDayId: string, toDayId: string) =>
     interCityTransports.filter((tr) => tr.fromDayId === fromDayId && tr.toDayId === toDayId);
 
   // Summary stats
-  const totalCost = days.reduce((sum, d) => sum + d.activities.reduce((s, a) => s + a.estimatedCost, 0), 0);
-  const totalActivities = days.reduce((sum, d) => sum + d.activities.length, 0);
-  const totalCompleted = days.reduce((sum, d) => sum + d.activities.filter((a) => a.isCompleted).length, 0);
-  const overallProgress = totalActivities > 0 ? Math.round((totalCompleted / totalActivities) * 100) : 0;
+  const { totalCost, totalActivities, totalCompleted, overallProgress } = useMemo(() => {
+    const cost = days.reduce((sum, d) => sum + d.activities.reduce((s, a) => s + a.estimatedCost, 0), 0);
+    const acts = days.reduce((sum, d) => sum + d.activities.length, 0);
+    const completed = days.reduce((sum, d) => sum + d.activities.filter((a) => a.isCompleted).length, 0);
+    return {
+      totalCost: cost,
+      totalActivities: acts,
+      totalCompleted: completed,
+      overallProgress: acts > 0 ? Math.round((completed / acts) * 100) : 0,
+    };
+  }, [days]);
 
   const handleSelectDay = (index: number) => {
     setCurrentDay(index);
@@ -534,10 +538,10 @@ export function DaySidebar({ onClose }: { onClose: () => void }) {
   return (
     <>
       {/* Backdrop */}
-      <div className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm animate-backdrop" onClick={onClose} />
 
       {/* Sidebar Panel */}
-      <aside className="fixed top-0 left-0 z-50 w-80 max-w-[85vw] h-full bg-white/95 backdrop-blur-2xl border-r border-gray-200/50 shadow-2xl overflow-y-auto scrollbar-hide scroll-smooth" role="navigation" aria-label={t('sidebar.schedule')}>
+      <aside className="fixed top-0 left-0 z-50 w-80 max-w-[85vw] h-full bg-surface/95 backdrop-blur-2xl border-r border-card-border shadow-2xl overflow-y-auto scrollbar-hide scroll-smooth animate-sidebar-in" role="navigation" aria-label={t('sidebar.schedule')}>
         <div className="p-3 pt-3">
           {/* ── Header ── */}
           <div className="mb-4 px-1">
@@ -546,31 +550,31 @@ export function DaySidebar({ onClose }: { onClose: () => void }) {
               <div className="flex items-center gap-1">
                 <button
                   onClick={() => setShowDestModal(true)}
-                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold text-spain-red hover:bg-red-50/80 transition-all border border-spain-red/15"
+                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold text-primary hover:bg-red-50/80 transition-all border border-primary/15"
                 >
                   <MapPin size={12} />
                   {t('place.addPlace')}
                 </button>
                 <button
                   onClick={onClose}
-                  className="p-1.5 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100/80 transition-all"
+                  className="p-2 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100/80 transition-all min-w-[36px] min-h-[36px] flex items-center justify-center focus-visible:ring-2 focus-visible:ring-primary/30"
                   aria-label={t('sidebar.close' as TranslationKey)}
                 >
-                  <X size={15} />
+                  <X size={16} />
                 </button>
               </div>
             </div>
 
             {/* Summary */}
-            <div className="bg-white/80 backdrop-blur-xl rounded-2xl p-3.5 border border-gray-100 shadow-[0_2px_10px_rgba(0,0,0,0.04)]">
+            <div className="bg-surface/80 backdrop-blur-xl rounded-2xl p-3.5 border border-card-border shadow-[0_2px_10px_rgba(0,0,0,0.04)]">
               <div className="flex items-center justify-between text-[10px] text-gray-600 mb-1.5">
                 <span className="font-medium">{days.length}{t('trips.days' as TranslationKey)} · {totalActivities}{t('trips.activities' as TranslationKey)}</span>
-                <span className="font-bold text-spain-red text-[11px]">{format(totalCost)}</span>
+                <span className="font-bold text-primary text-[11px]">{format(totalCost)}</span>
               </div>
               <div className="h-1.5 bg-gray-100/60 rounded-full overflow-hidden">
                 <div
                   className={`h-full rounded-full transition-all duration-700 ease-out ${
-                    overallProgress === 100 ? 'bg-gradient-to-r from-emerald-400 to-emerald-300' : 'bg-gradient-to-r from-spain-red to-spain-yellow'
+                    overallProgress === 100 ? 'bg-gradient-to-r from-emerald-400 to-emerald-300' : 'bg-gradient-to-r from-primary to-secondary'
                   }`}
                   style={{ width: `${overallProgress}%` }}
                 />
@@ -592,7 +596,7 @@ export function DaySidebar({ onClose }: { onClose: () => void }) {
                       <button onClick={handleDeleteImmigration} className="flex-1 bg-gradient-to-r from-red-500 to-red-600 text-white text-[11px] py-1.5 rounded-xl font-bold transition-all">
                         {t('immigration.delete')}
                       </button>
-                      <button onClick={() => setDeleteImmId(null)} className="flex-1 bg-white text-gray-500 text-[11px] py-1.5 rounded-xl border border-gray-200/60 hover:bg-gray-50 transition-colors">
+                      <button onClick={() => setDeleteImmId(null)} className="flex-1 bg-white text-gray-500 text-[11px] py-1.5 rounded-xl border border-gray-300/80 hover:bg-gray-50 transition-colors">
                         {t('activity.cancel')}
                       </button>
                     </div>
@@ -623,7 +627,7 @@ export function DaySidebar({ onClose }: { onClose: () => void }) {
           {/* ── Day & Flight list ── */}
           <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <SortableContext items={days.map((d) => d.id)} strategy={verticalListSortingStrategy}>
-              <nav className="space-y-1.5 md:space-y-2">
+              <nav className="space-y-1.5 md:space-y-2" aria-label={t('sidebar.schedule')}>
                 {days.map((day, idx) => {
                   const isDeleting = deleteConfirmId === day.id;
                   const flights = day.flights || [];
@@ -639,7 +643,7 @@ export function DaySidebar({ onClose }: { onClose: () => void }) {
                           <button onClick={() => handleDelete(day.id)} className="flex-1 bg-gradient-to-r from-red-500 to-red-600 text-white text-[10px] py-1.5 rounded-xl font-bold hover:shadow-md transition-all flex items-center justify-center gap-1">
                             <Trash2 size={10} /> {t('activity.delete')}
                           </button>
-                          <button onClick={() => setDeleteConfirmId(null)} className="flex-1 bg-white text-gray-500 text-[10px] py-1.5 rounded-xl border border-gray-200/60 hover:bg-gray-50 transition-colors">
+                          <button onClick={() => setDeleteConfirmId(null)} className="flex-1 bg-white text-gray-500 text-[10px] py-1.5 rounded-xl border border-gray-300/80 hover:bg-gray-50 transition-colors">
                             {t('activity.cancel')}
                           </button>
                         </div>
@@ -682,7 +686,7 @@ export function DaySidebar({ onClose }: { onClose: () => void }) {
                                       <button onClick={handleDeleteFlight} className="flex-1 bg-gradient-to-r from-red-500 to-red-600 text-white text-[11px] py-1.5 rounded-xl font-bold transition-all">
                                         {t('activity.delete')}
                                       </button>
-                                      <button onClick={() => setDeleteFlightInfo(null)} className="flex-1 bg-white text-gray-500 text-[11px] py-1.5 rounded-xl border border-gray-200/60 hover:bg-gray-50 transition-colors">
+                                      <button onClick={() => setDeleteFlightInfo(null)} className="flex-1 bg-white text-gray-500 text-[11px] py-1.5 rounded-xl border border-gray-300/80 hover:bg-gray-50 transition-colors">
                                         {t('activity.cancel')}
                                       </button>
                                     </div>
@@ -734,7 +738,7 @@ export function DaySidebar({ onClose }: { onClose: () => void }) {
                       <button onClick={handleDeleteImmigration} className="flex-1 bg-gradient-to-r from-red-500 to-red-600 text-white text-[11px] py-1.5 rounded-xl font-bold transition-all">
                         {t('immigration.delete')}
                       </button>
-                      <button onClick={() => setDeleteImmId(null)} className="flex-1 bg-white text-gray-500 text-[11px] py-1.5 rounded-xl border border-gray-200/60 hover:bg-gray-50 transition-colors">
+                      <button onClick={() => setDeleteImmId(null)} className="flex-1 bg-white text-gray-500 text-[11px] py-1.5 rounded-xl border border-gray-300/80 hover:bg-gray-50 transition-colors">
                         {t('activity.cancel')}
                       </button>
                     </div>

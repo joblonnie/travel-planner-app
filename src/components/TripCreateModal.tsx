@@ -15,10 +15,8 @@ const emojiOptions = ['✈️', '🏖️', '🗺️', '🌍', '🏔️', '🌸',
 export function TripCreateModal({ onClose }: Props) {
   const { t } = useI18n();
   const createTrip = useTripStore((s) => s.createTrip);
-  const { currency, symbol, DEFAULT_RATES } = useCurrency();
+  const { currency, symbol, rate } = useCurrency();
   useEscKey(onClose);
-
-  const rate = DEFAULT_RATES[currency] ?? 1;
   const defaultBudgetDisplay = currency === 'EUR' ? 5000 : Math.round(5000 * rate);
 
   const [tripName, setTripName] = useState('');
@@ -56,10 +54,10 @@ export function TripCreateModal({ onClose }: Props) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-md sm:p-4" onClick={onClose}>
-      <div className="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl max-w-md w-full overflow-hidden border border-gray-100/50" onClick={(e) => e.stopPropagation()}>
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-md sm:p-4 animate-backdrop" onClick={onClose}>
+      <div className="bg-surface rounded-t-3xl sm:rounded-3xl shadow-2xl max-w-md w-full overflow-hidden border border-gray-200/80 animate-sheet-up sm:animate-modal-pop" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-100/80">
+        <div className="flex items-center justify-between p-4 border-b border-gray-200">
           <div className="flex items-center gap-2.5">
             <div className="w-7 h-7 bg-gradient-to-br from-emerald-500 to-green-500 rounded-lg flex items-center justify-center shadow-sm">
               <Plane size={14} className="text-white" />
@@ -142,7 +140,7 @@ export function TripCreateModal({ onClose }: Props) {
         </div>
 
         {/* Create button */}
-        <div className="p-4 border-t border-gray-100/80 bg-gray-50/30 rounded-b-3xl">
+        <div className="p-4 border-t border-gray-200 bg-gray-50/30 rounded-b-3xl">
           <button
             onClick={handleCreate}
             disabled={!tripName.trim()}
