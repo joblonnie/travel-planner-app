@@ -1,7 +1,42 @@
+import type { IncomingMessage, ServerResponse } from 'node:http';
 import { app } from './_server/app.js';
 
-export const config = {
-  runtime: 'edge',
-};
+export default async function handler(req: IncomingMessage, res: ServerResponse) {
+  const protocol = req.headers['x-forwarded-proto'] || 'https';
+  const host = req.headers['x-forwarded-host'] || req.headers.host || 'localhost';
+  const url = `${protocol}://${host}${req.url}`;
 
-export default app.fetch;
+  const headers = new Headers();
+  for (const [key, val] of Object.entries(req.headers)) {
+    if (val) headers.set(key, Array.isArray(val) ? val[0] : val);
+  }
+
+  let body: ArrayBuffer | undefined;
+  if (req.method !== 'GET' && req.method !== 'HEAD') {
+    body = await new Promise<ArrayBuffer>((resolve, reject) => {
+      const chunks: Buffer[] = [];
+      req.on('data', (chunk: Buffer) => chunks.push(chunk));
+      req.on('end', () => {
+        const buf = Buffer.concat(chunks);
+        resolve(buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength));
+      });
+      req.on('error', reject);
+    });
+  }
+
+  const request = new Request(url, {
+    method: req.method,
+    headers,
+    body,
+  });
+
+  const response = await app.fetch(request);
+
+  res.statusCode = response.status;
+  response.headers.forEach((val, key) => {
+    res.setHeader(key, val);
+  });
+
+  const arrayBuffer = await response.arrayBuffer();
+  res.end(Buffer.from(arrayBuffer));
+}
