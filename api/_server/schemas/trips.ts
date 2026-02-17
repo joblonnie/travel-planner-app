@@ -237,6 +237,7 @@ export const TripSchema = z.object({
   createdAt: z.string(),
   updatedAt: z.string(),
   emoji: z.string().optional(),
+  guide: z.string().optional().default(''),
   role: z.enum(['owner', 'editor', 'viewer']).optional(),
   members: z.array(z.object({
     userId: z.string(),

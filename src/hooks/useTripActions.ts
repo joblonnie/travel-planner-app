@@ -96,6 +96,7 @@ export function useTripActions() {
     setEndDate: (date: string) => mutate(actions.setEndDate(date)),
     setTotalBudget: (budget: number) => mutate(actions.setTotalBudget(budget)),
     setTripEmoji: (emoji: string) => mutate(actions.setTripEmoji(emoji)),
+    setGuide: (guide: string) => mutate(actions.setGuide(guide)),
 
     // ── Trip-Level Actions (not debounced) ──
     createTrip,

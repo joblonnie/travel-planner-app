@@ -528,8 +528,16 @@ export interface components {
             createdAt: string;
             updatedAt: string;
             emoji?: string;
+            /** @default  */
+            guide: string;
             /** @enum {string} */
             role?: "owner" | "editor" | "viewer";
+            members?: {
+                userId: string;
+                name: string | null;
+                email: string;
+                role: string;
+            }[];
         };
         TripResponse: {
             trip: components["schemas"]["Trip"];

@@ -203,6 +203,7 @@ export function useTripListMutation() {
           interCityTransports: data.interCityTransports ?? [],
           owners: data.owners ?? [{ id: 'shared', name: '공용', color: 'gray' }],
           pendingCameraExpense: null,
+          guide: data.guide ?? '',
           createdAt: ts,
           updatedAt: ts,
         };

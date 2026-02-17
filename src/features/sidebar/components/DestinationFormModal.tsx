@@ -25,6 +25,7 @@ export function DestinationFormModal({ onClose }: Props) {
   const [lat, setLat] = useState<number | ''>('');
   const [lng, setLng] = useState<number | ''>('');
   const [timezone, setTimezone] = useState('Europe/Madrid');
+  const [nights, setNights] = useState(1);
 
   const mapRef = useRef<google.maps.Map | null>(null);
   const searchInputRef = useRef<HTMLInputElement | null>(null);
@@ -125,17 +126,24 @@ export function DestinationFormModal({ onClose }: Props) {
 
     addCustomDestination(dest);
 
-    // Also create a day so it appears in the sidebar
-    const newDay: DayPlan = {
-      id: crypto.randomUUID(),
-      dayNumber: days.length + 1,
-      date: getNextDate(),
-      destination: dest.nameKo,
-      destinationId: dest.id,
-      activities: [],
-      notes: '',
-    };
-    addDay(newDay);
+    // Create days for each night
+    const baseDate = getNextDate();
+    for (let i = 0; i < nights; i++) {
+      const dateObj = new Date(baseDate);
+      dateObj.setDate(dateObj.getDate() + i);
+      const dayDate = dateObj.toISOString().split('T')[0];
+
+      const newDay: DayPlan = {
+        id: crypto.randomUUID(),
+        dayNumber: days.length + 1 + i,
+        date: dayDate,
+        destination: dest.nameKo,
+        destinationId: dest.id,
+        activities: [],
+        notes: '',
+      };
+      addDay(newDay);
+    }
 
     onClose();
   };
@@ -219,6 +227,29 @@ export function DestinationFormModal({ onClose }: Props) {
               placeholder={t('place.descriptionPlaceholder' as TranslationKey)}
               className="w-full text-sm px-3.5 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/40 outline-none bg-gray-50/30 focus:bg-white transition-colors"
             />
+          </div>
+
+          {/* Nights selector */}
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1.5">
+              {t('place.nights' as TranslationKey)}
+            </label>
+            <div className="flex gap-2 flex-wrap">
+              {[1, 2, 3, 4, 5, 6, 7].map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => setNights(n)}
+                  className={`min-w-[36px] h-[36px] rounded-full text-sm font-medium transition-all ${
+                    nights === n
+                      ? 'bg-emerald-500 text-white shadow-md shadow-emerald-500/25'
+                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                  }`}
+                >
+                  {n}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Timezone */}

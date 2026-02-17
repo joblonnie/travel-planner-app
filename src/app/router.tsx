@@ -9,6 +9,7 @@ import { LoadingSpinner } from '@/components/LoadingSpinner.tsx';
 
 const BudgetPage = lazy(() => import('@/features/budget/components/BudgetPage.tsx').then(m => ({ default: m.BudgetPage })));
 const TripListPage = lazy(() => import('@/features/trips/components/TripListPage.tsx').then(m => ({ default: m.TripListPage })));
+const GuidePage = lazy(() => import('@/features/guide/components/GuidePage.tsx').then(m => ({ default: m.GuidePage })));
 
 function LazyBudgetPage() {
   return <Suspense fallback={<LoadingSpinner />}><BudgetPage /></Suspense>;
@@ -16,6 +17,10 @@ function LazyBudgetPage() {
 
 function LazyTripListPage() {
   return <Suspense fallback={<LoadingSpinner />}><TripListPage /></Suspense>;
+}
+
+function LazyGuidePage() {
+  return <Suspense fallback={<LoadingSpinner />}><GuidePage /></Suspense>;
 }
 
 export const router = createBrowserRouter([
@@ -30,6 +35,7 @@ export const router = createBrowserRouter([
           children: [
             { index: true, element: <DayContent /> },
             { path: 'budget', element: <LazyBudgetPage /> },
+            { path: 'guide', element: <LazyGuidePage /> },
             { path: 'trips', element: <LazyTripListPage /> },
           ],
         }],

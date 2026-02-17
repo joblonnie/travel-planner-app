@@ -49,6 +49,7 @@ export function TripCreateModal({ onClose }: Props) {
       interCityTransports: [],
       owners: [{ id: 'shared', name: t('owner.shared' as TranslationKey), color: 'gray' }],
       pendingCameraExpense: null,
+      guide: '',
     };
 
     createTrip(trip);

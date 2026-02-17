@@ -1008,6 +1008,10 @@
           "emoji": {
             "type": "string"
           },
+          "guide": {
+            "type": "string",
+            "default": ""
+          },
           "role": {
             "type": "string",
             "enum": [
@@ -1015,6 +1019,35 @@
               "editor",
               "viewer"
             ]
+          },
+          "members": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "userId": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": [
+                    "string",
+                    "null"
+                  ]
+                },
+                "email": {
+                  "type": "string"
+                },
+                "role": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "userId",
+                "name",
+                "email",
+                "role"
+              ]
+            }
           }
         },
         "required": [

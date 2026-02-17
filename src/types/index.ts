@@ -211,6 +211,7 @@ export interface Trip {
   createdAt: string;
   updatedAt: string;
   emoji?: string;
+  guide: string;
   role?: 'owner' | 'editor' | 'viewer';
   members?: Array<{ userId: string; name: string | null; email: string; role: string }>;
 }

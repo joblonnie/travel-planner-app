@@ -355,6 +355,9 @@ export const setTotalBudget = (totalBudget: number) =>
 export const setTripEmoji = (emoji: string) =>
   (trip: Trip): Trip => ({ ...trip, emoji });
 
+export const setGuide = (guide: string) =>
+  (trip: Trip): Trip => ({ ...trip, guide });
+
 export const setPendingCameraExpense = (pendingCameraExpense: { amount: number; currency: string } | null) =>
   (trip: Trip): Trip => ({ ...trip, pendingCameraExpense });
 

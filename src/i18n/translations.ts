@@ -149,6 +149,8 @@ export const translations = {
   'nav.budget': { ko: '가계부', en: 'Budget', es: 'Presupuesto' },
   'nav.tools': { ko: '도구', en: 'Tools', es: 'Herramientas' },
   'nav.settings': { ko: '설정', en: 'Settings', es: 'Config' },
+  'nav.exchange': { ko: '환율', en: 'Currency', es: 'Moneda' },
+  'nav.myInfo': { ko: '내 정보', en: 'My Info', es: 'Mi Info' },
 
   // Day CRUD
   'day.addDay': { ko: '일정 추가', en: 'Add Day', es: 'Agregar Día' },
@@ -265,10 +267,16 @@ export const translations = {
   'budget.noActivityExpenses': { ko: '활동별 지출 내역이 없습니다', en: 'No activity expenses', es: 'Sin gastos de actividad' },
   'budget.activityExpenses': { ko: '활동별 지출', en: 'Activity Expenses', es: 'Gastos por Actividad' },
 
+  // Guide
+  'guide.title': { ko: '가이드', en: 'Guide', es: 'Guía' },
+  'guide.placeholder': { ko: '여행 메모, 팁, 준비물 등을 자유롭게 적어보세요...', en: 'Write travel notes, tips, packing lists...', es: 'Escribe notas de viaje, consejos...' },
+  'guide.saved': { ko: '저장됨', en: 'Saved', es: 'Guardado' },
+
   // Place / Destination
   'place.addPlace': { ko: '도시 추가', en: 'Add City', es: 'Agregar Ciudad' },
   'place.name': { ko: '장소 이름', en: 'Place Name', es: 'Nombre del Lugar' },
   'place.description': { ko: '설명', en: 'Description', es: 'Descripción' },
+  'place.nights': { ko: '숙박 일수', en: 'Nights', es: 'Noches' },
   'place.timezone': { ko: '타임존', en: 'Timezone', es: 'Zona Horaria' },
 
   // Expense Owner

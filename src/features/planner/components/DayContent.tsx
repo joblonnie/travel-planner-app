@@ -109,7 +109,7 @@ export function DayContent() {
   const days = useTripData((t) => t.days);
   const currentDayIndex = useTripData((t) => t.currentDayIndex);
   const totalBudget = useTripData((t) => t.totalBudget);
-  const { reorderActivities, goToNextDay, goToPrevDay } = useTripActions();
+  const { reorderActivities, goToNextDay, goToPrevDay, setCurrentDay } = useTripActions();
   const allDestinations = useTripData((t) => getAllDestinations(t, staticDestinations));
   const totalCostVal = useTripData((t) => getTotalCost(t));
   const totalExpensesVal = useTripData((t) => getTotalExpenses(t));
@@ -176,8 +176,30 @@ export function DayContent() {
 
   return (
     <main className="flex-1 bg-gradient-to-br from-gray-50/80 via-white/40 to-gray-100/50">
+      {/* Horizontal Day Picker */}
+      {days.length > 1 && (
+        <div className="sticky top-[49px] z-20 bg-white/90 backdrop-blur-xl border-b border-gray-100 shadow-sm">
+          <div className="flex items-center gap-1.5 px-3 py-2 overflow-x-auto scrollbar-hide">
+            {days.map((d, idx) => (
+              <button
+                key={d.id}
+                onClick={() => setCurrentDay(idx)}
+                className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
+                  idx === currentDayIndex
+                    ? 'bg-primary text-white shadow-sm shadow-primary/20'
+                    : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+                }`}
+              >
+                <span className="font-bold">D{d.dayNumber}</span>
+                <span className="truncate max-w-[60px]">{d.destination}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Day info header: sticky below app header */}
-      <div className={`sticky top-[49px] z-20 border-b border-white/10 border-l-4 ${accentBorder} shadow-[0_4px_30px_rgba(0,0,0,0.08)]`}>
+      <div className={`sticky ${days.length > 1 ? 'top-[93px]' : 'top-[49px]'} z-20 border-b border-white/10 border-l-4 ${accentBorder} shadow-[0_4px_30px_rgba(0,0,0,0.08)]`}>
         <div className="relative overflow-hidden">
           {/* Weather animation background */}
           {destination && <WeatherAnimation rainfall={destination.weatherInfo.rainfall} />}

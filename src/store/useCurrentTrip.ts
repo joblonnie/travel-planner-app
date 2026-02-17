@@ -20,6 +20,7 @@ const EMPTY_TRIP: Trip = {
   pendingCameraExpense: null,
   createdAt: '',
   updatedAt: '',
+  guide: '',
 };
 
 /**
