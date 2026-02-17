@@ -181,7 +181,14 @@ export const sharingRoute = new OpenAPIHono<AppEnv>()
       }
     }
 
-    // Check for existing pending invitation
+    // Get trip name and inviter info
+    const [trip] = await db.select({ tripName: trips.tripName }).from(trips).where(eq(trips.id, tripId));
+    const [inviter] = await db.select({ name: users.name, email: users.email }).from(users).where(eq(users.id, userId));
+
+    const now = new Date();
+    const expiresAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 days
+
+    // If pending invitation exists, update it (re-invite); otherwise create new
     const [existingInvite] = await db
       .select()
       .from(tripInvitations)
@@ -190,28 +197,27 @@ export const sharingRoute = new OpenAPIHono<AppEnv>()
         eq(tripInvitations.inviteeEmail, email),
         eq(tripInvitations.status, 'pending'),
       ));
+
+    let invitationId: string;
     if (existingInvite) {
-      return c.json({ error: 'Invitation already pending' }, 400);
+      invitationId = existingInvite.id;
+      await db
+        .update(tripInvitations)
+        .set({ role, inviterId: userId, expiresAt })
+        .where(eq(tripInvitations.id, existingInvite.id));
+    } else {
+      invitationId = crypto.randomUUID();
+      await db.insert(tripInvitations).values({
+        id: invitationId,
+        tripId,
+        inviterId: userId,
+        inviteeEmail: email,
+        role,
+        status: 'pending',
+        createdAt: now,
+        expiresAt,
+      });
     }
-
-    // Get trip name and inviter info
-    const [trip] = await db.select({ tripName: trips.tripName }).from(trips).where(eq(trips.id, tripId));
-    const [inviter] = await db.select({ name: users.name, email: users.email }).from(users).where(eq(users.id, userId));
-
-    const invitationId = crypto.randomUUID();
-    const now = new Date();
-    const expiresAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000); // 7 days
-
-    await db.insert(tripInvitations).values({
-      id: invitationId,
-      tripId,
-      inviterId: userId,
-      inviteeEmail: email,
-      role,
-      status: 'pending',
-      createdAt: now,
-      expiresAt,
-    });
 
     return c.json({
       invitation: {
@@ -222,7 +228,7 @@ export const sharingRoute = new OpenAPIHono<AppEnv>()
         inviterEmail: inviter?.email ?? '',
         role,
         status: 'pending',
-        createdAt: now.toISOString(),
+        createdAt: existingInvite?.createdAt.toISOString() ?? now.toISOString(),
         expiresAt: expiresAt.toISOString(),
       },
     }, 201);
