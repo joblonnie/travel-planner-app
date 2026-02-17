@@ -4,7 +4,7 @@
   "framework": "vite",
   "functions": {
     "api/[[...route]].ts": {
-      "includeFiles": "api/_**/*"
+      "maxDuration": 10
     }
   },
   "rewrites": [

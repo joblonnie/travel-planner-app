@@ -1,6 +1,6 @@
 import { OpenAPIHono, createRoute } from '@hono/zod-openapi';
-import { ExchangeRatesResponseSchema } from '../_schemas/exchange-rates.js';
-import { ErrorResponseSchema } from '../_schemas/common.js';
+import { ExchangeRatesResponseSchema } from '../schemas/exchange-rates.js';
+import { ErrorResponseSchema } from '../schemas/common.js';
 
 const getExchangeRates = createRoute({
   operationId: 'getExchangeRates',
