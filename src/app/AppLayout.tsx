@@ -159,8 +159,8 @@ export function AppLayout() {
             </button>
           )}
 
-          {/* Page Navigation */}
-          <div className="flex bg-warm-100/80 rounded-full p-0.5 border border-warm-300/60" role="tablist">
+          {/* Page Navigation (desktop only — mobile uses bottom nav) */}
+          <div className="hidden sm:flex bg-warm-100/80 rounded-full p-0.5 border border-warm-300/60" role="tablist">
             <button
               onClick={() => navigate('/')}
               role="tab"
