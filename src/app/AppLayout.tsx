@@ -100,7 +100,13 @@ export function AppLayout() {
   const tripName = currentTrip?.tripName ?? '';
   const startDate = currentTrip?.startDate ?? '';
   const endDate = currentTrip?.endDate ?? '';
-  const daysLength = currentTrip?.days.length ?? 0;
+  const daysLength = currentTrip
+    ? currentTrip.days.length > 0
+      ? currentTrip.days.length
+      : currentTrip.startDate && currentTrip.endDate
+        ? Math.max(1, Math.ceil((new Date(currentTrip.endDate).getTime() - new Date(currentTrip.startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1)
+        : 0
+    : 0;
   const currentDay = currentTrip?.days[currentTrip.currentDayIndex];
   const currentDayNumber = currentDay?.dayNumber;
   const currentDayDestination = currentDay?.destination;

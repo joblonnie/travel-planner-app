@@ -546,7 +546,7 @@ export function DaySidebar({ onClose }: { onClose: () => void }) {
       <div className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm animate-backdrop" onClick={onClose} />
 
       {/* Sidebar Panel */}
-      <aside className="fixed top-0 left-0 z-50 w-80 max-w-[85vw] h-full bg-surface/95 backdrop-blur-2xl border-r border-card-border shadow-2xl overflow-y-auto scrollbar-hide scroll-smooth animate-sidebar-in" role="navigation" aria-label={t('sidebar.schedule')}>
+      <aside className="fixed top-0 left-0 z-50 w-80 max-w-[85vw] h-full bg-surface/95 backdrop-blur-2xl border-r border-card-border shadow-2xl overflow-y-auto scrollbar-hide scroll-smooth animate-sidebar-in pt-[env(safe-area-inset-top)] pl-[env(safe-area-inset-left)]" role="navigation" aria-label={t('sidebar.schedule')}>
         <div className="p-3 pt-3">
           {/* ── Header ── */}
           <div className="mb-4 px-1">

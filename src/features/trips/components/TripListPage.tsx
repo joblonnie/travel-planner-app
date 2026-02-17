@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Plus, Trash2, Copy, MapPin, Calendar, ArrowLeft, Settings, Users, Crown, Pencil, Eye } from 'lucide-react';
+import { Plus, Trash2, Copy, MapPin, Calendar, ArrowLeft, Settings, Users, Crown, Pencil, Eye, UserPlus, Send } from 'lucide-react';
 import { useTripStore } from '@/store/useTripStore.ts';
 import { useTripActions } from '@/hooks/useTripActions.ts';
 import { useI18n, type TranslationKey } from '@/i18n/useI18n.ts';
@@ -9,6 +9,7 @@ import { useCurrency } from '@/hooks/useCurrency.ts';
 import { TripCreateModal } from './TripCreateModal.tsx';
 import { useDeleteTrip } from '@/hooks/useTrips.ts';
 import { TRIPS_QUERY_KEY } from '@/hooks/useTripQuery.ts';
+import { useInviteMember } from '@/features/sharing/hooks/useMembers.ts';
 import type { Trip } from '@/types/index.ts';
 
 const ROLE_BADGE = {
@@ -16,6 +17,79 @@ const ROLE_BADGE = {
   editor: { icon: Pencil, label: 'sharing.editor', color: 'text-blue-600 bg-blue-50 border-blue-200' },
   viewer: { icon: Eye, label: 'sharing.viewer', color: 'text-gray-600 bg-gray-100 border-gray-200' },
 } as const;
+
+function InviteInlineForm({ tripId, onClose }: { tripId: string; onClose: () => void }) {
+  const { t } = useI18n();
+  const inviteMutation = useInviteMember(tripId);
+  const [email, setEmail] = useState('');
+  const [inviteRole, setInviteRole] = useState<'editor' | 'viewer'>('editor');
+  const [message, setMessage] = useState('');
+
+  const handleInvite = async () => {
+    if (!email.trim()) return;
+    try {
+      await inviteMutation.mutateAsync({ email: email.trim(), role: inviteRole });
+      setEmail('');
+      setMessage(t('sharing.inviteSent' as TranslationKey));
+      setTimeout(() => {
+        setMessage('');
+        onClose();
+      }, 2000);
+    } catch (err) {
+      setMessage((err as Error).message);
+      setTimeout(() => setMessage(''), 3000);
+    }
+  };
+
+  return (
+    <div className="px-4 pb-3 border-t border-gray-100 animate-expand">
+      <div className="pt-3 space-y-2">
+        <div className="flex items-center gap-2">
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder={t('sharing.emailPlaceholder' as TranslationKey)}
+            className="flex-1 px-3 py-2 border border-gray-200 rounded-xl text-xs focus:ring-2 focus:ring-primary/20 focus:border-primary/40 outline-none bg-white min-h-[36px]"
+            onKeyDown={(e) => e.key === 'Enter' && handleInvite()}
+            autoFocus
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <select
+            value={inviteRole}
+            onChange={(e) => setInviteRole(e.target.value as 'editor' | 'viewer')}
+            className="px-2 py-1.5 border border-gray-200 rounded-lg text-xs bg-white"
+          >
+            <option value="editor">{t('sharing.editor' as TranslationKey)}</option>
+            <option value="viewer">{t('sharing.viewer' as TranslationKey)}</option>
+          </select>
+          <button
+            onClick={handleInvite}
+            disabled={!email.trim() || inviteMutation.isPending}
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-primary text-white rounded-lg text-xs font-bold hover:opacity-90 transition-colors disabled:opacity-50"
+          >
+            <Send size={11} />
+            {inviteMutation.isPending ? '...' : t('sharing.invite' as TranslationKey)}
+          </button>
+          <button
+            onClick={onClose}
+            className="px-2 py-1.5 text-gray-500 text-xs hover:text-gray-700 transition-colors"
+          >
+            {t('activity.cancel' as TranslationKey)}
+          </button>
+        </div>
+        {message && (
+          <p className={`text-xs font-medium ${
+            message === t('sharing.inviteSent' as TranslationKey) ? 'text-emerald-600' : 'text-red-500'
+          }`}>
+            {message}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
 
 export function TripListPage() {
   const navigate = useNavigate();
@@ -27,6 +101,7 @@ export function TripListPage() {
   const { format } = useCurrency();
   const [showCreate, setShowCreate] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [invitingTripId, setInvitingTripId] = useState<string | null>(null);
   const deleteTripMutation = useDeleteTrip();
 
   const handleSwitch = (tripId: string) => {
@@ -170,10 +245,42 @@ export function TripListPage() {
                       </div>
                     )}
 
+                    {/* Member avatars */}
+                    {trip.members && trip.members.length > 0 && (
+                      <div className="flex items-center mt-1.5">
+                        <div className="flex items-center">
+                          {trip.members.slice(0, 5).map((member, idx) => (
+                            <div
+                              key={member.userId}
+                              className={`w-6 h-6 rounded-full bg-gradient-to-br from-primary/20 to-primary/10 flex items-center justify-center text-[9px] font-bold text-primary border-2 border-white ${
+                                idx > 0 ? '-ml-1.5' : ''
+                              } ${member.role === 'owner' ? 'ring-1 ring-amber-300' : ''}`}
+                              title={member.name ?? member.email}
+                            >
+                              {(member.name ?? member.email)?.[0]?.toUpperCase() ?? '?'}
+                            </div>
+                          ))}
+                          {trip.members.length > 5 && (
+                            <div className="w-6 h-6 rounded-full bg-gray-100 flex items-center justify-center text-[9px] font-bold text-gray-500 border-2 border-white -ml-1.5">
+                              +{trip.members.length - 5}
+                            </div>
+                          )}
+                        </div>
+                        <span className="text-[10px] text-gray-400 ml-1.5">
+                          {trip.members.length} {t('sharing.members' as TranslationKey)}
+                        </span>
+                      </div>
+                    )}
+
                     {/* Stats */}
                     <div className="flex items-center gap-3 mt-2">
                       <span className="text-[11px] text-gray-500">
-                        {trip.days.length}{t('trips.days' as TranslationKey)}
+                        {(trip.days.length > 0
+                          ? trip.days.length
+                          : trip.startDate && trip.endDate
+                            ? Math.max(1, Math.ceil((new Date(trip.endDate).getTime() - new Date(trip.startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1)
+                            : 0
+                        )}{t('trips.days' as TranslationKey)}
                       </span>
                       <span className="text-[11px] text-gray-500">
                         {totalActs}{t('trips.activities' as TranslationKey)}
@@ -199,6 +306,11 @@ export function TripListPage() {
                 </div>
               </button>
 
+              {/* Invite inline form */}
+              {invitingTripId === trip.id && (
+                <InviteInlineForm tripId={trip.id} onClose={() => setInvitingTripId(null)} />
+              )}
+
               {/* Action buttons */}
               <div className="flex border-t border-gray-100 divide-x divide-gray-100">
                 <button
@@ -209,6 +321,20 @@ export function TripListPage() {
                   <Settings size={13} />
                   {t('trips.edit' as TranslationKey)}
                 </button>
+                {isOwnerRole && (
+                  <button
+                    onClick={() => setInvitingTripId(invitingTripId === trip.id ? null : trip.id)}
+                    className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs transition-colors min-h-[44px] ${
+                      invitingTripId === trip.id
+                        ? 'text-primary bg-primary/5'
+                        : 'text-gray-500 hover:text-emerald-600 hover:bg-emerald-50/50'
+                    }`}
+                    title={t('sharing.invite' as TranslationKey)}
+                  >
+                    <UserPlus size={13} />
+                    {t('sharing.invite' as TranslationKey)}
+                  </button>
+                )}
                 {isOwnerRole && (
                   <button
                     onClick={() => duplicateTrip(trip.id)}

@@ -212,6 +212,7 @@ export interface Trip {
   updatedAt: string;
   emoji?: string;
   role?: 'owner' | 'editor' | 'viewer';
+  members?: Array<{ userId: string; name: string | null; email: string; role: string }>;
 }
 
 export interface TripExpense {

@@ -238,6 +238,12 @@ export const TripSchema = z.object({
   updatedAt: z.string(),
   emoji: z.string().optional(),
   role: z.enum(['owner', 'editor', 'viewer']).optional(),
+  members: z.array(z.object({
+    userId: z.string(),
+    name: z.string().nullable(),
+    email: z.string(),
+    role: z.string(),
+  })).optional(),
 }).openapi('Trip');
 
 // --- API-specific schemas ---

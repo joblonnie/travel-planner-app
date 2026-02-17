@@ -99,14 +99,14 @@ export function DestinationFormModal({ onClose }: Props) {
   };
 
   const handleSave = () => {
-    if (!name.trim() || lat === '' || lng === '') return;
+    if (!name.trim()) return;
 
     const dest: Destination = {
       id: `custom-${crypto.randomUUID()}`,
       name: name.trim(),
       nameKo: name.trim(),
-      lat: Number(lat),
-      lng: Number(lng),
+      lat: lat !== '' ? Number(lat) : 0,
+      lng: lng !== '' ? Number(lng) : 0,
       timezone,
       description: description.trim(),
       tips: [],
@@ -221,32 +221,6 @@ export function DestinationFormModal({ onClose }: Props) {
             />
           </div>
 
-          {/* Lat/Lng */}
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">{t('activityForm.lat')}</label>
-              <input
-                type="number"
-                step="any"
-                value={lat}
-                onChange={(e) => setLat(e.target.value === '' ? '' : Number(e.target.value))}
-                placeholder="37.3886"
-                className="w-full text-xs px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/40 outline-none bg-gray-50/30 focus:bg-white transition-colors font-mono"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">{t('activityForm.lng')}</label>
-              <input
-                type="number"
-                step="any"
-                value={lng}
-                onChange={(e) => setLng(e.target.value === '' ? '' : Number(e.target.value))}
-                placeholder="-5.9823"
-                className="w-full text-xs px-3 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500/40 outline-none bg-gray-50/30 focus:bg-white transition-colors font-mono"
-              />
-            </div>
-          </div>
-
           {/* Timezone */}
           <div>
             <label className="block text-xs font-medium text-gray-500 mb-1">{t('place.timezone')}</label>
@@ -264,7 +238,7 @@ export function DestinationFormModal({ onClose }: Props) {
         <div className="p-4 border-t border-gray-200 bg-gray-50/30 rounded-b-3xl sticky bottom-0">
           <button
             onClick={handleSave}
-            disabled={!name.trim() || lat === '' || lng === ''}
+            disabled={!name.trim()}
             className="w-full bg-gradient-to-r from-emerald-500 to-green-500 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-emerald-500/20 transition-all disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98]"
           >
             <Check size={16} />

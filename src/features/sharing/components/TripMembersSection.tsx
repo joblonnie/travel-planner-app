@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { Users, UserPlus, Trash2, ChevronDown, Crown, Pencil, Eye } from 'lucide-react';
+import { Users, Trash2, ChevronDown, Crown, Pencil, Eye } from 'lucide-react';
 import { useI18n, type TranslationKey } from '@/i18n/useI18n.ts';
 import { useTripStore } from '@/store/useTripStore.ts';
 import { useTripData } from '@/store/useCurrentTrip.ts';
-import { useMembers, useInviteMember, useRemoveMember, useUpdateMemberRole } from '../hooks/useMembers.ts';
+import { useMembers, useRemoveMember, useUpdateMemberRole } from '../hooks/useMembers.ts';
 
 const ROLE_ICONS = {
   owner: Crown,
@@ -25,30 +25,12 @@ export function TripMembersSection() {
   const isOwner = myRole === 'owner';
 
   const { data: members, isLoading } = useMembers(tripId || undefined);
-  const inviteMutation = useInviteMember(tripId || undefined);
   const removeMutation = useRemoveMember(tripId || undefined);
   const updateRoleMutation = useUpdateMemberRole(tripId || undefined);
 
-  const [email, setEmail] = useState('');
-  const [inviteRole, setInviteRole] = useState<'editor' | 'viewer'>('editor');
-  const [showInvite, setShowInvite] = useState(false);
   const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null);
   const [editRoleId, setEditRoleId] = useState<string | null>(null);
   const [message, setMessage] = useState('');
-
-  const handleInvite = async () => {
-    if (!email.trim()) return;
-    try {
-      await inviteMutation.mutateAsync({ email: email.trim(), role: inviteRole });
-      setEmail('');
-      setShowInvite(false);
-      setMessage(t('sharing.inviteSent' as TranslationKey));
-      setTimeout(() => setMessage(''), 3000);
-    } catch (err) {
-      setMessage((err as Error).message);
-      setTimeout(() => setMessage(''), 3000);
-    }
-  };
 
   const handleRemove = async (userId: string) => {
     try {
@@ -153,60 +135,9 @@ export function TripMembersSection() {
         })}
       </div>
 
-      {/* Invite form (owner only) */}
-      {isOwner && (
-        <>
-          {showInvite ? (
-            <div className="p-3 bg-blue-50/50 rounded-xl border border-blue-100 space-y-2">
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder={t('sharing.emailPlaceholder' as TranslationKey)}
-                className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary/40 outline-none bg-white"
-                onKeyDown={(e) => e.key === 'Enter' && handleInvite()}
-              />
-              <div className="flex items-center gap-2">
-                <select
-                  value={inviteRole}
-                  onChange={(e) => setInviteRole(e.target.value as 'editor' | 'viewer')}
-                  className="flex-1 px-2 py-1.5 border border-gray-200 rounded-lg text-xs bg-white"
-                >
-                  <option value="editor">{t('sharing.editor' as TranslationKey)}</option>
-                  <option value="viewer">{t('sharing.viewer' as TranslationKey)}</option>
-                </select>
-                <button
-                  onClick={handleInvite}
-                  disabled={!email.trim() || inviteMutation.isPending}
-                  className="px-3 py-1.5 bg-primary text-white rounded-lg text-xs font-bold hover:bg-primary-dark transition-colors disabled:opacity-50"
-                >
-                  {inviteMutation.isPending ? '...' : t('sharing.invite' as TranslationKey)}
-                </button>
-                <button
-                  onClick={() => { setShowInvite(false); setEmail(''); }}
-                  className="px-2 py-1.5 text-gray-500 text-xs hover:text-gray-700"
-                >
-                  {t('activity.cancel' as TranslationKey)}
-                </button>
-              </div>
-            </div>
-          ) : (
-            <button
-              onClick={() => setShowInvite(true)}
-              className="w-full flex items-center justify-center gap-1.5 py-2 bg-gray-100/80 text-gray-500 rounded-xl text-xs font-medium hover:bg-gray-200/80 transition-colors border border-gray-200/50"
-            >
-              <UserPlus size={13} />
-              {t('sharing.inviteByEmail' as TranslationKey)}
-            </button>
-          )}
-        </>
-      )}
-
       {/* Message */}
       {message && (
-        <p className={`text-xs font-medium mt-1.5 ${
-          message === t('sharing.inviteSent' as TranslationKey) ? 'text-emerald-600' : 'text-red-500'
-        }`}>
+        <p className="text-xs font-medium mt-1.5 text-red-500">
           {message}
         </p>
       )}

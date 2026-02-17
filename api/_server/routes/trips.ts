@@ -11,7 +11,7 @@ import {
 } from '../schemas/trips.js';
 import { ErrorResponseSchema } from '../schemas/common.js';
 import { getDb } from '../db/index.js';
-import { trips, tripMembers } from '../db/schema.js';
+import { trips, tripMembers, users } from '../db/schema.js';
 import { getTripRole, hasMinRole, type MemberRole } from '../middleware/tripAuth.js';
 
 type TripData = z.infer<typeof TripSchema>;
@@ -191,7 +191,34 @@ export const tripsRoute = new OpenAPIHono<AppEnv>()
       role: roleMap[row.id] ?? 'owner',
     }));
 
-    return c.json({ trips: tripList }, 200);
+    // Batch fetch members for all trips
+    const allTripIds = rows.map((r) => r.id);
+    const memberRows2 = allTripIds.length > 0
+      ? await db
+          .select({
+            tripId: tripMembers.tripId,
+            userId: tripMembers.userId,
+            role: tripMembers.role,
+            name: users.name,
+            email: users.email,
+          })
+          .from(tripMembers)
+          .innerJoin(users, eq(tripMembers.userId, users.id))
+          .where(inArray(tripMembers.tripId, allTripIds))
+      : [];
+
+    const membersMap: Record<string, Array<{ userId: string; name: string | null; email: string; role: string }>> = {};
+    for (const m of memberRows2) {
+      if (!membersMap[m.tripId]) membersMap[m.tripId] = [];
+      membersMap[m.tripId].push({ userId: m.userId, name: m.name, email: m.email, role: m.role });
+    }
+
+    const tripListWithMembers = tripList.map((trip, idx) => ({
+      ...trip,
+      members: membersMap[rows[idx].id] ?? [],
+    }));
+
+    return c.json({ trips: tripListWithMembers }, 200);
   })
   .openapi(getTrip, async (c) => {
     const userId = c.get('userId') as string;

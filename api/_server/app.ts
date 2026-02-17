@@ -13,7 +13,14 @@ export type AppEnv = {
   };
 };
 
-export const app = new OpenAPIHono<AppEnv>().basePath('/api');
+export const app = new OpenAPIHono<AppEnv>({
+  defaultHook: (result, c) => {
+    if (!result.success) {
+      const firstIssue = result.error.issues[0];
+      return c.json({ error: firstIssue?.message ?? 'Validation error' }, 400);
+    }
+  },
+}).basePath('/api');
 
 // Public routes
 app.route('/', exchangeRatesRoute);
