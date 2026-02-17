@@ -142,6 +142,13 @@ export function DayContent() {
     useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
+  // Must be called before any early return to satisfy React's rules of hooks
+  const { completedCount, skippedCount, totalCount } = useMemo(() => ({
+    completedCount: currentDay?.activities.filter((a) => a.isCompleted).length ?? 0,
+    skippedCount: currentDay?.activities.filter((a) => a.isSkipped).length ?? 0,
+    totalCount: currentDay?.activities.length ?? 0,
+  }), [currentDay?.activities]);
+
   if (!currentDay) {
     return (
       <main className="flex-1 bg-gray-50/50 flex items-center justify-center">
@@ -166,13 +173,6 @@ export function DayContent() {
   };
 
   const accentBorder = destAccentColors[currentDay.destinationId] || 'border-l-primary';
-
-  // Activity stats
-  const { completedCount, skippedCount, totalCount } = useMemo(() => ({
-    completedCount: currentDay.activities.filter((a) => a.isCompleted).length,
-    skippedCount: currentDay.activities.filter((a) => a.isSkipped).length,
-    totalCount: currentDay.activities.length,
-  }), [currentDay.activities]);
 
   return (
     <main className="flex-1 bg-gradient-to-br from-gray-50/80 via-white/40 to-gray-100/50">

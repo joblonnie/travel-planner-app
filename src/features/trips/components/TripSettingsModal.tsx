@@ -34,7 +34,7 @@ export function TripSettingsModal({ onClose }: Props) {
   const setTheme = useTripStore((s) => s.setTheme);
   const ratesUpdatedAt = useTripStore((s) => s.ratesUpdatedAt);
   const tripData = useTripData((trip) => trip);
-  const { currency } = useCurrency();
+  const { currency, convert, toEur } = useCurrency();
   const { refreshRates } = useExchangeRates();
   const [refreshing, setRefreshing] = useState(false);
   useEscKey(onClose);
@@ -42,7 +42,7 @@ export function TripSettingsModal({ onClose }: Props) {
   const [tripName, setTripName] = useState(tripData.tripName);
   const [startDate, setStartDate] = useState(tripData.startDate);
   const [endDate, setEndDate] = useState(tripData.endDate);
-  const [totalBudget, setTotalBudget] = useState(tripData.totalBudget);
+  const [totalBudget, setTotalBudget] = useState(convert(tripData.totalBudget));
   const [exchangeRate, setExchangeRate] = useState(exchangeRateFromStore);
   const [importMsg, setImportMsg] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -81,7 +81,7 @@ export function TripSettingsModal({ onClose }: Props) {
           setTripName(ct.tripName);
           setStartDate(ct.startDate);
           setEndDate(ct.endDate);
-          setTotalBudget(ct.totalBudget);
+          setTotalBudget(convert(ct.totalBudget));
         }
         setExchangeRate(s.exchangeRate);
         navigate('/');
@@ -120,7 +120,7 @@ export function TripSettingsModal({ onClose }: Props) {
     setTripNameAction(tripName);
     setStartDateAction(startDate);
     setEndDateAction(endDate);
-    setTotalBudgetAction(totalBudget);
+    setTotalBudgetAction(toEur(totalBudget));
     setExchangeRateAction(exchangeRate);
     onClose();
   };

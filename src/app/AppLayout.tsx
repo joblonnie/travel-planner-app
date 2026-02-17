@@ -1,5 +1,5 @@
-import { useState, useCallback, lazy, Suspense } from 'react';
-import { Outlet, useNavigate, useLocation, Navigate } from 'react-router-dom';
+import { useState, useCallback, useEffect, lazy, Suspense } from 'react';
+import { Outlet, useNavigate, useLocation, useSearchParams, Navigate } from 'react-router-dom';
 import { Plane, Heart, CalendarDays, Wallet, Globe, ArrowLeftRight, Settings, Calculator, PanelLeftOpen, Search, Map } from 'lucide-react';
 import { UserMenu } from '@/features/auth/components/UserMenu.tsx';
 import { useTripStore } from '@/store/useTripStore.ts';
@@ -19,6 +19,7 @@ export function AppLayout() {
   useExchangeRates();
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const user = useTripStore((s) => s.user);
   const setUser = useTripStore((s) => s.setUser);
@@ -32,6 +33,16 @@ export function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const setPendingCameraExpense = useTripStore((s) => s.setPendingCameraExpense);
+
+  // Auto-open settings modal when navigated with ?settings=true
+  useEffect(() => {
+    if (searchParams.get('settings') === 'true') {
+      setShowSettings(true);
+      const next = new URLSearchParams(searchParams);
+      next.delete('settings');
+      setSearchParams(next, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   const currentPath = location.pathname;
   const isPlanner = currentPath === '/';
@@ -212,9 +223,7 @@ export function AppLayout() {
           </button>
 
           {/* Auth */}
-          <div className="hidden sm:flex">
-            {user && <UserMenu user={user} onLogout={logout} />}
-          </div>
+          {user && <UserMenu user={user} onLogout={logout} />}
         </div>
       </header>
 

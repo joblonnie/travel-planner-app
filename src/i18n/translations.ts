@@ -343,6 +343,7 @@ export const translations = {
   'trips.delete': { ko: '여행 삭제', en: 'Delete Trip', es: 'Eliminar Viaje' },
   'trips.deleteConfirm': { ko: '이 여행을 삭제하시겠습니까? 모든 데이터가 삭제됩니다.', en: 'Delete this trip? All data will be removed.', es: '¿Eliminar este viaje? Todos los datos serán eliminados.' },
   'trips.duplicate': { ko: '여행 복제', en: 'Duplicate Trip', es: 'Duplicar Viaje' },
+  'trips.edit': { ko: '여행 수정', en: 'Edit Trip', es: 'Editar Viaje' },
   'trips.noTrips': { ko: '여행이 없습니다', en: 'No trips yet', es: 'Sin viajes aún' },
   'trips.current': { ko: '현재 여행', en: 'Current Trip', es: 'Viaje Actual' },
   'trips.cannotDeleteLast': { ko: '마지막 여행은 삭제할 수 없습니다', en: 'Cannot delete the last trip', es: 'No se puede eliminar el último viaje' },

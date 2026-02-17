@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Trash2, Copy, MapPin, Calendar, ArrowLeft } from 'lucide-react';
+import { Plus, Trash2, Copy, MapPin, Calendar, ArrowLeft, Settings } from 'lucide-react';
 import { useTripStore } from '@/store/useTripStore.ts';
 import { useI18n, type TranslationKey } from '@/i18n/useI18n.ts';
 import { useCurrency } from '@/hooks/useCurrency.ts';
@@ -24,6 +24,11 @@ export function TripListPage() {
   const handleSwitch = (tripId: string) => {
     switchTrip(tripId);
     navigate('/');
+  };
+
+  const handleEdit = (tripId: string) => {
+    switchTrip(tripId);
+    navigate('/?settings=true');
   };
 
   const handleDelete = (tripId: string) => {
@@ -175,6 +180,14 @@ export function TripListPage() {
 
               {/* Action buttons */}
               <div className="flex border-t border-gray-100 divide-x divide-gray-100">
+                <button
+                  onClick={() => handleEdit(trip.id)}
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs text-gray-500 hover:text-primary hover:bg-primary/5 transition-colors min-h-[44px]"
+                  title={t('trips.edit' as TranslationKey)}
+                >
+                  <Settings size={13} />
+                  {t('trips.edit' as TranslationKey)}
+                </button>
                 <button
                   onClick={() => duplicateTrip(trip.id)}
                   className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs text-gray-500 hover:text-blue-600 hover:bg-blue-50/50 transition-colors min-h-[44px]"
