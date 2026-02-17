@@ -8,7 +8,7 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
 
   const headers = new Headers();
   for (const [key, val] of Object.entries(req.headers)) {
-    if (val) headers.set(key, Array.isArray(val) ? val[0] : val);
+    if (val) headers.set(key, Array.isArray(val) ? val.join(', ') : val);
   }
 
   let body: ArrayBuffer | undefined;
@@ -33,8 +33,18 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
   const response = await app.fetch(request);
 
   res.statusCode = response.status;
+
+  // Handle Set-Cookie separately — getSetCookie() returns individual values
+  const setCookies = response.headers.getSetCookie();
+  if (setCookies.length > 0) {
+    res.setHeader('set-cookie', setCookies);
+  }
+
+  // Copy other headers
   response.headers.forEach((val, key) => {
-    res.setHeader(key, val);
+    if (key.toLowerCase() !== 'set-cookie') {
+      res.setHeader(key, val);
+    }
   });
 
   const arrayBuffer = await response.arrayBuffer();
