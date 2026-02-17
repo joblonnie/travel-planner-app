@@ -8,7 +8,7 @@ export function LoginPage() {
   const { t } = useI18n();
 
   if (isAuthenticated) {
-    return <Navigate to="/" replace />;
+    return <Navigate to="/trips" replace />;
   }
 
   const login = () => {

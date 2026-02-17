@@ -241,7 +241,7 @@ export const authRoute = new OpenAPIHono<AppEnv>()
     const sessionId = await createSession(userId);
     setCookie(c, SESSION_COOKIE_NAME, sessionId, COOKIE_OPTIONS);
 
-    return c.redirect('/', 302);
+    return c.redirect('/trips', 302);
   })
   .openapi(getMe, async (c) => {
     // Inline optionalAuth: check session without requiring it
