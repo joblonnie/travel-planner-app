@@ -1,5 +1,5 @@
 import { useTripStore } from './useTripStore.ts';
-import type { Trip } from '../types/index.ts';
+import type { Trip } from '@/types/index.ts';
 
 /**
  * Selector hook for current trip data.

@@ -1,7 +1,7 @@
 import { memo } from 'react';
 import { Users, User } from 'lucide-react';
-import type { ExpenseOwner } from '../types/index.ts';
-import { useTripData } from '../store/useCurrentTrip.ts';
+import type { ExpenseOwner } from '@/types/index.ts';
+import { useTripData } from '@/store/useCurrentTrip.ts';
 
 export const ownerColorMap: Record<string, { text: string; bg: string; active: string; badge: string }> = {
   gray:    { text: 'text-gray-500',    bg: 'bg-gray-100',    active: 'bg-gray-700 text-white border-gray-700',       badge: 'bg-gray-50 text-gray-600 border-gray-300/70' },

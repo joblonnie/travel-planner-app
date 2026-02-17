@@ -1,0 +1,8 @@
+import { neon } from '@neondatabase/serverless';
+import { drizzle } from 'drizzle-orm/neon-http';
+import * as schema from './schema.ts';
+
+export function getDb() {
+  const sql = neon(process.env.POSTGRES_URL!);
+  return drizzle(sql, { schema });
+}

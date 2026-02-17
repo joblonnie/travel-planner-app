@@ -437,6 +437,12 @@ export const translations = {
   // Camera OCR
   'camera.ocrResult': { ko: 'OCR 인식 결과', en: 'OCR Result', es: 'Resultado OCR' },
 
+  // Auth
+  'auth.login': { ko: 'Google 로그인', en: 'Sign in with Google', es: 'Iniciar con Google' },
+  'auth.logout': { ko: '로그아웃', en: 'Log out', es: 'Cerrar sesión' },
+  'auth.syncPrompt': { ko: '로그인하여 클라우드 동기화', en: 'Sign in for cloud sync', es: 'Inicia sesión para sincronizar' },
+  'auth.syncDesc': { ko: 'Google로 로그인하면 여행 데이터가 자동 저장됩니다', en: 'Sign in with Google to auto-save your trip data', es: 'Inicia sesión con Google para guardar automáticamente' },
+
   // Theme
   'theme.title': { ko: '테마', en: 'Theme', es: 'Tema' },
   'theme.cloudDancer': { ko: 'Cloud Dancer', en: 'Cloud Dancer', es: 'Cloud Dancer' },

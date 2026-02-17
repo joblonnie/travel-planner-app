@@ -1,38 +1,44 @@
-import { useEffect, useCallback } from 'react';
-import { useTripStore } from '../store/useTripStore.ts';
+import { useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { useTripStore } from '@/store/useTripStore.ts';
+import { apiClient } from '@/api/client.ts';
 
-const API_URL = 'https://api.frankfurter.dev/v1/latest?base=EUR&symbols=KRW,USD,JPY,CNY';
-const STALE_MS = 24 * 60 * 60 * 1000; // 24 hours
+const FALLBACK_URL = 'https://api.frankfurter.dev/v1/latest?base=EUR&symbols=KRW,USD,JPY,CNY';
+
+async function fetchRates(): Promise<{ rates: Record<string, number> }> {
+  // Try our proxy first, fallback to direct API (for local dev without backend)
+  try {
+    const { data, error } = await apiClient.GET('/api/exchange-rates');
+    if (!error && data) return data;
+  } catch {
+    // proxy unavailable (local dev)
+  }
+  const res = await fetch(FALLBACK_URL);
+  if (!res.ok) throw new Error('Failed to fetch rates');
+  return res.json();
+}
 
 export function useExchangeRates() {
   const setFetchedRates = useTripStore((s) => s.setFetchedRates);
   const setExchangeRate = useTripStore((s) => s.setExchangeRate);
-  const ratesUpdatedAt = useTripStore((s) => s.ratesUpdatedAt);
 
-  const refreshRates = useCallback(async () => {
-    try {
-      const res = await fetch(API_URL);
-      if (!res.ok) return;
-      const data = await res.json();
-      if (data.rates) {
-        setFetchedRates(data.rates);
-        // Sync store.exchangeRate with fetched KRW rate
-        if (data.rates.KRW) {
-          setExchangeRate(data.rates.KRW);
-        }
-      }
-    } catch {
-      // Offline or network error — keep existing values
-    }
-  }, [setFetchedRates, setExchangeRate]);
+  const query = useQuery({
+    queryKey: ['exchange-rates'],
+    queryFn: fetchRates,
+    staleTime: 24 * 60 * 60 * 1000, // 24 hours
+    gcTime: Infinity,
+    retry: 1,
+  });
 
+  // Sync fetched rates into Zustand for useCurrency compatibility
   useEffect(() => {
-    if (ratesUpdatedAt) {
-      const age = Date.now() - new Date(ratesUpdatedAt).getTime();
-      if (age < STALE_MS) return;
+    if (query.data?.rates) {
+      setFetchedRates(query.data.rates);
+      if (query.data.rates.KRW) {
+        setExchangeRate(query.data.rates.KRW);
+      }
     }
-    refreshRates();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [query.data, setFetchedRates, setExchangeRate]);
 
-  return { refreshRates };
+  return { refreshRates: () => query.refetch() };
 }

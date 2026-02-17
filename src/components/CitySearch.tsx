@@ -1,8 +1,8 @@
 import { useState, useRef, useCallback } from 'react';
 import { Search, MapPin } from 'lucide-react';
 import { Autocomplete } from '@react-google-maps/api';
-import type { Destination } from '../types/index.ts';
-import { useI18n } from '../i18n/useI18n.ts';
+import type { Destination } from '@/types/index.ts';
+import { useI18n } from '@/i18n/useI18n.ts';
 
 interface Props {
   apiKey: string;

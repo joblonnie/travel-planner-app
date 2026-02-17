@@ -1,0 +1,1469 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Travel Planner API",
+    "version": "1.0.0",
+    "description": "API for travel planning application"
+  },
+  "components": {
+    "schemas": {
+      "ExchangeRatesResponse": {
+        "type": "object",
+        "properties": {
+          "base": {
+            "type": "string",
+            "example": "EUR"
+          },
+          "date": {
+            "type": "string",
+            "example": "2026-02-17"
+          },
+          "rates": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "number"
+            },
+            "example": {
+              "KRW": 1450,
+              "USD": 1.08,
+              "JPY": 160,
+              "CNY": 7.8
+            }
+          }
+        },
+        "required": [
+          "base",
+          "date",
+          "rates"
+        ]
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "error"
+        ]
+      },
+      "VisionResponse": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string",
+            "description": "Detected text from the image",
+            "example": "Receipt total: €25.50"
+          }
+        },
+        "required": [
+          "text"
+        ]
+      },
+      "VisionRequest": {
+        "type": "object",
+        "properties": {
+          "image": {
+            "type": "string",
+            "description": "Base64 encoded image (with or without data URL prefix)",
+            "example": "data:image/jpeg;base64,..."
+          }
+        },
+        "required": [
+          "image"
+        ]
+      },
+      "UserResponse": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "id": {
+                "type": "string"
+              },
+              "email": {
+                "type": "string"
+              },
+              "name": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              }
+            },
+            "required": [
+              "id",
+              "email",
+              "name"
+            ]
+          }
+        },
+        "required": [
+          "user"
+        ]
+      },
+      "LogoutResponse": {
+        "type": "object",
+        "properties": {
+          "success": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "success"
+        ]
+      },
+      "TripListResponse": {
+        "type": "object",
+        "properties": {
+          "trips": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TripListItem"
+            }
+          }
+        },
+        "required": [
+          "trips"
+        ]
+      },
+      "TripListItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "tripName": {
+            "type": "string"
+          },
+          "startDate": {
+            "type": "string"
+          },
+          "endDate": {
+            "type": "string"
+          },
+          "emoji": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "tripName",
+          "startDate",
+          "endDate",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "TripResponse": {
+        "type": "object",
+        "properties": {
+          "trip": {
+            "$ref": "#/components/schemas/Trip"
+          }
+        },
+        "required": [
+          "trip"
+        ]
+      },
+      "Trip": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "tripName": {
+            "type": "string"
+          },
+          "startDate": {
+            "type": "string"
+          },
+          "endDate": {
+            "type": "string"
+          },
+          "days": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "dayNumber": {
+                  "type": "number"
+                },
+                "date": {
+                  "type": "string"
+                },
+                "destination": {
+                  "type": "string"
+                },
+                "destinationId": {
+                  "type": "string"
+                },
+                "activities": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "contentId": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "nameKo": {
+                        "type": "string"
+                      },
+                      "time": {
+                        "type": "string"
+                      },
+                      "duration": {
+                        "type": "string"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "attraction",
+                          "shopping",
+                          "meal",
+                          "transport",
+                          "free"
+                        ]
+                      },
+                      "estimatedCost": {
+                        "type": "number"
+                      },
+                      "currency": {
+                        "type": "string"
+                      },
+                      "isBooked": {
+                        "type": "boolean"
+                      },
+                      "isCompleted": {
+                        "type": "boolean"
+                      },
+                      "isSkipped": {
+                        "type": "boolean"
+                      },
+                      "booking": {
+                        "type": "object",
+                        "properties": {
+                          "confirmationNumber": {
+                            "type": "string"
+                          },
+                          "voucherUrl": {
+                            "type": "string"
+                          },
+                          "voucherFile": {
+                            "type": "string"
+                          },
+                          "notes": {
+                            "type": "string"
+                          },
+                          "bookingDate": {
+                            "type": "string"
+                          },
+                          "provider": {
+                            "type": "string"
+                          }
+                        },
+                        "required": [
+                          "notes"
+                        ]
+                      },
+                      "lat": {
+                        "type": "number"
+                      },
+                      "lng": {
+                        "type": "number"
+                      },
+                      "memos": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "expenses": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "amount": {
+                              "type": "number"
+                            },
+                            "currency": {
+                              "type": "string"
+                            },
+                            "description": {
+                              "type": "string"
+                            },
+                            "createdAt": {
+                              "type": "string"
+                            },
+                            "owner": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "amount",
+                            "currency",
+                            "description",
+                            "createdAt",
+                            "owner"
+                          ]
+                        }
+                      },
+                      "media": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "id": {
+                              "type": "string"
+                            },
+                            "type": {
+                              "type": "string",
+                              "enum": [
+                                "image",
+                                "video"
+                              ]
+                            },
+                            "dataUrl": {
+                              "type": "string"
+                            },
+                            "thumbnail": {
+                              "type": "string"
+                            },
+                            "caption": {
+                              "type": "string"
+                            },
+                            "createdAt": {
+                              "type": "string"
+                            }
+                          },
+                          "required": [
+                            "id",
+                            "type",
+                            "dataUrl",
+                            "createdAt"
+                          ]
+                        }
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "name",
+                      "nameKo",
+                      "time",
+                      "duration",
+                      "type",
+                      "estimatedCost",
+                      "currency",
+                      "isBooked"
+                    ]
+                  }
+                },
+                "notes": {
+                  "type": "string"
+                },
+                "flights": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "airline": {
+                        "type": "string"
+                      },
+                      "flightNumber": {
+                        "type": "string"
+                      },
+                      "departure": {
+                        "type": "string"
+                      },
+                      "arrival": {
+                        "type": "string"
+                      },
+                      "departureTime": {
+                        "type": "string"
+                      },
+                      "arrivalTime": {
+                        "type": "string"
+                      },
+                      "confirmationNumber": {
+                        "type": "string"
+                      },
+                      "notes": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "airline",
+                      "flightNumber",
+                      "departure",
+                      "arrival",
+                      "departureTime",
+                      "arrivalTime"
+                    ]
+                  }
+                },
+                "accommodation": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string"
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "address": {
+                      "type": "string"
+                    },
+                    "checkIn": {
+                      "type": "string"
+                    },
+                    "checkOut": {
+                      "type": "string"
+                    },
+                    "confirmationNumber": {
+                      "type": "string"
+                    },
+                    "cost": {
+                      "type": "number"
+                    },
+                    "currency": {
+                      "type": "string"
+                    },
+                    "notes": {
+                      "type": "string"
+                    },
+                    "lat": {
+                      "type": "number"
+                    },
+                    "lng": {
+                      "type": "number"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "name",
+                    "address",
+                    "cost",
+                    "currency"
+                  ]
+                }
+              },
+              "required": [
+                "id",
+                "dayNumber",
+                "date",
+                "destination",
+                "destinationId",
+                "activities",
+                "notes"
+              ]
+            }
+          },
+          "currentDayIndex": {
+            "type": "number"
+          },
+          "totalBudget": {
+            "type": "number"
+          },
+          "expenses": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "dayId": {
+                  "type": "string"
+                },
+                "category": {
+                  "type": "string",
+                  "enum": [
+                    "accommodation",
+                    "food",
+                    "transport",
+                    "attraction",
+                    "shopping",
+                    "entertainment",
+                    "other"
+                  ]
+                },
+                "amount": {
+                  "type": "number"
+                },
+                "currency": {
+                  "type": "string",
+                  "enum": [
+                    "EUR"
+                  ]
+                },
+                "description": {
+                  "type": "string"
+                },
+                "date": {
+                  "type": "string"
+                },
+                "owner": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "category",
+                "amount",
+                "currency",
+                "description",
+                "date",
+                "owner"
+              ]
+            }
+          },
+          "restaurantComments": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "restaurantId": {
+                  "type": "string"
+                },
+                "text": {
+                  "type": "string"
+                },
+                "rating": {
+                  "type": "number"
+                },
+                "date": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "restaurantId",
+                "text",
+                "date"
+              ]
+            }
+          },
+          "customDestinations": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "nameKo": {
+                  "type": "string"
+                },
+                "lat": {
+                  "type": "number"
+                },
+                "lng": {
+                  "type": "number"
+                },
+                "timezone": {
+                  "type": "string"
+                },
+                "description": {
+                  "type": "string"
+                },
+                "tips": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  }
+                },
+                "phrases": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "situation": {
+                        "type": "string"
+                      },
+                      "spanish": {
+                        "type": "string"
+                      },
+                      "pronunciation": {
+                        "type": "string"
+                      },
+                      "korean": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "situation",
+                      "spanish",
+                      "pronunciation",
+                      "korean"
+                    ]
+                  }
+                },
+                "restaurants": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "cuisine": {
+                        "type": "string"
+                      },
+                      "priceRange": {
+                        "type": "string"
+                      },
+                      "rating": {
+                        "type": "number"
+                      },
+                      "address": {
+                        "type": "string"
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "mustTry": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      },
+                      "lat": {
+                        "type": "number"
+                      },
+                      "lng": {
+                        "type": "number"
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "name",
+                      "cuisine",
+                      "priceRange",
+                      "rating",
+                      "address",
+                      "description",
+                      "mustTry",
+                      "lat",
+                      "lng"
+                    ]
+                  }
+                },
+                "contents": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "id": {
+                        "type": "string"
+                      },
+                      "name": {
+                        "type": "string"
+                      },
+                      "nameKo": {
+                        "type": "string"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "attraction",
+                          "shopping",
+                          "meal",
+                          "transport",
+                          "free"
+                        ]
+                      },
+                      "description": {
+                        "type": "string"
+                      },
+                      "estimatedCost": {
+                        "type": "number"
+                      },
+                      "currency": {
+                        "type": "string"
+                      },
+                      "duration": {
+                        "type": "string"
+                      },
+                      "address": {
+                        "type": "string"
+                      },
+                      "lat": {
+                        "type": "number"
+                      },
+                      "lng": {
+                        "type": "number"
+                      },
+                      "imageUrl": {
+                        "type": "string"
+                      },
+                      "tips": {
+                        "type": "array",
+                        "items": {
+                          "type": "string"
+                        }
+                      }
+                    },
+                    "required": [
+                      "id",
+                      "name",
+                      "nameKo",
+                      "type",
+                      "description",
+                      "estimatedCost",
+                      "currency",
+                      "duration",
+                      "address",
+                      "lat",
+                      "lng"
+                    ]
+                  }
+                },
+                "transportation": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "from": {
+                        "type": "string"
+                      },
+                      "to": {
+                        "type": "string"
+                      },
+                      "type": {
+                        "type": "string",
+                        "enum": [
+                          "train",
+                          "bus",
+                          "taxi",
+                          "rental_car",
+                          "walk",
+                          "metro"
+                        ]
+                      },
+                      "duration": {
+                        "type": "string"
+                      },
+                      "estimatedCost": {
+                        "type": "number"
+                      },
+                      "currency": {
+                        "type": "string"
+                      },
+                      "notes": {
+                        "type": "string"
+                      },
+                      "bookingUrl": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "from",
+                      "to",
+                      "type",
+                      "duration",
+                      "estimatedCost",
+                      "currency",
+                      "notes"
+                    ]
+                  }
+                },
+                "weatherInfo": {
+                  "type": "object",
+                  "properties": {
+                    "avgTempHigh": {
+                      "type": "number"
+                    },
+                    "avgTempLow": {
+                      "type": "number"
+                    },
+                    "rainfall": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
+                    },
+                    "clothing": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "avgTempHigh",
+                    "avgTempLow",
+                    "rainfall",
+                    "description",
+                    "clothing"
+                  ]
+                }
+              },
+              "required": [
+                "id",
+                "name",
+                "nameKo",
+                "lat",
+                "lng",
+                "timezone",
+                "description",
+                "tips",
+                "phrases",
+                "restaurants",
+                "contents",
+                "transportation",
+                "weatherInfo"
+              ]
+            }
+          },
+          "immigrationSchedules": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "departure",
+                    "arrival"
+                  ]
+                },
+                "date": {
+                  "type": "string"
+                },
+                "time": {
+                  "type": "string"
+                },
+                "airport": {
+                  "type": "string"
+                },
+                "airline": {
+                  "type": "string"
+                },
+                "flightNumber": {
+                  "type": "string"
+                },
+                "terminal": {
+                  "type": "string"
+                },
+                "gate": {
+                  "type": "string"
+                },
+                "confirmationNumber": {
+                  "type": "string"
+                },
+                "notes": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "type",
+                "date",
+                "time",
+                "airport"
+              ]
+            }
+          },
+          "interCityTransports": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "fromDayId": {
+                  "type": "string"
+                },
+                "toDayId": {
+                  "type": "string"
+                },
+                "type": {
+                  "type": "string",
+                  "enum": [
+                    "train",
+                    "bus",
+                    "taxi",
+                    "rental_car",
+                    "flight"
+                  ]
+                },
+                "departure": {
+                  "type": "string"
+                },
+                "arrival": {
+                  "type": "string"
+                },
+                "departureTime": {
+                  "type": "string"
+                },
+                "arrivalTime": {
+                  "type": "string"
+                },
+                "operator": {
+                  "type": "string"
+                },
+                "confirmationNumber": {
+                  "type": "string"
+                },
+                "estimatedCost": {
+                  "type": "number"
+                },
+                "currency": {
+                  "type": "string"
+                },
+                "notes": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "fromDayId",
+                "toDayId",
+                "type"
+              ]
+            }
+          },
+          "owners": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "color": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "id",
+                "name",
+                "color"
+              ]
+            }
+          },
+          "pendingCameraExpense": {
+            "type": [
+              "object",
+              "null"
+            ],
+            "properties": {
+              "amount": {
+                "type": "number"
+              },
+              "currency": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "amount",
+              "currency"
+            ]
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": "string"
+          },
+          "emoji": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "tripName",
+          "startDate",
+          "endDate",
+          "days",
+          "currentDayIndex",
+          "totalBudget",
+          "expenses",
+          "restaurantComments",
+          "customDestinations",
+          "immigrationSchedules",
+          "interCityTransports",
+          "owners",
+          "pendingCameraExpense",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "DeleteResponse": {
+        "type": "object",
+        "properties": {
+          "deleted": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "deleted"
+        ]
+      }
+    },
+    "parameters": {}
+  },
+  "paths": {
+    "/api/exchange-rates": {
+      "get": {
+        "operationId": "getExchangeRates",
+        "tags": [
+          "Currency"
+        ],
+        "summary": "Get current EUR exchange rates",
+        "description": "Proxies Frankfurter API with 24h edge caching. Returns EUR-based rates for KRW, USD, JPY, CNY.",
+        "responses": {
+          "200": {
+            "description": "Current exchange rates",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExchangeRatesResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Upstream Frankfurter API error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Exchange rate service unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/vision": {
+      "post": {
+        "operationId": "ocrImage",
+        "tags": [
+          "OCR"
+        ],
+        "summary": "Detect text in an image via Google Cloud Vision",
+        "description": "Sends a base64-encoded image to Google Cloud Vision TEXT_DETECTION and returns extracted text.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VisionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Extracted text from image",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VisionResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "No image provided",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Vision API not configured or processing error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "502": {
+            "description": "Google Vision API request failed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/google": {
+      "get": {
+        "operationId": "googleLogin",
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Start Google OAuth flow",
+        "responses": {
+          "302": {
+            "description": "Redirect to Google"
+          }
+        }
+      }
+    },
+    "/api/auth/google/callback": {
+      "get": {
+        "operationId": "googleCallback",
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Google OAuth callback",
+        "responses": {
+          "302": {
+            "description": "Redirect to app after login"
+          },
+          "400": {
+            "description": "Invalid callback",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/me": {
+      "get": {
+        "operationId": "getMe",
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Get current authenticated user",
+        "responses": {
+          "200": {
+            "description": "Current user or null",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "operationId": "logout",
+        "tags": [
+          "Auth"
+        ],
+        "summary": "Log out current user",
+        "responses": {
+          "200": {
+            "description": "Logged out",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LogoutResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/trips": {
+      "get": {
+        "operationId": "listTrips",
+        "tags": [
+          "Trips"
+        ],
+        "summary": "List all trips for current user",
+        "description": "Returns trip metadata (id, name, dates, emoji) without full JSONB data.",
+        "responses": {
+          "200": {
+            "description": "List of trips",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TripListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "operationId": "createTrip",
+        "tags": [
+          "Trips"
+        ],
+        "summary": "Create a new trip",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Trip"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Trip created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TripResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/trips/{tripId}": {
+      "get": {
+        "operationId": "getTrip",
+        "tags": [
+          "Trips"
+        ],
+        "summary": "Get a single trip",
+        "description": "Returns the full Trip object including all days, activities, and expenses.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
+            },
+            "required": true,
+            "name": "tripId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Trip details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TripResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Trip not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "operationId": "updateTrip",
+        "tags": [
+          "Trips"
+        ],
+        "summary": "Update a trip",
+        "description": "Replaces the entire Trip JSONB data.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
+            },
+            "required": true,
+            "name": "tripId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Trip"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Trip updated",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TripResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Trip not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "operationId": "deleteTrip",
+        "tags": [
+          "Trips"
+        ],
+        "summary": "Delete a trip",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
+            },
+            "required": true,
+            "name": "tripId",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Trip deleted",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeleteResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Trip not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "webhooks": {}
+}
