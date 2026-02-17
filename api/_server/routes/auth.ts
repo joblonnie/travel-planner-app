@@ -1,6 +1,5 @@
 import { OpenAPIHono, createRoute } from '@hono/zod-openapi';
 import { setCookie, getCookie, deleteCookie } from 'hono/cookie';
-import { Google, generateCodeVerifier, generateState } from 'arctic';
 import { eq, and } from 'drizzle-orm';
 import type { AppEnv } from '../app.js';
 import { getDb } from '../db/index.js';
@@ -15,12 +14,68 @@ import {
 import { UserResponseSchema, LogoutResponseSchema } from '../schemas/auth.js';
 import { ErrorResponseSchema } from '../schemas/common.js';
 
-function getGoogle() {
-  return new Google(
-    process.env.GOOGLE_CLIENT_ID!,
-    process.env.GOOGLE_CLIENT_SECRET!,
-    process.env.AUTH_REDIRECT_URI!,
-  );
+// --- Edge-compatible OAuth helpers (replaces arctic) ---
+
+function randomBase64url(bytes: number): string {
+  const buf = new Uint8Array(bytes);
+  crypto.getRandomValues(buf);
+  // base64url encode
+  let binary = '';
+  for (const b of buf) binary += String.fromCharCode(b);
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+function generateState(): string {
+  return randomBase64url(32);
+}
+
+function generateCodeVerifier(): string {
+  return randomBase64url(32);
+}
+
+async function generateCodeChallenge(verifier: string): Promise<string> {
+  const data = new TextEncoder().encode(verifier);
+  const digest = await crypto.subtle.digest('SHA-256', data);
+  let binary = '';
+  for (const b of new Uint8Array(digest)) binary += String.fromCharCode(b);
+  return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+function buildGoogleAuthUrl(state: string, codeChallenge: string): string {
+  const params = new URLSearchParams({
+    client_id: process.env.GOOGLE_CLIENT_ID!,
+    redirect_uri: process.env.AUTH_REDIRECT_URI!,
+    response_type: 'code',
+    scope: 'openid email profile',
+    state,
+    code_challenge: codeChallenge,
+    code_challenge_method: 'S256',
+    access_type: 'offline',
+    prompt: 'consent',
+  });
+  return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
+}
+
+async function exchangeCodeForTokens(code: string, codeVerifier: string) {
+  const res = await fetch('https://oauth2.googleapis.com/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      client_id: process.env.GOOGLE_CLIENT_ID!,
+      client_secret: process.env.GOOGLE_CLIENT_SECRET!,
+      redirect_uri: process.env.AUTH_REDIRECT_URI!,
+      grant_type: 'authorization_code',
+      code,
+      code_verifier: codeVerifier,
+    }).toString(),
+  });
+
+  if (!res.ok) {
+    const errText = await res.text();
+    throw new Error(`Token exchange failed: ${errText}`);
+  }
+
+  return (await res.json()) as { access_token: string; id_token?: string };
 }
 
 // --- Route definitions ---
@@ -83,14 +138,10 @@ const logout = createRoute({
 
 export const authRoute = new OpenAPIHono<AppEnv>()
   .openapi(googleLogin, async (c) => {
-    const google = getGoogle();
     const state = generateState();
     const codeVerifier = generateCodeVerifier();
-    const url = google.createAuthorizationURL(state, codeVerifier, [
-      'openid',
-      'email',
-      'profile',
-    ]);
+    const codeChallenge = await generateCodeChallenge(codeVerifier);
+    const url = buildGoogleAuthUrl(state, codeChallenge);
 
     // Store state and codeVerifier in short-lived cookies
     setCookie(c, 'oauth_state', state, {
@@ -102,7 +153,7 @@ export const authRoute = new OpenAPIHono<AppEnv>()
       maxAge: 600,
     });
 
-    return c.redirect(url.toString(), 302);
+    return c.redirect(url, 302);
   })
   .openapi(googleCallback, async (c) => {
     const code = c.req.query('code');
@@ -118,18 +169,16 @@ export const authRoute = new OpenAPIHono<AppEnv>()
       return c.json({ error: 'Invalid OAuth callback' }, 400);
     }
 
-    const google = getGoogle();
-
     let tokens;
     try {
-      tokens = await google.validateAuthorizationCode(code, codeVerifier);
+      tokens = await exchangeCodeForTokens(code, codeVerifier);
     } catch {
       return c.json({ error: 'Failed to validate authorization code' }, 400);
     }
 
     // Fetch user info from Google
     const res = await fetch('https://openidconnect.googleapis.com/v1/userinfo', {
-      headers: { Authorization: `Bearer ${tokens.accessToken()}` },
+      headers: { Authorization: `Bearer ${tokens.access_token}` },
     });
     if (!res.ok) {
       return c.json({ error: 'Failed to fetch user info' }, 400);
