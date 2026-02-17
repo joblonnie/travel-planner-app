@@ -2,17 +2,18 @@ import { OpenAPIHono, createRoute } from '@hono/zod-openapi';
 import { setCookie, getCookie, deleteCookie } from 'hono/cookie';
 import { Google, generateCodeVerifier, generateState } from 'arctic';
 import { eq, and } from 'drizzle-orm';
-import { getDb } from '../_db/index.ts';
-import { users } from '../_db/schema.ts';
+import type { AppEnv } from '../_app';
+import { getDb } from '../_db/index';
+import { users } from '../_db/schema';
 import {
   createSession,
   deleteSession,
   SESSION_COOKIE_NAME,
   COOKIE_OPTIONS,
-} from '../_lib/session.ts';
-import { optionalAuth } from '../_middleware/auth.ts';
-import { UserResponseSchema, LogoutResponseSchema } from '../_schemas/auth.ts';
-import { ErrorResponseSchema } from '../_schemas/common.ts';
+} from '../_lib/session';
+import { optionalAuth } from '../_middleware/auth';
+import { UserResponseSchema, LogoutResponseSchema } from '../_schemas/auth';
+import { ErrorResponseSchema } from '../_schemas/common';
 
 function getGoogle() {
   return new Google(
@@ -80,7 +81,7 @@ const logout = createRoute({
 
 // --- Route handlers ---
 
-export const authRoute = new OpenAPIHono()
+export const authRoute = new OpenAPIHono<AppEnv>()
   .openapi(googleLogin, async (c) => {
     const google = getGoogle();
     const state = generateState();

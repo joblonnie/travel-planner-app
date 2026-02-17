@@ -1,6 +1,6 @@
 import { OpenAPIHono, createRoute } from '@hono/zod-openapi';
-import { VisionRequestSchema, VisionResponseSchema } from '../_schemas/vision.ts';
-import { ErrorResponseSchema } from '../_schemas/common.ts';
+import { VisionRequestSchema, VisionResponseSchema } from '../_schemas/vision';
+import { ErrorResponseSchema } from '../_schemas/common';
 
 const postVision = createRoute({
   operationId: 'ocrImage',

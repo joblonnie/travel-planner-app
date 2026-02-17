@@ -1,4 +1,4 @@
-import { app } from './_app.ts';
+import { app } from './_app';
 
 const spec = app.getOpenAPI31Document({
   openapi: '3.1.0',

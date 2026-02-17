@@ -1,15 +1,16 @@
 import { OpenAPIHono, createRoute } from '@hono/zod-openapi';
 import { eq } from 'drizzle-orm';
+import type { AppEnv } from '../_app';
 import {
   TripSchema,
   TripListResponseSchema,
   TripResponseSchema,
   TripParamsSchema,
   DeleteResponseSchema,
-} from '../_schemas/trips.ts';
-import { ErrorResponseSchema } from '../_schemas/common.ts';
-import { getDb } from '../_db/index.ts';
-import { trips } from '../_db/schema.ts';
+} from '../_schemas/trips';
+import { ErrorResponseSchema } from '../_schemas/common';
+import { getDb } from '../_db/index';
+import { trips } from '../_db/schema';
 
 // --- Route definitions ---
 
@@ -141,7 +142,7 @@ const deleteTrip = createRoute({
 // Auth is enforced by requireAuth middleware in app.ts.
 // userId is available via c.get('userId').
 
-export const tripsRoute = new OpenAPIHono()
+export const tripsRoute = new OpenAPIHono<AppEnv>()
   .openapi(listTrips, async (c) => {
     const userId = c.get('userId') as string;
 
