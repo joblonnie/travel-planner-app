@@ -23,7 +23,6 @@ const SearchModal = lazy(() => import('@/features/search/components/SearchModal.
 
 function App() {
   useTheme();
-  useExchangeRates();
   useSyncTrips();
   const { login, logout, loading } = useAuth();
   const isAuthenticated = useTripStore((s) => s.isAuthenticated);
@@ -111,6 +110,7 @@ function App() {
 }
 
 function AppContent({ logout }: { logout: () => void }) {
+  useExchangeRates();
   const user = useTripStore((s) => s.user);
   const tripName = useTripData((t) => t.tripName);
   const startDate = useTripData((t) => t.startDate);
