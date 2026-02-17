@@ -2,7 +2,7 @@ import { useState, useCallback, useRef, useEffect } from 'react';
 import { X, Check, MapPin, Search } from 'lucide-react';
 import { GoogleMap, MarkerF } from '@react-google-maps/api';
 import { useEscKey } from '@/hooks/useEscKey.ts';
-import { useTripStore } from '@/store/useTripStore.ts';
+import { useTripActions } from '@/hooks/useTripActions.ts';
 import { useTripData } from '@/store/useCurrentTrip.ts';
 import { useI18n, type TranslationKey } from '@/i18n/useI18n.ts';
 import { useGoogleMaps } from '@/hooks/useGoogleMaps.ts';
@@ -15,8 +15,7 @@ interface Props {
 export function DestinationFormModal({ onClose }: Props) {
   const days = useTripData((t) => t.days);
   const startDate = useTripData((t) => t.startDate);
-  const addCustomDestination = useTripStore((s) => s.addCustomDestination);
-  const addDay = useTripStore((s) => s.addDay);
+  const { addCustomDestination, addDay } = useTripActions();
   const { t } = useI18n();
   const { isLoaded, apiKey } = useGoogleMaps();
   const mapAvailable = apiKey && isLoaded;

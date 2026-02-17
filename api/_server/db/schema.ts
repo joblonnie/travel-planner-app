@@ -1,4 +1,4 @@
-import { pgTable, text, jsonb, timestamp, integer, uniqueIndex } from 'drizzle-orm/pg-core';
+import { pgTable, text, jsonb, timestamp, integer, uniqueIndex, primaryKey } from 'drizzle-orm/pg-core';
 
 export const users = pgTable('users', {
   id: text('id').primaryKey(),
@@ -16,6 +16,26 @@ export const sessions = pgTable('sessions', {
   userId: text('user_id').references(() => users.id).notNull(),
   expiresAt: timestamp('expires_at').notNull(),
   createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+
+export const tripMembers = pgTable('trip_members', {
+  tripId: text('trip_id').references(() => trips.id, { onDelete: 'cascade' }).notNull(),
+  userId: text('user_id').references(() => users.id, { onDelete: 'cascade' }).notNull(),
+  role: text('role').notNull(),  // 'owner' | 'editor' | 'viewer'
+  joinedAt: timestamp('joined_at').defaultNow().notNull(),
+}, (table) => [
+  primaryKey({ columns: [table.tripId, table.userId] }),
+]);
+
+export const tripInvitations = pgTable('trip_invitations', {
+  id: text('id').primaryKey(),
+  tripId: text('trip_id').references(() => trips.id, { onDelete: 'cascade' }).notNull(),
+  inviterId: text('inviter_id').references(() => users.id).notNull(),
+  inviteeEmail: text('invitee_email').notNull(),
+  role: text('role').notNull(),  // 'editor' | 'viewer'
+  status: text('status').notNull().default('pending'),  // 'pending' | 'accepted' | 'declined'
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  expiresAt: timestamp('expires_at').notNull(),
 });
 
 export const trips = pgTable('trips', {

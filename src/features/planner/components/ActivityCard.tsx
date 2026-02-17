@@ -3,7 +3,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { MapPin, CheckCircle2, Circle, FileText, Ticket, Pencil, Trash2, SkipForward, MoreHorizontal, Plus, X, Receipt, Copy, GripVertical } from 'lucide-react';
 import type { ScheduledActivity, ExpenseOwner } from '@/types/index.ts';
 import { useState, useRef, useEffect, memo, lazy, Suspense } from 'react';
-import { useTripStore } from '@/store/useTripStore.ts';
+import { useTripActions } from '@/hooks/useTripActions.ts';
 import { useCurrency } from '@/hooks/useCurrency.ts';
 import { useI18n, type TranslationKey } from '@/i18n/useI18n.ts';
 import { translations } from '@/i18n/translations.ts';
@@ -65,15 +65,7 @@ export const ActivityCard = memo(function ActivityCard({ activity, dayId, reorde
   const [showLocationEdit, setShowLocationEdit] = useState(false);
   const actionsRef = useRef<HTMLDivElement>(null);
   const memoInputRef = useRef<HTMLInputElement>(null);
-  const removeActivity = useTripStore((s) => s.removeActivity);
-  const duplicateActivity = useTripStore((s) => s.duplicateActivity);
-  const toggleCompleted = useTripStore((s) => s.toggleCompleted);
-  const toggleSkipped = useTripStore((s) => s.toggleSkipped);
-  const addMemo = useTripStore((s) => s.addMemo);
-  const removeMemo = useTripStore((s) => s.removeMemo);
-  const addActivityExpense = useTripStore((s) => s.addActivityExpense);
-  const updateActivityExpense = useTripStore((s) => s.updateActivityExpense);
-  const removeActivityExpense = useTripStore((s) => s.removeActivityExpense);
+  const { removeActivity, duplicateActivity, toggleCompleted, toggleSkipped, addMemo, removeMemo, addActivityExpense, updateActivityExpense, removeActivityExpense } = useTripActions();
 
   const { format, convert, symbol: currencySymbol, toEur } = useCurrency();
   const { t } = useI18n();

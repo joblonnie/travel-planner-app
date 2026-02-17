@@ -5,10 +5,12 @@ import {
   ChevronDown, ChevronUp, Receipt, X, Calculator, Users, User, ArrowRight,
   Settings, Pencil,
 } from 'lucide-react';
-import { useTripStore, type Expense } from '@/store/useTripStore.ts';
 import { useTripData } from '@/store/useCurrentTrip.ts';
+import { useTripActions } from '@/hooks/useTripActions.ts';
+import { getTotalCost, getTotalExpenses, getTotalExpensesByOwner } from '@/store/tripActions.ts';
 import { useCurrency } from '@/hooks/useCurrency.ts';
 import { useI18n, type TranslationKey } from '@/i18n/useI18n.ts';
+import type { Expense } from '@/store/useTripStore.ts';
 import { OwnerSelector, OwnerBadge, ownerColorMap } from '@/components/OwnerSelector.tsx';
 import { CameraOcrModal } from './CameraOcrModal.tsx';
 import type { ExpenseOwner } from '@/types/index.ts';
@@ -57,17 +59,7 @@ export function BudgetPage() {
   const days = useTripData((t) => t.days);
   const pendingCameraExpense = useTripData((t) => t.pendingCameraExpense);
   const owners = useTripData((t) => t.owners);
-  const addExpense = useTripStore((s) => s.addExpense);
-  const removeExpense = useTripStore((s) => s.removeExpense);
-  const getTotalCost = useTripStore((s) => s.getTotalCost);
-  const getTotalExpenses = useTripStore((s) => s.getTotalExpenses);
-  const getTotalExpensesByOwner = useTripStore((s) => s.getTotalExpensesByOwner);
-  const setTotalBudget = useTripStore((s) => s.setTotalBudget);
-  const removeActivityExpense = useTripStore((s) => s.removeActivityExpense);
-  const setPendingCameraExpense = useTripStore((s) => s.setPendingCameraExpense);
-  const addOwner = useTripStore((s) => s.addOwner);
-  const removeOwner = useTripStore((s) => s.removeOwner);
-  const updateOwner = useTripStore((s) => s.updateOwner);
+  const { addExpense, removeExpense, setTotalBudget, removeActivityExpense, setPendingCameraExpense, addOwner, removeOwner, updateOwner } = useTripActions();
 
   const [showAddForm, setShowAddForm] = useState(false);
   const [showBudgetEdit, setShowBudgetEdit] = useState(false);
@@ -107,9 +99,14 @@ export function BudgetPage() {
     }
   }, [pendingCameraExpense, setPendingCameraExpense]);
 
-  const estimatedTotal = getTotalCost();
-  const allExpensesTotal = getTotalExpenses();
-  const actualTotal = ownerFilter === 'all' ? allExpensesTotal : getTotalExpensesByOwner(ownerFilter);
+  const estimatedTotal = useTripData((t) => getTotalCost(t));
+  const allExpensesTotal = useTripData((t) => getTotalExpenses(t));
+  const ownerExpenseMap = useTripData((t) => {
+    const map: Record<string, number> = { all: getTotalExpenses(t) };
+    for (const o of t.owners) map[o.id] = getTotalExpensesByOwner(t, o.id);
+    return map;
+  });
+  const actualTotal = ownerFilter === 'all' ? allExpensesTotal : (ownerExpenseMap[ownerFilter] ?? 0);
   const remaining = totalBudget - allExpensesTotal;
 
   // Filter expenses by owner
@@ -129,11 +126,11 @@ export function BudgetPage() {
   // Settlement calculation - generalized for N owners
   const { nonSharedOwners, ownerTotals, hasPersonalExpenses, sharedTotal } = useMemo(() => {
     const nonShared = owners.filter((o) => o.id !== 'shared');
-    const shared = getTotalExpensesByOwner('shared');
+    const shared = ownerExpenseMap['shared'] ?? 0;
     const totals = nonShared.map((o) => ({
       ...o,
-      personal: getTotalExpensesByOwner(o.id),
-      total: getTotalExpensesByOwner(o.id) + (nonShared.length > 0 ? shared / nonShared.length : 0),
+      personal: ownerExpenseMap[o.id] ?? 0,
+      total: (ownerExpenseMap[o.id] ?? 0) + (nonShared.length > 0 ? shared / nonShared.length : 0),
     }));
     return {
       nonSharedOwners: nonShared,
@@ -141,7 +138,7 @@ export function BudgetPage() {
       hasPersonalExpenses: totals.some((o) => o.personal > 0),
       sharedTotal: shared,
     };
-  }, [owners, getTotalExpensesByOwner]);
+  }, [owners, ownerExpenseMap]);
 
   const handleAddExpense = () => {
     if (!form.amount || !form.description) return;
@@ -438,7 +435,7 @@ export function BudgetPage() {
             <div className="mt-2 h-1.5 bg-gray-200/60 rounded-full overflow-hidden">
               <div
                 className={`h-full rounded-full transition-all ${remaining >= 0 ? 'bg-gradient-to-r from-emerald-500 to-green-400' : 'bg-gradient-to-r from-red-500 to-rose-400'}`}
-                style={{ width: `${Math.min(100, (getTotalExpenses() / totalBudget) * 100)}%` }}
+                style={{ width: `${Math.min(100, (allExpensesTotal / totalBudget) * 100)}%` }}
               />
             </div>
           </div>

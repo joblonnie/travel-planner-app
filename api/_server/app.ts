@@ -4,6 +4,7 @@ import { exchangeRatesRoute } from './routes/exchange-rates.js';
 import { visionRoute } from './routes/vision.js';
 import { tripsRoute } from './routes/trips.js';
 import { authRoute } from './routes/auth.js';
+import { sharingRoute } from './routes/sharing.js';
 import { requireAuth } from './middleware/auth.js';
 
 export type AppEnv = {
@@ -22,7 +23,10 @@ app.route('/', authRoute);
 // Protected routes — require session auth
 app.use('/trips/*', requireAuth);
 app.use('/trips', requireAuth);
+app.use('/invitations/*', requireAuth);
+app.use('/invitations', requireAuth);
 app.route('/', tripsRoute);
+app.route('/', sharingRoute);
 
 // OpenAPI 3.1 spec endpoint
 app.doc31('/doc', {

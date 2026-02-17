@@ -211,6 +211,7 @@ export interface Trip {
   createdAt: string;
   updatedAt: string;
   emoji?: string;
+  role?: 'owner' | 'editor' | 'viewer';
 }
 
 export interface TripExpense {

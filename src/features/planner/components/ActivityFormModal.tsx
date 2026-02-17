@@ -3,11 +3,12 @@ import { useEscKey } from '@/hooks/useEscKey.ts';
 import { X, PlusCircle, Save, Trash2, MapPin, Landmark, ShoppingBag, UtensilsCrossed, Bus, Coffee, Search, Hotel, AlertTriangle, Zap } from 'lucide-react';
 import { GoogleMap, MarkerF } from '@react-google-maps/api';
 import type { ScheduledActivity } from '@/types/index.ts';
-import { useTripStore } from '@/store/useTripStore.ts';
+import { useTripActions } from '@/hooks/useTripActions.ts';
 import { useTripData } from '@/store/useCurrentTrip.ts';
 import { useI18n, type TranslationKey } from '@/i18n/useI18n.ts';
 import { useGoogleMaps } from '@/hooks/useGoogleMaps.ts';
 import { useCurrency } from '@/hooks/useCurrency.ts';
+import { destinations as staticDestinations } from '@/data/destinations.ts';
 
 interface Props {
   dayId: string;
@@ -29,17 +30,15 @@ const typeConfig: { value: ScheduledActivity['type']; labelKey: string; icon: Re
 const durationPresetKeys = ['duration.30min', 'duration.1h', 'duration.1h30', 'duration.2h', 'duration.3h', 'duration.halfDay'] as const;
 
 export function ActivityFormModal({ dayId, onClose, insertAtIndex, activity, placeOnly, locationOnly }: Props) {
-  const addActivity = useTripStore((s) => s.addActivity);
-  const updateActivity = useTripStore((s) => s.updateActivity);
-  const removeActivity = useTripStore((s) => s.removeActivity);
+  const { addActivity, updateActivity, removeActivity } = useTripActions();
   const days = useTripData((t) => t.days);
-  const getAllDestinations = useTripStore((s) => s.getAllDestinations);
+  const customDestinations = useTripData((t) => t.customDestinations);
+  const allDestinations = [...staticDestinations, ...customDestinations];
   const { t } = useI18n();
   const { isLoaded, apiKey } = useGoogleMaps();
   const { currency, symbol, convert, rate } = useCurrency();
 
   useEscKey(onClose);
-  const allDestinations = getAllDestinations();
   const currentDay = days.find((d) => d.id === dayId);
   const destination = allDestinations.find((d) => d.id === currentDay?.destinationId);
   const mapAvailable = apiKey && isLoaded;

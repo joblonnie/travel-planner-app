@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { X, Check, Plane } from 'lucide-react';
 import { useEscKey } from '@/hooks/useEscKey.ts';
-import { useTripStore } from '@/store/useTripStore.ts';
+import { useTripActions } from '@/hooks/useTripActions.ts';
 import { useI18n, type TranslationKey } from '@/i18n/useI18n.ts';
 import type { FlightInfo } from '@/types/index.ts';
 
@@ -12,8 +12,7 @@ interface Props {
 }
 
 export function FlightFormModal({ dayId, flight, onClose }: Props) {
-  const addFlight = useTripStore((s) => s.addFlight);
-  const updateFlight = useTripStore((s) => s.updateFlight);
+  const { addFlight, updateFlight } = useTripActions();
   const { t } = useI18n();
   const isEdit = !!flight;
 

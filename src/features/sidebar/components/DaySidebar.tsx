@@ -17,8 +17,9 @@ import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { useTripStore } from '@/store/useTripStore.ts';
 import { useTripData } from '@/store/useCurrentTrip.ts';
+import { useTripActions } from '@/hooks/useTripActions.ts';
+import { getDayCost } from '@/store/tripActions.ts';
 import { useCurrency } from '@/hooks/useCurrency.ts';
 import { useI18n, type TranslationKey } from '@/i18n/useI18n.ts';
 import { DayFormModal } from './DayFormModal.tsx';
@@ -451,14 +452,7 @@ export function DaySidebar({ onClose }: { onClose: () => void }) {
   const currentDayIndex = useTripData((t) => t.currentDayIndex);
   const immigrationSchedules = useTripData((t) => t.immigrationSchedules);
   const interCityTransports = useTripData((t) => t.interCityTransports);
-  const setCurrentDay = useTripStore((s) => s.setCurrentDay);
-  const getDayCost = useTripStore((s) => s.getDayCost);
-  const removeDay = useTripStore((s) => s.removeDay);
-  const removeFlight = useTripStore((s) => s.removeFlight);
-  const reorderDays = useTripStore((s) => s.reorderDays);
-  const removeImmigrationSchedule = useTripStore((s) => s.removeImmigrationSchedule);
-  const removeInterCityTransport = useTripStore((s) => s.removeInterCityTransport);
-  const duplicateDay = useTripStore((s) => s.duplicateDay);
+  const { setCurrentDay, removeDay, removeFlight, reorderDays, removeImmigrationSchedule, removeInterCityTransport, duplicateDay } = useTripActions();
   const { format } = useCurrency();
   const { t } = useI18n();
 
@@ -512,6 +506,13 @@ export function DaySidebar({ onClose }: { onClose: () => void }) {
       setDeleteImmId(null);
     }
   };
+
+  // Day cost map
+  const dayCostMap = useTripData((t) => {
+    const map: Record<string, number> = {};
+    for (const d of t.days) map[d.id] = getDayCost(t, d.id);
+    return map;
+  });
 
   // Immigration schedules
   const departureSchedules = useMemo(() => immigrationSchedules.filter((s) => s.type === 'departure'), [immigrationSchedules]);
@@ -670,7 +671,7 @@ export function DaySidebar({ onClose }: { onClose: () => void }) {
                         canMoveUp={idx > 0}
                         canMoveDown={idx < days.length - 1}
                         format={format}
-                        dayCost={getDayCost(day.id)}
+                        dayCost={dayCostMap[day.id] ?? 0}
                         t={t}
                       />
 

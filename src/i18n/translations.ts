@@ -462,6 +462,30 @@ export const translations = {
   'theme.mochaMousse': { ko: 'Mocha Mousse', en: 'Mocha Mousse', es: 'Mocha Mousse' },
   'theme.mochaMousseDesc': { ko: '2025 팬톤 올해의 색', en: '2025 Pantone COTY', es: 'Pantone COTY 2025' },
   'theme.scrollToTop': { ko: '맨 위로', en: 'Top', es: 'Arriba' },
+
+  // Sharing
+  'sharing.members': { ko: '멤버', en: 'Members', es: 'Miembros' },
+  'sharing.invite': { ko: '초대', en: 'Invite', es: 'Invitar' },
+  'sharing.inviteByEmail': { ko: '이메일로 초대', en: 'Invite by email', es: 'Invitar por email' },
+  'sharing.emailPlaceholder': { ko: '이메일 주소 입력', en: 'Enter email address', es: 'Ingrese email' },
+  'sharing.role': { ko: '역할', en: 'Role', es: 'Rol' },
+  'sharing.owner': { ko: '소유자', en: 'Owner', es: 'Propietario' },
+  'sharing.editor': { ko: '편집자', en: 'Editor', es: 'Editor' },
+  'sharing.viewer': { ko: '뷰어', en: 'Viewer', es: 'Visor' },
+  'sharing.remove': { ko: '제거', en: 'Remove', es: 'Eliminar' },
+  'sharing.removeConfirm': { ko: '이 멤버를 제거하시겠습니까?', en: 'Remove this member?', es: '¿Eliminar este miembro?' },
+  'sharing.inviteSent': { ko: '초대를 보냈습니다', en: 'Invitation sent', es: 'Invitación enviada' },
+  'sharing.invitations': { ko: '초대', en: 'Invitations', es: 'Invitaciones' },
+  'sharing.pendingInvitations': { ko: '대기 중인 초대', en: 'Pending Invitations', es: 'Invitaciones Pendientes' },
+  'sharing.noInvitations': { ko: '대기 중인 초대가 없습니다', en: 'No pending invitations', es: 'Sin invitaciones pendientes' },
+  'sharing.accept': { ko: '수락', en: 'Accept', es: 'Aceptar' },
+  'sharing.decline': { ko: '거절', en: 'Decline', es: 'Rechazar' },
+  'sharing.invitedBy': { ko: '초대한 사람', en: 'Invited by', es: 'Invitado por' },
+  'sharing.expiresAt': { ko: '만료', en: 'Expires', es: 'Expira' },
+  'sharing.shared': { ko: '공유됨', en: 'Shared', es: 'Compartido' },
+  'sharing.you': { ko: '나', en: 'You', es: 'Tú' },
+  'sharing.leaveTrip': { ko: '여행 나가기', en: 'Leave trip', es: 'Salir del viaje' },
+  'sharing.leaveConfirm': { ko: '이 여행에서 나가시겠습니까?', en: 'Leave this trip?', es: '¿Salir de este viaje?' },
 } as const;
 
 export type TranslationKey = keyof typeof translations;

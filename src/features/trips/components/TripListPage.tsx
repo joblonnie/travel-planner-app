@@ -1,20 +1,28 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Trash2, Copy, MapPin, Calendar, ArrowLeft, Settings } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { Plus, Trash2, Copy, MapPin, Calendar, ArrowLeft, Settings, Users, Crown, Pencil, Eye } from 'lucide-react';
 import { useTripStore } from '@/store/useTripStore.ts';
+import { useTripActions } from '@/hooks/useTripActions.ts';
 import { useI18n, type TranslationKey } from '@/i18n/useI18n.ts';
 import { useCurrency } from '@/hooks/useCurrency.ts';
 import { TripCreateModal } from './TripCreateModal.tsx';
 import { useDeleteTrip } from '@/hooks/useTrips.ts';
+import { TRIPS_QUERY_KEY } from '@/hooks/useTripQuery.ts';
 import type { Trip } from '@/types/index.ts';
+
+const ROLE_BADGE = {
+  owner: { icon: Crown, label: 'sharing.owner', color: 'text-amber-600 bg-amber-50 border-amber-200' },
+  editor: { icon: Pencil, label: 'sharing.editor', color: 'text-blue-600 bg-blue-50 border-blue-200' },
+  viewer: { icon: Eye, label: 'sharing.viewer', color: 'text-gray-600 bg-gray-100 border-gray-200' },
+} as const;
 
 export function TripListPage() {
   const navigate = useNavigate();
-  const trips = useTripStore((s) => s.trips);
+  const { data: trips = [] } = useQuery<Trip[]>({ queryKey: TRIPS_QUERY_KEY, staleTime: Infinity, enabled: false });
   const currentTripId = useTripStore((s) => s.currentTripId);
-  const switchTrip = useTripStore((s) => s.switchTrip);
-  const deleteTrip = useTripStore((s) => s.deleteTrip);
-  const duplicateTrip = useTripStore((s) => s.duplicateTrip);
+  const setCurrentTripId = useTripStore((s) => s.setCurrentTripId);
+  const { deleteTrip, duplicateTrip } = useTripActions();
   const { t } = useI18n();
   const { format } = useCurrency();
   const [showCreate, setShowCreate] = useState(false);
@@ -22,12 +30,12 @@ export function TripListPage() {
   const deleteTripMutation = useDeleteTrip();
 
   const handleSwitch = (tripId: string) => {
-    switchTrip(tripId);
+    setCurrentTripId(tripId);
     navigate('/');
   };
 
   const handleEdit = (tripId: string) => {
-    switchTrip(tripId);
+    setCurrentTripId(tripId);
     navigate('/?settings=true');
   };
 
@@ -94,6 +102,11 @@ export function TripListPage() {
           const totalActs = getTotalActivities(trip);
           const destinations = getUniqueDestinations(trip);
           const isCurrent = trip.id === currentTripId;
+          const role = trip.role ?? 'owner';
+          const isShared = role !== 'owner';
+          const isOwnerRole = role === 'owner';
+          const badge = ROLE_BADGE[role] ?? ROLE_BADGE.viewer;
+          const BadgeIcon = badge.icon;
 
           return (
             <div
@@ -126,7 +139,15 @@ export function TripListPage() {
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-gray-800 text-sm truncate">{trip.tripName}</h3>
+                    <div className="flex items-center gap-1.5">
+                      <h3 className="font-bold text-gray-800 text-sm truncate">{trip.tripName}</h3>
+                      {isShared && (
+                        <span className={`flex items-center gap-0.5 text-[9px] px-1.5 py-0.5 rounded-full border font-medium flex-shrink-0 ${badge.color}`}>
+                          <BadgeIcon size={8} />
+                          {t(badge.label as TranslationKey)}
+                        </span>
+                      )}
+                    </div>
 
                     {/* Date range */}
                     {trip.startDate && (
@@ -188,22 +209,35 @@ export function TripListPage() {
                   <Settings size={13} />
                   {t('trips.edit' as TranslationKey)}
                 </button>
-                <button
-                  onClick={() => duplicateTrip(trip.id)}
-                  className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs text-gray-500 hover:text-blue-600 hover:bg-blue-50/50 transition-colors min-h-[44px]"
-                  title={t('trips.duplicate' as TranslationKey)}
-                >
-                  <Copy size={13} />
-                  {t('trips.duplicate' as TranslationKey)}
-                </button>
-                <button
-                  onClick={() => handleDelete(trip.id)}
-                  className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs text-gray-500 hover:text-red-600 hover:bg-red-50/50 transition-colors min-h-[44px]"
-                  title={t('trips.delete' as TranslationKey)}
-                >
-                  <Trash2 size={13} />
-                  {t('trips.delete' as TranslationKey)}
-                </button>
+                {isOwnerRole && (
+                  <button
+                    onClick={() => duplicateTrip(trip.id)}
+                    className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs text-gray-500 hover:text-blue-600 hover:bg-blue-50/50 transition-colors min-h-[44px]"
+                    title={t('trips.duplicate' as TranslationKey)}
+                  >
+                    <Copy size={13} />
+                    {t('trips.duplicate' as TranslationKey)}
+                  </button>
+                )}
+                {isOwnerRole ? (
+                  <button
+                    onClick={() => handleDelete(trip.id)}
+                    className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs text-gray-500 hover:text-red-600 hover:bg-red-50/50 transition-colors min-h-[44px]"
+                    title={t('trips.delete' as TranslationKey)}
+                  >
+                    <Trash2 size={13} />
+                    {t('trips.delete' as TranslationKey)}
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => handleDelete(trip.id)}
+                    className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs text-gray-500 hover:text-orange-600 hover:bg-orange-50/50 transition-colors min-h-[44px]"
+                    title={t('sharing.leaveTrip' as TranslationKey)}
+                  >
+                    <Users size={13} />
+                    {t('sharing.leaveTrip' as TranslationKey)}
+                  </button>
+                )}
               </div>
             </div>
           );

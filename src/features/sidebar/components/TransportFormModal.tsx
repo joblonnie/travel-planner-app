@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { X, Train, Pencil, Plus } from 'lucide-react';
 import { useEscKey } from '@/hooks/useEscKey.ts';
-import { useTripStore } from '@/store/useTripStore.ts';
+import { useTripActions } from '@/hooks/useTripActions.ts';
 import { useI18n, type TranslationKey } from '@/i18n/useI18n.ts';
 import type { InterCityTransport } from '@/types/index.ts';
 
@@ -17,8 +17,7 @@ interface Props {
 const transportTypes = ['train', 'bus', 'flight', 'taxi', 'rental_car'] as const;
 
 export function TransportFormModal({ fromDayId, toDayId, fromCity, toCity, transport, onClose }: Props) {
-  const addInterCityTransport = useTripStore((s) => s.addInterCityTransport);
-  const updateInterCityTransport = useTripStore((s) => s.updateInterCityTransport);
+  const { addInterCityTransport, updateInterCityTransport } = useTripActions();
   const { t } = useI18n();
   const isEdit = !!transport;
 

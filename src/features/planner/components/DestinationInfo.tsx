@@ -2,7 +2,9 @@ import { memo, useState } from 'react';
 import { MessageCircle, Utensils, Lightbulb, Train, Star, MapPin, ExternalLink, Send, Trash2, BookOpen, X } from 'lucide-react';
 import type { Destination } from '@/types/index.ts';
 import { useI18n, type TranslationKey } from '@/i18n/useI18n.ts';
-import { useTripStore } from '@/store/useTripStore.ts';
+import { useTripData } from '@/store/useCurrentTrip.ts';
+import { useTripActions } from '@/hooks/useTripActions.ts';
+import { getRestaurantComments } from '@/store/tripActions.ts';
 
 interface Props {
   destination: Destination;
@@ -12,9 +14,8 @@ type Tab = 'tips' | 'phrases' | 'restaurants' | 'transport';
 
 function RestaurantComments({ restaurantId }: { restaurantId: string }) {
   const { t } = useI18n();
-  const comments = useTripStore((s) => s.getRestaurantComments(restaurantId));
-  const addComment = useTripStore((s) => s.addRestaurantComment);
-  const removeComment = useTripStore((s) => s.removeRestaurantComment);
+  const comments = useTripData((t) => getRestaurantComments(t, restaurantId));
+  const { addRestaurantComment: addComment, removeRestaurantComment: removeComment } = useTripActions();
   const [text, setText] = useState('');
   const [rating, setRating] = useState(0);
 

@@ -4,7 +4,7 @@ import {
   Camera as CameraIcon, AlertTriangle, Film, Tag,
 } from 'lucide-react';
 import type { ScheduledActivity, MediaItem, ExpenseOwner } from '@/types/index.ts';
-import { useTripStore } from '@/store/useTripStore.ts';
+import { useTripActions } from '@/hooks/useTripActions.ts';
 import { useCurrency } from '@/hooks/useCurrency.ts';
 import { useI18n, type TranslationKey } from '@/i18n/useI18n.ts';
 import { translations } from '@/i18n/translations.ts';
@@ -31,12 +31,7 @@ function getMediaTotalSize(media: MediaItem[]): number {
 export function ActivityDetailModal({ activity, dayId, onClose }: Props) {
   const { t } = useI18n();
   const { format } = useCurrency();
-  const addMemo = useTripStore((s) => s.addMemo);
-  const removeMemo = useTripStore((s) => s.removeMemo);
-  const addActivityExpense = useTripStore((s) => s.addActivityExpense);
-  const removeActivityExpense = useTripStore((s) => s.removeActivityExpense);
-  const addMedia = useTripStore((s) => s.addMedia);
-  const removeMedia = useTripStore((s) => s.removeMedia);
+  const { addMemo, removeMemo, addActivityExpense, removeActivityExpense, addMedia, removeMedia } = useTripActions();
 
   const [memoText, setMemoText] = useState('');
   const [showExpenseForm, setShowExpenseForm] = useState(false);

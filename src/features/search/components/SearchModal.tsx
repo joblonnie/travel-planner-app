@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { X, Search, MapPin, Calendar } from 'lucide-react';
-import { useTripStore } from '@/store/useTripStore.ts';
+import { useTripActions } from '@/hooks/useTripActions.ts';
 import { useTripData } from '@/store/useCurrentTrip.ts';
 import { useI18n, type TranslationKey } from '@/i18n/useI18n.ts';
 import { translations } from '@/i18n/translations.ts';
@@ -22,7 +22,7 @@ const typeColors: Record<string, string> = {
 
 export function SearchModal({ onClose }: Props) {
   const days = useTripData((t) => t.days);
-  const setCurrentDay = useTripStore((s) => s.setCurrentDay);
+  const { setCurrentDay } = useTripActions();
   const { t } = useI18n();
   const { format } = useCurrency();
   const [query, setQuery] = useState('');

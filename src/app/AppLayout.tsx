@@ -1,19 +1,24 @@
 import { useState, useCallback, useEffect, lazy, Suspense } from 'react';
 import { Outlet, useNavigate, useLocation, useSearchParams, Navigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { Plane, Heart, CalendarDays, Wallet, Globe, ArrowLeftRight, Settings, Calculator, PanelLeftOpen, Search, Map } from 'lucide-react';
 import { UserMenu } from '@/features/auth/components/UserMenu.tsx';
 import { useTripStore } from '@/store/useTripStore.ts';
+import { useTripActions } from '@/hooks/useTripActions.ts';
 import { useI18n, type TranslationKey } from '@/i18n/useI18n.ts';
 import { useCurrency } from '@/hooks/useCurrency.ts';
 import { useExchangeRates } from '@/hooks/useExchangeRates.ts';
 import { languageNames } from '@/i18n/translations.ts';
 import { LoadingSpinner } from '@/components/LoadingSpinner.tsx';
 import { apiClient } from '@/api/client.ts';
+import { TRIPS_QUERY_KEY } from '@/hooks/useTripQuery.ts';
+import type { Trip } from '@/types/index.ts';
 
 const DaySidebar = lazy(() => import('@/features/sidebar/components/DaySidebar.tsx').then(m => ({ default: m.DaySidebar })));
 const TripSettingsModal = lazy(() => import('@/features/trips/components/TripSettingsModal.tsx').then(m => ({ default: m.TripSettingsModal })));
 const CameraOcrModal = lazy(() => import('@/features/budget/components/CameraOcrModal.tsx').then(m => ({ default: m.CameraOcrModal })));
 const SearchModal = lazy(() => import('@/features/search/components/SearchModal.tsx').then(m => ({ default: m.SearchModal })));
+const InvitationsBadge = lazy(() => import('@/features/sharing/components/InvitationsBadge.tsx').then(m => ({ default: m.InvitationsBadge })));
 
 export function AppLayout() {
   useExchangeRates();
@@ -23,8 +28,11 @@ export function AppLayout() {
 
   const user = useTripStore((s) => s.user);
   const setUser = useTripStore((s) => s.setUser);
-  const hasTrips = useTripStore((s) => s.trips.length > 0);
-  const currentTrip = useTripStore((s) => s.trips.find((t) => t.id === s.currentTripId));
+  const currentTripId = useTripStore((s) => s.currentTripId);
+
+  const { data: trips } = useQuery<Trip[]>({ queryKey: TRIPS_QUERY_KEY, staleTime: Infinity, enabled: false });
+  const hasTrips = (trips?.length ?? 0) > 0;
+  const currentTrip = trips?.find((t) => t.id === currentTripId);
 
   const { t, language, setLanguage } = useI18n();
   const { currency, nextCurrency, symbol } = useCurrency();
@@ -32,7 +40,7 @@ export function AppLayout() {
   const [showCamera, setShowCamera] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
-  const setPendingCameraExpense = useTripStore((s) => s.setPendingCameraExpense);
+  const { setPendingCameraExpense } = useTripActions();
 
   // Auto-open settings modal when navigated with ?settings=true
   useEffect(() => {
@@ -221,6 +229,9 @@ export function AppLayout() {
             <Globe size={11} />
             {languageNames[language]}
           </button>
+
+          {/* Invitations */}
+          <Suspense fallback={null}><InvitationsBadge /></Suspense>
 
           {/* Auth */}
           {user && <UserMenu user={user} onLogout={logout} />}

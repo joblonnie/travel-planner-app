@@ -1,5 +1,5 @@
 import { OpenAPIHono, createRoute } from '@hono/zod-openapi';
-import { eq } from 'drizzle-orm';
+import { eq, inArray } from 'drizzle-orm';
 import type { AppEnv } from '../app.js';
 import {
   TripSchema,
@@ -10,7 +10,8 @@ import {
 } from '../schemas/trips.js';
 import { ErrorResponseSchema } from '../schemas/common.js';
 import { getDb } from '../db/index.js';
-import { trips } from '../db/schema.js';
+import { trips, tripMembers } from '../db/schema.js';
+import { getTripRole, hasMinRole } from '../middleware/tripAuth.js';
 
 // --- Route definitions ---
 
@@ -20,7 +21,7 @@ const listTrips = createRoute({
   path: '/trips',
   tags: ['Trips'],
   summary: 'List all trips for current user',
-  description: 'Returns trip metadata (id, name, dates, emoji) without full JSONB data.',
+  description: 'Returns owned and shared trips with full JSONB data.',
   responses: {
     200: {
       content: { 'application/json': { schema: TripListFullResponseSchema } },
@@ -145,14 +146,47 @@ const deleteTrip = createRoute({
 export const tripsRoute = new OpenAPIHono<AppEnv>()
   .openapi(listTrips, async (c) => {
     const userId = c.get('userId') as string;
-
     const db = getDb();
-    const rows = await db
-      .select({ data: trips.data })
+
+    // Get trips via trip_members (includes shared trips)
+    const memberRows = await db
+      .select({ tripId: tripMembers.tripId, role: tripMembers.role })
+      .from(tripMembers)
+      .where(eq(tripMembers.userId, userId));
+
+    const roleMap: Record<string, string> = {};
+    const tripIdSet = new Set<string>();
+    for (const r of memberRows) {
+      roleMap[r.tripId] = r.role;
+      tripIdSet.add(r.tripId);
+    }
+
+    // Also include legacy trips (trips.userId but no trip_members row)
+    const ownedRows = await db
+      .select({ id: trips.id })
       .from(trips)
       .where(eq(trips.userId, userId));
 
-    const tripList = rows.map((row) => row.data as Record<string, unknown>);
+    for (const r of ownedRows) {
+      if (!tripIdSet.has(r.id)) {
+        tripIdSet.add(r.id);
+        roleMap[r.id] = 'owner';
+      }
+    }
+
+    if (tripIdSet.size === 0) {
+      return c.json({ trips: [] }, 200);
+    }
+
+    const rows = await db
+      .select({ data: trips.data, id: trips.id })
+      .from(trips)
+      .where(inArray(trips.id, [...tripIdSet]));
+
+    const tripList = rows.map((row) => ({
+      ...(row.data as Record<string, unknown>),
+      role: roleMap[row.id] ?? 'owner',
+    }));
 
     return c.json({ trips: tripList }, 200);
   })
@@ -160,16 +194,22 @@ export const tripsRoute = new OpenAPIHono<AppEnv>()
     const userId = c.get('userId') as string;
     const { tripId } = c.req.valid('param');
     const db = getDb();
+
+    const role = await getTripRole(tripId, userId);
+    if (!role) {
+      return c.json({ error: 'Trip not found' }, 404);
+    }
+
     const [row] = await db
       .select()
       .from(trips)
       .where(eq(trips.id, tripId));
 
-    if (!row || row.userId !== userId) {
+    if (!row) {
       return c.json({ error: 'Trip not found' }, 404);
     }
 
-    return c.json({ trip: row.data as Record<string, unknown> }, 200);
+    return c.json({ trip: { ...(row.data as Record<string, unknown>), role } }, 200);
   })
   .openapi(createTrip, async (c) => {
     const userId = c.get('userId') as string;
@@ -189,6 +229,14 @@ export const tripsRoute = new OpenAPIHono<AppEnv>()
       updatedAt: now,
     });
 
+    // Add creator as owner in trip_members
+    await db.insert(tripMembers).values({
+      tripId: tripData.id,
+      userId,
+      role: 'owner',
+      joinedAt: now,
+    }).onConflictDoNothing();
+
     return c.json({ trip: tripData }, 201);
   })
   .openapi(updateTrip, async (c) => {
@@ -198,17 +246,19 @@ export const tripsRoute = new OpenAPIHono<AppEnv>()
     const db = getDb();
     const now = new Date();
 
+    const role = await getTripRole(tripId, userId);
+
     const [existing] = await db
       .select({ userId: trips.userId })
       .from(trips)
       .where(eq(trips.id, tripId));
 
-    if (existing && existing.userId !== userId) {
-      return c.json({ error: 'Trip not found' }, 404);
-    }
-
     if (existing) {
-      // Update existing trip
+      // Existing trip — need editor+ role
+      if (!hasMinRole(role, 'editor')) {
+        return c.json({ error: 'Trip not found' }, 404);
+      }
+
       await db
         .update(trips)
         .set({
@@ -232,6 +282,14 @@ export const tripsRoute = new OpenAPIHono<AppEnv>()
         createdAt: now,
         updatedAt: now,
       });
+
+      // Add creator as owner in trip_members
+      await db.insert(tripMembers).values({
+        tripId: tripData.id,
+        userId,
+        role: 'owner',
+        joinedAt: now,
+      }).onConflictDoNothing();
     }
 
     return c.json({ trip: tripData }, 200);
@@ -241,12 +299,8 @@ export const tripsRoute = new OpenAPIHono<AppEnv>()
     const { tripId } = c.req.valid('param');
     const db = getDb();
 
-    const [existing] = await db
-      .select({ userId: trips.userId })
-      .from(trips)
-      .where(eq(trips.id, tripId));
-
-    if (!existing || existing.userId !== userId) {
+    const role = await getTripRole(tripId, userId);
+    if (!hasMinRole(role, 'owner')) {
       return c.json({ error: 'Trip not found' }, 404);
     }
 

@@ -2,11 +2,12 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { X, Check, Trash2, Hotel, MapPin, Search } from 'lucide-react';
 import { GoogleMap, MarkerF } from '@react-google-maps/api';
 import { useEscKey } from '@/hooks/useEscKey.ts';
-import { useTripStore } from '@/store/useTripStore.ts';
+import { useTripActions } from '@/hooks/useTripActions.ts';
 import { useTripData } from '@/store/useCurrentTrip.ts';
 import { useI18n, type TranslationKey } from '@/i18n/useI18n.ts';
 import { useGoogleMaps } from '@/hooks/useGoogleMaps.ts';
 import { CitySearch } from '@/components/CitySearch.tsx';
+import { destinations as staticDestinations } from '@/data/destinations.ts';
 import type { DayPlan, Destination, AccommodationInfo } from '@/types/index.ts';
 
 interface Props {
@@ -16,14 +17,11 @@ interface Props {
 
 export function DayFormModal({ day, onClose }: Props) {
   const days = useTripData((t) => t.days);
-  const addDay = useTripStore((s) => s.addDay);
-  const updateDay = useTripStore((s) => s.updateDay);
-  const updateAccommodationByDestination = useTripStore((s) => s.updateAccommodationByDestination);
-  const getAllDestinations = useTripStore((s) => s.getAllDestinations);
-  const addCustomDestination = useTripStore((s) => s.addCustomDestination);
+  const { addDay, updateDay, updateAccommodationByDestination, addCustomDestination } = useTripActions();
+  const customDestinations = useTripData((t) => t.customDestinations);
+  const allDestinations = [...staticDestinations, ...customDestinations];
   const { t } = useI18n();
   const { isLoaded, apiKey } = useGoogleMaps();
-  const allDestinations = getAllDestinations();
   const mapAvailable = apiKey && isLoaded;
 
   const isEdit = !!day;

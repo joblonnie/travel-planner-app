@@ -1,14 +1,19 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { X, Settings, Globe, Download, Upload, FileSpreadsheet, Palette, Check, RefreshCw } from 'lucide-react';
 import { useTripStore } from '@/store/useTripStore.ts';
 import { useTripData } from '@/store/useCurrentTrip.ts';
+import { useTripActions } from '@/hooks/useTripActions.ts';
 import { useI18n, type TranslationKey } from '@/i18n/useI18n.ts';
 import { useCurrency } from '@/hooks/useCurrency.ts';
 import { useExchangeRates } from '@/hooks/useExchangeRates.ts';
 import { useEscKey } from '@/hooks/useEscKey.ts';
 import { languageNames } from '@/i18n/translations.ts';
-import type { ThemeId } from '@/types/index.ts';
+import { TRIPS_QUERY_KEY } from '@/hooks/useTripQuery.ts';
+import type { ThemeId, Trip } from '@/types/index.ts';
+
+const TripMembersSection = lazy(() => import('@/features/sharing/components/TripMembersSection.tsx').then(m => ({ default: m.TripMembersSection })));
 
 const themes: { id: ThemeId; nameKey: TranslationKey; descKey: TranslationKey; colors: string[] }[] = [
   { id: 'cloud-dancer', nameKey: 'theme.cloudDancer' as TranslationKey, descKey: 'theme.cloudDancerDesc' as TranslationKey, colors: ['#1E2D4F', '#8B734A', '#9E7B8A', '#F0EEE9'] },
@@ -24,15 +29,12 @@ export function TripSettingsModal({ onClose }: Props) {
   const navigate = useNavigate();
   const { t, language, setLanguage } = useI18n();
   const exchangeRateFromStore = useTripStore((s) => s.exchangeRate);
-  const importTripData = useTripStore((s) => s.importTripData);
-  const setTripNameAction = useTripStore((s) => s.setTripName);
-  const setStartDateAction = useTripStore((s) => s.setStartDate);
-  const setEndDateAction = useTripStore((s) => s.setEndDate);
-  const setTotalBudgetAction = useTripStore((s) => s.setTotalBudget);
   const setExchangeRateAction = useTripStore((s) => s.setExchangeRate);
   const theme = useTripStore((s) => s.theme);
   const setTheme = useTripStore((s) => s.setTheme);
   const ratesUpdatedAt = useTripStore((s) => s.ratesUpdatedAt);
+  const queryClient = useQueryClient();
+  const { setTripName: setTripNameAction, setStartDate: setStartDateAction, setEndDate: setEndDateAction, setTotalBudget: setTotalBudgetAction, importTripData } = useTripActions();
   const tripData = useTripData((trip) => trip);
   const { currency, convert, toEur } = useCurrency();
   const { refreshRates } = useExchangeRates();
@@ -48,12 +50,13 @@ export function TripSettingsModal({ onClose }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleExport = () => {
-    const state = useTripStore.getState();
-    const trip = state.trips.find((t) => t.id === state.currentTripId);
+    const trips = queryClient.getQueryData<Trip[]>(TRIPS_QUERY_KEY);
+    const trip = trips?.find((t) => t.id === useTripStore.getState().currentTripId);
     if (!trip) return;
+    const exchangeRateVal = useTripStore.getState().exchangeRate;
     const exportData = {
       trips: [trip],
-      exchangeRate: state.exchangeRate,
+      exchangeRate: exchangeRateVal,
       exportedAt: new Date().toISOString(),
       version: 5,
     };
@@ -75,15 +78,15 @@ export function TripSettingsModal({ onClose }: Props) {
       setImportMsg(result ? t('feature.importSuccess' as TranslationKey) : t('feature.importError' as TranslationKey));
       setTimeout(() => setImportMsg(''), 3000);
       if (result) {
-        const s = useTripStore.getState();
-        const ct = s.trips.find((tr) => tr.id === s.currentTripId);
+        const trips = queryClient.getQueryData<Trip[]>(TRIPS_QUERY_KEY);
+        const ct = trips?.find((tr) => tr.id === useTripStore.getState().currentTripId);
         if (ct) {
           setTripName(ct.tripName);
           setStartDate(ct.startDate);
           setEndDate(ct.endDate);
           setTotalBudget(convert(ct.totalBudget));
         }
-        setExchangeRate(s.exchangeRate);
+        setExchangeRate(useTripStore.getState().exchangeRate);
         navigate('/');
       }
     };
@@ -92,8 +95,8 @@ export function TripSettingsModal({ onClose }: Props) {
   };
 
   const handleCsvExport = () => {
-    const state = useTripStore.getState();
-    const trip = state.trips.find((t) => t.id === state.currentTripId);
+    const trips = queryClient.getQueryData<Trip[]>(TRIPS_QUERY_KEY);
+    const trip = trips?.find((t) => t.id === useTripStore.getState().currentTripId);
     if (!trip) return;
     const allExpenses: string[] = ['Date,Day,Category,Description,Amount,Currency,Owner'];
     trip.expenses.forEach((e) => {
@@ -226,6 +229,11 @@ export function TripSettingsModal({ onClose }: Props) {
               </div>
             </div>
           </div>
+
+          {/* Members (Sharing) */}
+          <Suspense fallback={null}>
+            <TripMembersSection />
+          </Suspense>
 
           {/* Data Management */}
           <div>

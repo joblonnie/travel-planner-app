@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { X, Upload, Save, Ticket } from 'lucide-react';
 import type { ScheduledActivity, BookingInfo } from '@/types/index.ts';
-import { useTripStore } from '@/store/useTripStore.ts';
+import { useTripActions } from '@/hooks/useTripActions.ts';
 import { useI18n } from '@/i18n/useI18n.ts';
 import { useEscKey } from '@/hooks/useEscKey.ts';
 
@@ -14,7 +14,7 @@ interface Props {
 export function BookingModal({ activity, dayId, onClose }: Props) {
   const { t } = useI18n();
   useEscKey(onClose);
-  const updateBooking = useTripStore((s) => s.updateBooking);
+  const { updateBooking } = useTripActions();
   const [form, setForm] = useState<BookingInfo>({
     confirmationNumber: activity.booking?.confirmationNumber || '',
     voucherUrl: activity.booking?.voucherUrl || '',

@@ -8,6 +8,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - `npm run build` — Type-check with `tsc -b` then build with Vite
 - `npm run lint` — ESLint across the project
 - `npm run preview` — Preview production build locally
+- `npm run gen:api` — Generate OpenAPI spec → FE types (`src/api/schema.d.ts`)
+- `npm run db:generate` / `db:push` / `db:studio` — Drizzle migrations
 - No test framework is configured
 
 ## Path Alias
@@ -18,7 +20,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```
 src/
-├── app/                          # App.tsx, main.tsx, index.css
+├── app/                          # main.tsx, router.tsx, RootLayout, AuthLayout, AppLayout, index.css
 ├── components/                   # Shared UI (OwnerSelector, LoadingSpinner, CitySearch)
 ├── features/
 │   ├── planner/                  # Day planner view
@@ -35,15 +37,23 @@ src/
 │   ├── trips/                    # Trip management
 │   │   ├── components/           # TripListPage, TripCreateModal, TripSettingsModal
 │   │   └── index.ts
-│   └── search/                   # Global search
-│       ├── components/           # SearchModal
+│   ├── search/                   # Global search
+│   │   ├── components/           # SearchModal
+│   │   └── index.ts
+│   ├── auth/                     # Authentication (Google SSO)
+│   │   ├── components/           # LoginPage, LoginButton, UserMenu
+│   │   └── hooks/                # useAuth
+│   └── sharing/                  # Trip sharing & collaboration
+│       ├── components/           # TripMembersSection, InvitationsBadge
+│       ├── hooks/                # useMembers, useInvitations, useMyRole
 │       └── index.ts
-├── hooks/                        # Shared hooks (useCurrency, useEscKey, useExchangeRates, useGoogleMaps, useTheme)
+├── hooks/                        # Shared hooks (useCurrency, useTripActions, useTripMutation, useTripQuery, etc.)
 ├── store/
-│   ├── slices/                   # 7 Zustand slices (app, trip, day, activity, expense, transport, destination)
-│   ├── helpers.ts                # currentTrip, updateCurrentTrip, mapDays, mapActivities
-│   ├── useTripStore.ts           # Composed store (all slices)
-│   └── useCurrentTrip.ts         # useTripData<T> selector hook
+│   ├── slices/appSlice.ts        # Zustand UI state (theme, language, currency, auth)
+│   ├── tripActions.ts            # Pure trip transformer functions (~50 actions)
+│   ├── useTripStore.ts           # Zustand store (AppSlice only, version 8)
+│   └── useCurrentTrip.ts         # useTripData<T> selector hook (React Query cache)
+├── api/                          # client.ts, schema.d.ts (generated)
 ├── lib/                          # queryClient.ts (TanStack Query)
 ├── data/                         # Static destinations, tripPlan
 ├── i18n/                         # translations, useI18n
@@ -54,42 +64,54 @@ src/
 
 Single-page React PWA for honeymoon trip planning. Korean is the primary UI language with English and Spanish support.
 
-**State management:** Zustand store with slice pattern (`src/store/slices/`) composed in `src/store/useTripStore.ts`. 7 slices: `appSlice` (UI state), `tripSlice` (CRUD), `daySlice`, `activitySlice`, `expenseSlice`, `transportSlice`, `destinationSlice`. Persisted in localStorage as `honeymoon-trip-store` (version 6).
+**Data flow — React Query as source of truth:**
+```
+Server DB ←→ React Query (trips cache, optimistic update, debounced PUT)
+Zustand → UI state only (currentTripId, currentDayIndex, theme, language, currency, auth)
+```
 
-**Server state:** TanStack Query manages server-fetched data (exchange rates via `useExchangeRates`, OCR via `useVisionOcr`). `QueryClientProvider` wraps the app in `src/app/main.tsx`.
+- `useTripsQuery()` fetches trips from server → React Query cache (`TRIPS_QUERY_KEY`)
+- `useTripData<T>(selector)` reads current trip from RQ cache (replaces old Zustand selectors)
+- `useTripActions()` returns ~50 action functions that call `useTripMutation()`
+- `useTripMutation()` does optimistic cache update → 2s debounced PUT to server
+- `tripActions.ts` contains pure `(args) => (trip: Trip) => Trip` transformer functions
+- Zustand (`appSlice` only) holds UI preferences persisted in localStorage as `travel-trip-store` (version 8)
 
-**Backend:** Hono serverless API at `api/[[...route]].ts` (Vercel Functions). Routes: `GET /api/exchange-rates` (Frankfurter proxy), `POST /api/vision` (Google Cloud Vision OCR).
+**Backend:** Hono serverless API at `api/[[...route]].ts` (Vercel Functions). OpenAPI 3.1 with Swagger UI. Routes: trips (CRUD + sharing), auth (Google SSO), exchange-rates, vision (OCR).
 
-**Data flow:** Static destination/trip data lives in `src/data/` and seeds the store. Custom destinations appended via `addCustomDestination()`. All mutations go through Zustand actions — components use `useTripStore((s) => s.someField)` individual selectors.
+**Trip Sharing:** Role-based access (owner > editor > viewer). `trip_members` table tracks roles. Email-based invitations with 7-day TTL. Frontend components in `src/features/sharing/`.
 
-**Two-page layout:** App.tsx switches between `DayContent` (planner) and `BudgetPage` via `currentPage` state. `DaySidebar` is an overlay for day navigation. Mobile bottom nav provides access to sidebar, camera, currency toggle, search, and settings.
+**Layout:** React Router v7 with layout chain: RootLayout → AuthLayout → AppLayout → Page. Routes: `/login`, `/` (DayContent), `/budget` (BudgetPage), `/trips` (TripListPage).
 
-**Expense system:** Two layers — per-activity expenses (`ActivityExpense[]` on each `ScheduledActivity`) and global expenses (`Expense[]` at store level). Both use `owner: ExpenseOwner` (a string). Owners are dynamic via `ExpenseOwnerConfig[]` in the store; `'shared'` is built-in and non-deletable.
+**Expense system:** Two layers — per-activity expenses (`ActivityExpense[]` on each `ScheduledActivity`) and global expenses (`Expense[]` on Trip). Both use `owner: ExpenseOwner`. Owners are dynamic via `ExpenseOwnerConfig[]`; `'shared'` is built-in and non-deletable.
 
 **i18n:** `src/i18n/translations.ts` exports a flat record keyed by dot-notation strings. `useI18n()` returns memoized `t(key)` via `useCallback`. Use the `TranslationKey` type from `src/i18n/useI18n.ts` for type-safe translation key casts.
 
 **Currency:** `useCurrency()` hook manages display currency (EUR/KRW/USD/JPY/CNY) with `useCallback`/`useMemo` memoization. All stored costs are in EUR.
 
-## Zustand Slice Guide
+## Adding Trip Actions
 
-Each slice is a `StateCreator<TripStore, [], [], SliceInterface>`. Slices use helpers from `store/helpers.ts`:
-- `currentTrip(state)` — get current trip
-- `updateCurrentTrip(state, updater)` — immutably update current trip
-- `mapDays(trip, fn)` — map over days
-- `mapActivities(trip, dayId, fn)` — map activities in a specific day
+Trip mutations are pure functions in `src/store/tripActions.ts`:
+```ts
+export const addActivity = (dayId: string, activity: ScheduledActivity, insertIdx?: number) =>
+  (trip: Trip): Trip => ({ ...trip, days: trip.days.map(d => ...) });
+```
 
-When adding new store actions, add them to the appropriate slice, update the slice's interface, and the composed `TripStore` type picks it up automatically.
+To add a new action:
+1. Add the pure transformer to `tripActions.ts`
+2. Expose it in `useTripActions()` hook (`src/hooks/useTripActions.ts`)
+3. Components call `const { myAction } = useTripActions()` then `myAction(args)`
 
 ## Re-render Prevention Rules
 
 - **Always** use individual selectors: `useTripStore((s) => s.field)` — never destructure the whole store
+- **Always** use `useTripData((trip) => trip.specificField)` — select only what you need
 - **Always** `useCallback`/`useMemo` for functions/computed values in hooks
 - **Always** `memo()` for components receiving props that may cause unnecessary re-renders
-- Getter functions (`getTotalCost`, etc.) are fine as-is since they're synchronous
 
 ## Key Types
 
-All in `src/types/index.ts`. The 5 activity/content types: `'attraction' | 'shopping' | 'meal' | 'transport' | 'free'`. Adding a new type requires updating `ScheduledActivity.type`, `Content.type`, and translations.
+All in `src/types/index.ts`. The 5 activity/content types: `'attraction' | 'shopping' | 'meal' | 'transport' | 'free'`. Trip has optional `role?: 'owner' | 'editor' | 'viewer'` for shared trips.
 
 ## Styling
 
@@ -101,14 +123,15 @@ Tailwind CSS 4 with CSS variable-based theming in `src/app/index.css`. Three the
 - Google Maps `isLoaded` is async — don't assume it's ready on mount
 - Minimum text color: `text-gray-500` (lighter is unreadable)
 - Minimum icon sizes: 12px info, 14px actions, 16px primary
-- Base64 media in localStorage has ~5-10MB limit; warn users at 3MB
 - Accommodation syncs across all days with the same `destinationId` via `updateAccommodationByDestination()`
-- Store version is 6 — add migrations when changing persisted state shape
+- Store version is 8 — add migrations when changing persisted state shape
 - `useExchangeRates` falls back to direct Frankfurter API if `/api/exchange-rates` proxy is unavailable (local dev)
+- Vite dev server doesn't serve API routes → use `api/gen-spec.ts` for spec generation
 
 ## Environment Variables (Vercel)
 
 - `GOOGLE_CLOUD_VISION_API_KEY` — for `/api/vision` OCR endpoint
+- `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `AUTH_REDIRECT_URI` — Google OAuth
 
 ## Deployment
 

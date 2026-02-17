@@ -1,18 +1,46 @@
+import { useQuery } from '@tanstack/react-query';
 import { useTripStore } from './useTripStore.ts';
+import { TRIPS_QUERY_KEY } from '@/hooks/useTripQuery.ts';
 import type { Trip } from '@/types/index.ts';
+
+const EMPTY_TRIP: Trip = {
+  id: '',
+  tripName: '',
+  startDate: '',
+  endDate: '',
+  days: [],
+  currentDayIndex: 0,
+  totalBudget: 0,
+  expenses: [],
+  restaurantComments: [],
+  customDestinations: [],
+  immigrationSchedules: [],
+  interCityTransports: [],
+  owners: [{ id: 'shared', name: '공용', color: 'gray' }],
+  pendingCameraExpense: null,
+  createdAt: '',
+  updatedAt: '',
+};
 
 /**
  * Selector hook for current trip data.
- * Zustand v4 compares selector results with === by default,
- * so primitives and stable references won't cause unnecessary re-renders.
+ * Subscribes to React Query cache (source of truth for trip data).
+ * Uses Zustand only for currentTripId (UI state).
  *
- * For object/array results that may be reconstructed, use useShallow:
- *   import { useShallow } from 'zustand/react/shallow';
- *   const { days, tripName } = useTripStore(useShallow(s => ...));
+ * Re-renders when:
+ * - React Query cache is updated via setQueryData (optimistic mutations)
+ * - currentTripId changes in Zustand
  */
 export function useTripData<T>(selector: (trip: Trip) => T): T {
-  return useTripStore((s) => {
-    const trip = s.trips.find((t) => t.id === s.currentTripId)!;
-    return selector(trip);
+  const currentTripId = useTripStore((s) => s.currentTripId);
+
+  // Subscribe to React Query cache updates — re-renders on setQueryData calls
+  const { data: trips } = useQuery<Trip[]>({
+    queryKey: TRIPS_QUERY_KEY,
+    staleTime: Infinity,
+    enabled: false, // Don't auto-fetch; AuthLayout handles fetching
   });
+
+  const trip = trips?.find((t) => t.id === currentTripId);
+  return selector(trip ?? EMPTY_TRIP);
 }

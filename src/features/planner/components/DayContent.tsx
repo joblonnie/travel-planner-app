@@ -15,8 +15,10 @@ import {
 } from '@dnd-kit/sortable';
 import { Calendar, Navigation, Plus, Clock, Compass, Hotel, ChevronLeft, ChevronRight, ChevronUp, AlertTriangle, ArrowUpDown, Footprints, MapPin } from 'lucide-react';
 import { useState, useMemo, memo, useEffect, useCallback } from 'react';
-import { useTripStore } from '@/store/useTripStore.ts';
 import { useTripData } from '@/store/useCurrentTrip.ts';
+import { useTripActions } from '@/hooks/useTripActions.ts';
+import { getTotalCost, getDayCost, getDayActualCost, getTotalExpenses, getAllDestinations } from '@/store/tripActions.ts';
+import { destinations as staticDestinations } from '@/data/destinations.ts';
 import { ActivityCard } from './ActivityCard.tsx';
 import { MapView } from './MapView.tsx';
 import { DestinationInfo } from './DestinationInfo.tsx';
@@ -107,16 +109,14 @@ export function DayContent() {
   const days = useTripData((t) => t.days);
   const currentDayIndex = useTripData((t) => t.currentDayIndex);
   const totalBudget = useTripData((t) => t.totalBudget);
-  const reorderActivities = useTripStore((s) => s.reorderActivities);
-  const getTotalCost = useTripStore((s) => s.getTotalCost);
-  const getDayCost = useTripStore((s) => s.getDayCost);
-  const getDayActualCost = useTripStore((s) => s.getDayActualCost);
-  const getTotalExpenses = useTripStore((s) => s.getTotalExpenses);
-  const getAllDestinations = useTripStore((s) => s.getAllDestinations);
-  const goToNextDay = useTripStore((s) => s.goToNextDay);
-  const goToPrevDay = useTripStore((s) => s.goToPrevDay);
-  const allDestinations = getAllDestinations();
+  const { reorderActivities, goToNextDay, goToPrevDay } = useTripActions();
+  const allDestinations = useTripData((t) => getAllDestinations(t, staticDestinations));
+  const totalCostVal = useTripData((t) => getTotalCost(t));
+  const totalExpensesVal = useTripData((t) => getTotalExpenses(t));
   const currentDay = days[currentDayIndex];
+  const currentDayId = currentDay?.id;
+  const dayCostVal = useTripData((t) => currentDayId ? getDayCost(t, currentDayId) : 0);
+  const dayActualCostVal = useTripData((t) => currentDayId ? getDayActualCost(t, currentDayId) : 0);
   const { t } = useI18n();
   const { localTimeStr } = useLocalTime(currentDay ? allDestinations.find((d) => d.id === currentDay.destinationId)?.timezone : undefined);
   const { position, watching, enabled: gpsEnabled, enable: enableGps } = useGeolocation();
@@ -259,13 +259,13 @@ export function DayContent() {
               {/* Day cost: estimated only */}
               <div className="text-[10px] sm:text-[11px] text-white backdrop-blur-md px-2.5 sm:px-3 py-1 rounded-full border border-white/10 flex items-center gap-1.5 bg-white/10">
                 <span className="opacity-70">{t('budget.estimated')}</span>
-                <span className="font-bold">{format(getDayCost(currentDay.id))}</span>
+                <span className="font-bold">{format(dayCostVal)}</span>
               </div>
               <div className="hidden sm:flex items-center gap-1.5 text-[11px] text-white/80 bg-white/10 backdrop-blur-md px-3 py-1 rounded-full border border-white/10">
                 <span>{t('day.total')}</span>
-                <span>{format(getTotalCost())}</span>
-                {getTotalExpenses() > 0 && (
-                  <span className="text-white/50">/ {format(getTotalExpenses())}</span>
+                <span>{format(totalCostVal)}</span>
+                {totalExpensesVal > 0 && (
+                  <span className="text-white/50">/ {format(totalExpensesVal)}</span>
                 )}
               </div>
             </div>
@@ -323,7 +323,7 @@ export function DayContent() {
       <div className="max-w-4xl mx-auto px-3 py-4 sm:px-4 md:p-6 space-y-4 sm:space-y-5">
         {/* Budget Alert */}
         {(() => {
-          const totalSpent = getTotalExpenses();
+          const totalSpent = totalExpensesVal;
           const pct = totalBudget > 0 ? (totalSpent / totalBudget) * 100 : 0;
           if (pct < 90) return null;
           const isOver = pct >= 100;
@@ -398,34 +398,34 @@ export function DayContent() {
           </div>
 
           {/* Day cost summary: estimated vs actual — above activity list for visibility */}
-          {getDayActualCost(currentDay.id) > 0 && (
+          {dayActualCostVal > 0 && (
             <div className={`flex items-center justify-between px-4 py-3 rounded-xl border mb-3 ${
-              getDayActualCost(currentDay.id) > getDayCost(currentDay.id)
+              dayActualCostVal > dayCostVal
                 ? 'bg-red-50/60 border-red-200/50'
                 : 'bg-emerald-50/60 border-emerald-200/50'
             }`}>
               <div className="flex items-center gap-3 text-xs">
                 <div>
                   <span className="text-gray-400 block text-[10px]">{t('budget.estimated')}</span>
-                  <span className="font-bold text-gray-600">{format(getDayCost(currentDay.id))}</span>
+                  <span className="font-bold text-gray-600">{format(dayCostVal)}</span>
                 </div>
                 <span className="text-gray-300">→</span>
                 <div>
                   <span className="text-gray-400 block text-[10px]">{t('budget.actual')}</span>
-                  <span className={`font-bold ${getDayActualCost(currentDay.id) > getDayCost(currentDay.id) ? 'text-red-600' : 'text-emerald-600'}`}>
-                    {format(getDayActualCost(currentDay.id))}
+                  <span className={`font-bold ${dayActualCostVal > dayCostVal ? 'text-red-600' : 'text-emerald-600'}`}>
+                    {format(dayActualCostVal)}
                   </span>
                 </div>
               </div>
-              {getDayCost(currentDay.id) > 0 && (
+              {dayCostVal > 0 && (
                 <span className={`text-[11px] font-bold px-2.5 py-1 rounded-full ${
-                  getDayActualCost(currentDay.id) > getDayCost(currentDay.id)
+                  dayActualCostVal > dayCostVal
                     ? 'text-red-600 bg-red-100/80'
                     : 'text-emerald-600 bg-emerald-100/80'
                 }`}>
-                  {getDayActualCost(currentDay.id) > getDayCost(currentDay.id)
-                    ? `+${format(getDayActualCost(currentDay.id) - getDayCost(currentDay.id))} ${t('budget.overBudget' as TranslationKey)}`
-                    : `-${format(getDayCost(currentDay.id) - getDayActualCost(currentDay.id))} ${t('budget.saved' as TranslationKey)}`
+                  {dayActualCostVal > dayCostVal
+                    ? `+${format(dayActualCostVal - dayCostVal)} ${t('budget.overBudget' as TranslationKey)}`
+                    : `-${format(dayCostVal - dayActualCostVal)} ${t('budget.saved' as TranslationKey)}`
                   }
                 </span>
               )}

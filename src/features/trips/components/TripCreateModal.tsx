@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { X, Check, Plane } from 'lucide-react';
-import { useTripStore } from '@/store/useTripStore.ts';
+import { useTripActions } from '@/hooks/useTripActions.ts';
 import { useI18n, type TranslationKey } from '@/i18n/useI18n.ts';
 import { useCurrency } from '@/hooks/useCurrency.ts';
 import { useEscKey } from '@/hooks/useEscKey.ts';
@@ -16,7 +16,7 @@ const emojiOptions = ['✈️', '🏖️', '🗺️', '🌍', '🏔️', '🌸',
 export function TripCreateModal({ onClose }: Props) {
   const navigate = useNavigate();
   const { t } = useI18n();
-  const createTrip = useTripStore((s) => s.createTrip);
+  const { createTrip } = useTripActions();
   const { currency, symbol, rate } = useCurrency();
   useEscKey(onClose);
   const defaultBudgetDisplay = currency === 'EUR' ? 5000 : Math.round(5000 * rate);

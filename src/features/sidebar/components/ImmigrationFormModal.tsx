@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { X, Check, PlaneTakeoff, PlaneLanding } from 'lucide-react';
 import { useEscKey } from '@/hooks/useEscKey.ts';
-import { useTripStore } from '@/store/useTripStore.ts';
+import { useTripActions } from '@/hooks/useTripActions.ts';
 import { useI18n } from '@/i18n/useI18n.ts';
 import type { ImmigrationSchedule } from '@/types/index.ts';
 
@@ -12,8 +12,7 @@ interface Props {
 }
 
 export function ImmigrationFormModal({ type, schedule, onClose }: Props) {
-  const addImmigrationSchedule = useTripStore((s) => s.addImmigrationSchedule);
-  const updateImmigrationSchedule = useTripStore((s) => s.updateImmigrationSchedule);
+  const { addImmigrationSchedule, updateImmigrationSchedule } = useTripActions();
   const { t } = useI18n();
   const isEdit = !!schedule;
 
