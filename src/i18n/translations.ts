@@ -149,8 +149,10 @@ export const translations = {
   'nav.budget': { ko: '가계부', en: 'Budget', es: 'Presupuesto' },
   'nav.tools': { ko: '도구', en: 'Tools', es: 'Herramientas' },
   'nav.settings': { ko: '설정', en: 'Settings', es: 'Config' },
-  'nav.exchange': { ko: '환율', en: 'Currency', es: 'Moneda' },
+  'nav.exchange': { ko: '환율 계산기', en: 'Calculator', es: 'Calculadora' },
   'nav.myInfo': { ko: '내 정보', en: 'My Info', es: 'Mi Info' },
+  'calc.title': { ko: '환율 계산기', en: 'Exchange Calculator', es: 'Calculadora de Cambio' },
+  'calc.result': { ko: '변환 결과', en: 'Result', es: 'Resultado' },
 
   // Day CRUD
   'day.addDay': { ko: '일정 추가', en: 'Add Day', es: 'Agregar Día' },

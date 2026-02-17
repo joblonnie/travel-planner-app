@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, lazy, Suspense } from 'react';
 import { Outlet, useNavigate, useLocation, useSearchParams, Navigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Plane, Heart, CalendarDays, Wallet, Globe, ArrowLeftRight, Settings, Calculator, PanelLeftOpen, Search, Map, FileText, User, LogOut } from 'lucide-react';
+import { Plane, Heart, CalendarDays, Wallet, Globe, ArrowLeftRight, Settings, Calculator, PanelLeftOpen, Search, Map, FileText, User, LogOut, ChevronLeft } from 'lucide-react';
 import { UserMenu } from '@/features/auth/components/UserMenu.tsx';
 import { useTripStore } from '@/store/useTripStore.ts';
 import { useTripActions } from '@/hooks/useTripActions.ts';
@@ -19,6 +19,7 @@ const TripSettingsModal = lazy(() => import('@/features/trips/components/TripSet
 const CameraOcrModal = lazy(() => import('@/features/budget/components/CameraOcrModal.tsx').then(m => ({ default: m.CameraOcrModal })));
 const SearchModal = lazy(() => import('@/features/search/components/SearchModal.tsx').then(m => ({ default: m.SearchModal })));
 const InvitationsBadge = lazy(() => import('@/features/sharing/components/InvitationsBadge.tsx').then(m => ({ default: m.InvitationsBadge })));
+const ExchangeCalculatorModal = lazy(() => import('@/components/ExchangeCalculatorModal.tsx').then(m => ({ default: m.ExchangeCalculatorModal })));
 
 export function AppLayout() {
   useExchangeRates();
@@ -41,6 +42,7 @@ export function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth >= 640);
   const [showSearch, setShowSearch] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
+  const [showCalc, setShowCalc] = useState(false);
   const { setPendingCameraExpense } = useTripActions();
 
   // Auto-open settings modal when navigated with ?settings=true
@@ -113,7 +115,16 @@ export function AppLayout() {
     <div className="min-h-screen flex flex-col bg-warm-50">
       {/* Top Header */}
       <header className="sticky top-0 z-30 bg-header-bg backdrop-blur-2xl border-b border-card-border px-3 sm:px-5 py-2.5 sm:py-3 flex items-center justify-between flex-shrink-0 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_8px_24px_rgba(0,0,0,0.04)]">
-        <div className="flex items-center gap-2.5 sm:gap-3.5 min-w-0">
+        <div className="flex items-center gap-1.5 sm:gap-3.5 min-w-0">
+          {!isTrips && (
+            <button
+              onClick={() => navigate('/trips')}
+              className="flex items-center justify-center p-1.5 -ml-1 rounded-full text-warm-400 hover:text-primary hover:bg-primary/10 transition-all flex-shrink-0 sm:hidden"
+              aria-label={t('trips.manageTrips' as TranslationKey)}
+            >
+              <ChevronLeft size={20} />
+            </button>
+          )}
           <div className="bg-gradient-to-br from-primary to-primary-dark text-white p-1.5 sm:p-2 rounded-xl shadow-[0_2px_8px_rgba(190,18,60,0.25)] flex-shrink-0">
             <Plane size={16} className="sm:w-[18px] sm:h-[18px]" />
           </div>
@@ -266,6 +277,7 @@ export function AppLayout() {
       {showSettings && <Suspense fallback={<LoadingSpinner />}><TripSettingsModal onClose={() => setShowSettings(false)} /></Suspense>}
       {showCamera && <Suspense fallback={<LoadingSpinner />}><CameraOcrModal onClose={() => setShowCamera(false)} onAddExpense={handleCameraExpense} /></Suspense>}
       {showSearch && <Suspense fallback={<LoadingSpinner />}><SearchModal onClose={() => setShowSearch(false)} /></Suspense>}
+      {showCalc && <Suspense fallback={<LoadingSpinner />}><ExchangeCalculatorModal onClose={() => setShowCalc(false)} /></Suspense>}
 
       {/* Mobile Bottom Navigation — context-aware */}
       <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-30 bg-bottom-nav-bg backdrop-blur-2xl border-t border-card-border shadow-[0_-2px_10px_rgba(0,0,0,0.05)] pb-[env(safe-area-inset-bottom)]" aria-label={t('nav.planner')}>
@@ -282,22 +294,20 @@ export function AppLayout() {
                 <span className="text-[10px] font-medium">{t('trips.manageTrips' as TranslationKey)}</span>
               </button>
 
-              {/* 환율 */}
+              {/* 환율 계산기 */}
               <button
-                onClick={nextCurrency}
+                onClick={() => setShowCalc(true)}
                 className="flex flex-col items-center gap-0.5 min-w-[48px] min-h-[48px] py-1.5 rounded-xl text-gray-400 active:text-primary transition-colors"
                 aria-label={t('nav.exchange' as TranslationKey)}
               >
-                <ArrowLeftRight size={20} />
-                <span className="text-[10px] font-medium">{symbol}{currency}</span>
+                <Calculator size={20} />
+                <span className="text-[10px] font-medium">{t('nav.exchange' as TranslationKey)}</span>
               </button>
 
               {/* 내 정보 */}
               <button
                 onClick={() => setShowProfile(true)}
-                className={`flex flex-col items-center gap-0.5 min-w-[48px] min-h-[48px] py-1.5 rounded-xl transition-colors ${
-                  showProfile ? 'text-primary' : 'text-gray-400 active:text-primary'
-                }`}
+                className="flex flex-col items-center gap-0.5 min-w-[48px] min-h-[48px] py-1.5 rounded-xl text-gray-400 active:text-primary transition-colors"
                 aria-label={t('nav.myInfo' as TranslationKey)}
               >
                 <User size={20} />
@@ -318,14 +328,14 @@ export function AppLayout() {
                 <span className="text-[10px] font-medium">{t('nav.planner')}</span>
               </button>
 
-              {/* 환율 */}
+              {/* 환율 계산기 */}
               <button
-                onClick={nextCurrency}
+                onClick={() => setShowCalc(true)}
                 className="flex flex-col items-center gap-0.5 min-w-[48px] min-h-[48px] py-1.5 rounded-xl text-gray-400 active:text-primary transition-colors"
                 aria-label={t('nav.exchange' as TranslationKey)}
               >
-                <ArrowLeftRight size={20} />
-                <span className="text-[10px] font-medium">{symbol}{currency}</span>
+                <Calculator size={20} />
+                <span className="text-[10px] font-medium">{t('nav.exchange' as TranslationKey)}</span>
               </button>
 
               {/* 가계부 */}
@@ -353,9 +363,7 @@ export function AppLayout() {
               {/* 내 정보 */}
               <button
                 onClick={() => setShowProfile(true)}
-                className={`flex flex-col items-center gap-0.5 min-w-[48px] min-h-[48px] py-1.5 rounded-xl transition-colors ${
-                  showProfile ? 'text-primary' : 'text-gray-400 active:text-primary'
-                }`}
+                className="flex flex-col items-center gap-0.5 min-w-[48px] min-h-[48px] py-1.5 rounded-xl text-gray-400 active:text-primary transition-colors"
                 aria-label={t('nav.myInfo' as TranslationKey)}
               >
                 <User size={20} />
@@ -393,13 +401,15 @@ export function AppLayout() {
                   <span className="text-sm text-gray-700">{t('settings.language')}</span>
                   <span className="ml-auto text-xs text-warm-400">{languageNames[language]}</span>
                 </button>
-                <button
-                  onClick={() => { navigate('/guide'); setShowProfile(false); }}
-                  className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-warm-50 active:bg-warm-100 transition-colors"
-                >
-                  <FileText size={18} className="text-warm-400" />
-                  <span className="text-sm text-gray-700">{t('guide.title' as TranslationKey)}</span>
-                </button>
+                {!isTrips && (
+                  <button
+                    onClick={() => { navigate('/guide'); setShowProfile(false); }}
+                    className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-warm-50 active:bg-warm-100 transition-colors"
+                  >
+                    <FileText size={18} className="text-warm-400" />
+                    <span className="text-sm text-gray-700">{t('guide.title' as TranslationKey)}</span>
+                  </button>
+                )}
                 <div className="border-t border-gray-100 my-2" />
                 <button
                   onClick={() => { logout(); setShowProfile(false); }}
