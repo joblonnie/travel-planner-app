@@ -3,8 +3,8 @@ config({ path: '.env.local' });
 import { defineConfig } from 'drizzle-kit';
 
 export default defineConfig({
-  schema: './server/db/schema.ts',
-  out: './server/db/migrations',
+  schema: './api/_server/db/schema.ts',
+  out: './api/_server/db/migrations',
   dialect: 'postgresql',
   dbCredentials: {
     url: process.env.POSTGRES_URL!,

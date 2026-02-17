@@ -1,13 +1,13 @@
 import type { StateCreator } from 'zustand';
 import type { Trip, DayPlan, ExpenseOwnerConfig, Destination, ImmigrationSchedule, InterCityTransport } from '@/types/index.ts';
 import type { TripStore } from '../useTripStore.ts';
-import { defaultTripPlan } from '@/data/tripPlan.ts';
 import type { TripExpense, TripRestaurantComment } from '@/types/index.ts';
 
 export interface TripSlice {
   trips: Trip[];
   currentTripId: string;
 
+  setTrips: (trips: Trip[], currentId?: string) => void;
   createTrip: (trip: Omit<Trip, 'createdAt' | 'updatedAt'>) => void;
   deleteTrip: (tripId: string) => void;
   switchTrip: (tripId: string) => void;
@@ -15,31 +15,15 @@ export interface TripSlice {
   importTripData: (jsonStr: string) => boolean;
 }
 
-const DEFAULT_TRIP_ID = crypto.randomUUID();
-const now = new Date().toISOString();
-
-export const defaultTrip: Trip = {
-  id: DEFAULT_TRIP_ID,
-  tripName: '스페인 신혼여행 2026',
-  startDate: '2026-10-17',
-  endDate: '2026-11-01',
-  days: defaultTripPlan,
-  currentDayIndex: 0,
-  totalBudget: 5000,
-  expenses: [],
-  restaurantComments: [],
-  customDestinations: [],
-  immigrationSchedules: [],
-  interCityTransports: [],
-  owners: [{ id: 'shared', name: '공용', color: 'gray' }],
-  pendingCameraExpense: null,
-  createdAt: now,
-  updatedAt: now,
-};
-
 export const createTripSlice: StateCreator<TripStore, [], [], TripSlice> = (set) => ({
-  trips: [defaultTrip],
-  currentTripId: DEFAULT_TRIP_ID,
+  trips: [],
+  currentTripId: '',
+
+  setTrips: (trips, currentId) =>
+    set({
+      trips,
+      currentTripId: currentId || trips[0]?.id || '',
+    }),
 
   createTrip: (trip) =>
     set((state) => {
@@ -57,10 +41,9 @@ export const createTripSlice: StateCreator<TripStore, [], [], TripSlice> = (set)
 
   deleteTrip: (tripId) =>
     set((state) => {
-      if (state.trips.length <= 1) return state;
       const remaining = state.trips.filter((t) => t.id !== tripId);
       const newCurrentId = state.currentTripId === tripId
-        ? remaining[0].id
+        ? (remaining[0]?.id || '')
         : state.currentTripId;
       return { trips: remaining, currentTripId: newCurrentId };
     }),

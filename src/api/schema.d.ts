@@ -206,20 +206,8 @@ export interface components {
         LogoutResponse: {
             success: boolean;
         };
-        TripListResponse: {
-            trips: components["schemas"]["TripListItem"][];
-        };
-        TripListItem: {
-            id: string;
-            tripName: string;
-            startDate: string;
-            endDate: string;
-            emoji?: string;
-            createdAt: string;
-            updatedAt: string;
-        };
-        TripResponse: {
-            trip: components["schemas"]["Trip"];
+        TripListFullResponse: {
+            trips: components["schemas"]["Trip"][];
         };
         Trip: {
             id: string;
@@ -427,6 +415,9 @@ export interface components {
             updatedAt: string;
             emoji?: string;
         };
+        TripResponse: {
+            trip: components["schemas"]["Trip"];
+        };
         DeleteResponse: {
             deleted: boolean;
         };
@@ -622,13 +613,13 @@ export interface operations {
         };
         requestBody?: never;
         responses: {
-            /** @description List of trips */
+            /** @description List of trips with full data */
             200: {
                 headers: {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["TripListResponse"];
+                    "application/json": components["schemas"]["TripListFullResponse"];
                 };
             };
             /** @description Unauthorized */

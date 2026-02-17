@@ -255,6 +255,10 @@ export const TripListResponseSchema = z.object({
   trips: z.array(TripListItemSchema),
 }).openapi('TripListResponse');
 
+export const TripListFullResponseSchema = z.object({
+  trips: z.array(TripSchema),
+}).openapi('TripListFullResponse');
+
 export const TripResponseSchema = z.object({
   trip: TripSchema,
 }).openapi('TripResponse');

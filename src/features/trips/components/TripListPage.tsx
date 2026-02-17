@@ -1,15 +1,15 @@
 import { useState } from 'react';
-import { Plus, Trash2, Copy, MapPin, Calendar, ArrowLeft, Cloud } from 'lucide-react';
+import { Plus, Trash2, Copy, MapPin, Calendar, ArrowLeft } from 'lucide-react';
 import { useTripStore } from '@/store/useTripStore.ts';
 import { useI18n, type TranslationKey } from '@/i18n/useI18n.ts';
 import { useCurrency } from '@/hooks/useCurrency.ts';
 import { TripCreateModal } from './TripCreateModal.tsx';
+import { useDeleteTrip } from '@/hooks/useTrips.ts';
 import type { Trip } from '@/types/index.ts';
 
 export function TripListPage() {
   const trips = useTripStore((s) => s.trips);
   const currentTripId = useTripStore((s) => s.currentTripId);
-  const isAuthenticated = useTripStore((s) => s.isAuthenticated);
   const switchTrip = useTripStore((s) => s.switchTrip);
   const deleteTrip = useTripStore((s) => s.deleteTrip);
   const duplicateTrip = useTripStore((s) => s.duplicateTrip);
@@ -18,6 +18,7 @@ export function TripListPage() {
   const { format } = useCurrency();
   const [showCreate, setShowCreate] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const deleteTripMutation = useDeleteTrip();
 
   const handleSwitch = (tripId: string) => {
     switchTrip(tripId);
@@ -25,12 +26,12 @@ export function TripListPage() {
   };
 
   const handleDelete = (tripId: string) => {
-    if (trips.length <= 1) return;
     setConfirmDeleteId(tripId);
   };
 
   const confirmDelete = () => {
     if (confirmDeleteId) {
+      deleteTripMutation.mutate(confirmDeleteId);
       deleteTrip(confirmDeleteId);
       setConfirmDeleteId(null);
     }
@@ -79,23 +80,6 @@ export function TripListPage() {
           </button>
         </div>
       </div>
-
-      {/* Cloud sync prompt */}
-      {!isAuthenticated && (
-        <div className="mb-4 p-3 bg-blue-50/80 backdrop-blur-sm border border-blue-200/60 rounded-xl flex items-center gap-3">
-          <Cloud size={18} className="text-blue-500 flex-shrink-0" />
-          <div className="flex-1 min-w-0">
-            <p className="text-xs font-semibold text-blue-800">{t('auth.syncPrompt' as TranslationKey)}</p>
-            <p className="text-[10px] text-blue-600 mt-0.5">{t('auth.syncDesc' as TranslationKey)}</p>
-          </div>
-          <button
-            onClick={() => { window.location.href = '/api/auth/google'; }}
-            className="flex-shrink-0 px-3 py-1.5 bg-white border border-blue-200 rounded-lg text-xs font-semibold text-blue-700 hover:bg-blue-50 transition-colors"
-          >
-            {t('auth.login' as TranslationKey)}
-          </button>
-        </div>
-      )}
 
       {/* Trip cards */}
       <div className="space-y-3">
@@ -200,9 +184,8 @@ export function TripListPage() {
                 </button>
                 <button
                   onClick={() => handleDelete(trip.id)}
-                  disabled={trips.length <= 1}
-                  className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs text-gray-500 hover:text-red-600 hover:bg-red-50/50 transition-colors disabled:opacity-30 disabled:cursor-not-allowed min-h-[44px]"
-                  title={trips.length <= 1 ? t('trips.cannotDeleteLast' as TranslationKey) : t('trips.delete' as TranslationKey)}
+                  className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs text-gray-500 hover:text-red-600 hover:bg-red-50/50 transition-colors min-h-[44px]"
+                  title={t('trips.delete' as TranslationKey)}
                 >
                   <Trash2 size={13} />
                   {t('trips.delete' as TranslationKey)}

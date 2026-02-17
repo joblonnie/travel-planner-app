@@ -118,63 +118,18 @@
           "success"
         ]
       },
-      "TripListResponse": {
+      "TripListFullResponse": {
         "type": "object",
         "properties": {
           "trips": {
             "type": "array",
             "items": {
-              "$ref": "#/components/schemas/TripListItem"
+              "$ref": "#/components/schemas/Trip"
             }
           }
         },
         "required": [
           "trips"
-        ]
-      },
-      "TripListItem": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "tripName": {
-            "type": "string"
-          },
-          "startDate": {
-            "type": "string"
-          },
-          "endDate": {
-            "type": "string"
-          },
-          "emoji": {
-            "type": "string"
-          },
-          "createdAt": {
-            "type": "string"
-          },
-          "updatedAt": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "tripName",
-          "startDate",
-          "endDate",
-          "createdAt",
-          "updatedAt"
-        ]
-      },
-      "TripResponse": {
-        "type": "object",
-        "properties": {
-          "trip": {
-            "$ref": "#/components/schemas/Trip"
-          }
-        },
-        "required": [
-          "trip"
         ]
       },
       "Trip": {
@@ -1030,6 +985,17 @@
           "updatedAt"
         ]
       },
+      "TripResponse": {
+        "type": "object",
+        "properties": {
+          "trip": {
+            "$ref": "#/components/schemas/Trip"
+          }
+        },
+        "required": [
+          "trip"
+        ]
+      },
       "DeleteResponse": {
         "type": "object",
         "properties": {
@@ -1239,11 +1205,11 @@
         "description": "Returns trip metadata (id, name, dates, emoji) without full JSONB data.",
         "responses": {
           "200": {
-            "description": "List of trips",
+            "description": "List of trips with full data",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/TripListResponse"
+                  "$ref": "#/components/schemas/TripListFullResponse"
                 }
               }
             }

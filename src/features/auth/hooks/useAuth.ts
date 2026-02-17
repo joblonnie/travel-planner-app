@@ -1,9 +1,10 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useState } from 'react';
 import { useTripStore } from '@/store/useTripStore.ts';
 import { apiClient } from '@/api/client.ts';
 
 export function useAuth() {
   const setUser = useTripStore((s) => s.setUser);
+  const [loading, setLoading] = useState(true);
 
   // Check session on mount
   useEffect(() => {
@@ -13,6 +14,8 @@ export function useAuth() {
       }
     }).catch(() => {
       // Silently fail — user stays unauthenticated
+    }).finally(() => {
+      setLoading(false);
     });
   }, [setUser]);
 
@@ -25,5 +28,5 @@ export function useAuth() {
     setUser(null);
   }, [setUser]);
 
-  return { login, logout };
+  return { login, logout, loading };
 }

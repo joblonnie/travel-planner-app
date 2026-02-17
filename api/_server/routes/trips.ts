@@ -3,7 +3,7 @@ import { eq } from 'drizzle-orm';
 import type { AppEnv } from '../app.js';
 import {
   TripSchema,
-  TripListResponseSchema,
+  TripListFullResponseSchema,
   TripResponseSchema,
   TripParamsSchema,
   DeleteResponseSchema,
@@ -23,8 +23,8 @@ const listTrips = createRoute({
   description: 'Returns trip metadata (id, name, dates, emoji) without full JSONB data.',
   responses: {
     200: {
-      content: { 'application/json': { schema: TripListResponseSchema } },
-      description: 'List of trips',
+      content: { 'application/json': { schema: TripListFullResponseSchema } },
+      description: 'List of trips with full data',
     },
     401: {
       content: { 'application/json': { schema: ErrorResponseSchema } },
@@ -148,27 +148,11 @@ export const tripsRoute = new OpenAPIHono<AppEnv>()
 
     const db = getDb();
     const rows = await db
-      .select({
-        id: trips.id,
-        tripName: trips.tripName,
-        startDate: trips.startDate,
-        endDate: trips.endDate,
-        data: trips.data,
-        createdAt: trips.createdAt,
-        updatedAt: trips.updatedAt,
-      })
+      .select({ data: trips.data })
       .from(trips)
       .where(eq(trips.userId, userId));
 
-    const tripList = rows.map((row) => ({
-      id: row.id,
-      tripName: row.tripName,
-      startDate: row.startDate,
-      endDate: row.endDate,
-      emoji: (row.data as Record<string, unknown>)?.emoji as string | undefined,
-      createdAt: row.createdAt.toISOString(),
-      updatedAt: row.updatedAt.toISOString(),
-    }));
+    const tripList = rows.map((row) => row.data as Record<string, unknown>);
 
     return c.json({ trips: tripList }, 200);
   })
@@ -212,26 +196,43 @@ export const tripsRoute = new OpenAPIHono<AppEnv>()
     const { tripId } = c.req.valid('param');
     const tripData = c.req.valid('json');
     const db = getDb();
+    const now = new Date();
 
     const [existing] = await db
       .select({ userId: trips.userId })
       .from(trips)
       .where(eq(trips.id, tripId));
 
-    if (!existing || existing.userId !== userId) {
+    if (existing && existing.userId !== userId) {
       return c.json({ error: 'Trip not found' }, 404);
     }
 
-    await db
-      .update(trips)
-      .set({
+    if (existing) {
+      // Update existing trip
+      await db
+        .update(trips)
+        .set({
+          tripName: tripData.tripName,
+          startDate: tripData.startDate,
+          endDate: tripData.endDate,
+          data: tripData,
+          updatedAt: now,
+        })
+        .where(eq(trips.id, tripId));
+    } else {
+      // Create new trip (upsert)
+      await db.insert(trips).values({
+        id: tripData.id,
+        userId,
         tripName: tripData.tripName,
         startDate: tripData.startDate,
         endDate: tripData.endDate,
         data: tripData,
-        updatedAt: new Date(),
-      })
-      .where(eq(trips.id, tripId));
+        schemaVersion: 6,
+        createdAt: now,
+        updatedAt: now,
+      });
+    }
 
     return c.json({ trip: tripData }, 200);
   })

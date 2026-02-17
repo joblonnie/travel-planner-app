@@ -22,6 +22,7 @@ export interface AppSlice {
   // Auth
   user: AuthUser | null;
   isAuthenticated: boolean;
+  tripsLoaded: boolean;
 
   setCurrentPage: (page: 'planner' | 'budget' | 'trips') => void;
   setLanguage: (lang: Language) => void;
@@ -30,6 +31,7 @@ export interface AppSlice {
   setTheme: (theme: ThemeId) => void;
   setFetchedRates: (rates: Record<string, number>) => void;
   setUser: (user: AuthUser | null) => void;
+  setTripsLoaded: (loaded: boolean) => void;
 }
 
 export const createAppSlice: StateCreator<TripStore, [], [], AppSlice> = (set) => ({
@@ -44,6 +46,7 @@ export const createAppSlice: StateCreator<TripStore, [], [], AppSlice> = (set) =
   // Auth
   user: null,
   isAuthenticated: false,
+  tripsLoaded: false,
 
   setCurrentPage: (page) => set({ currentPage: page }),
   setLanguage: (language) => set({ language }),
@@ -55,5 +58,6 @@ export const createAppSlice: StateCreator<TripStore, [], [], AppSlice> = (set) =
   },
   setFetchedRates: (rates) =>
     set({ fetchedRates: rates, ratesUpdatedAt: new Date().toISOString() }),
-  setUser: (user) => set({ user, isAuthenticated: !!user }),
+  setUser: (user) => set({ user, isAuthenticated: !!user, tripsLoaded: !user ? false : undefined }),
+  setTripsLoaded: (loaded) => set({ tripsLoaded: loaded }),
 });
