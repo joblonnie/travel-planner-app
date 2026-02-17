@@ -1,10 +1,10 @@
 import { OpenAPIHono } from '@hono/zod-openapi';
 import { swaggerUI } from '@hono/swagger-ui';
-import { exchangeRatesRoute } from './_routes/exchange-rates';
-import { visionRoute } from './_routes/vision';
-import { tripsRoute } from './_routes/trips';
-import { authRoute } from './_routes/auth';
-import { requireAuth } from './_middleware/auth';
+import { exchangeRatesRoute } from './_routes/exchange-rates.js';
+import { visionRoute } from './_routes/vision.js';
+import { tripsRoute } from './_routes/trips.js';
+import { authRoute } from './_routes/auth.js';
+import { requireAuth } from './_middleware/auth.js';
 
 export type AppEnv = {
   Variables: {

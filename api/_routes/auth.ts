@@ -2,18 +2,18 @@ import { OpenAPIHono, createRoute } from '@hono/zod-openapi';
 import { setCookie, getCookie, deleteCookie } from 'hono/cookie';
 import { Google, generateCodeVerifier, generateState } from 'arctic';
 import { eq, and } from 'drizzle-orm';
-import type { AppEnv } from '../_app';
-import { getDb } from '../_db/index';
-import { users } from '../_db/schema';
+import type { AppEnv } from '../_app.js';
+import { getDb } from '../_db/index.js';
+import { users } from '../_db/schema.js';
 import {
   createSession,
   deleteSession,
+  getSession,
   SESSION_COOKIE_NAME,
   COOKIE_OPTIONS,
-} from '../_lib/session';
-import { optionalAuth } from '../_middleware/auth';
-import { UserResponseSchema, LogoutResponseSchema } from '../_schemas/auth';
-import { ErrorResponseSchema } from '../_schemas/common';
+} from '../_lib/session.js';
+import { UserResponseSchema, LogoutResponseSchema } from '../_schemas/auth.js';
+import { ErrorResponseSchema } from '../_schemas/common.js';
 
 function getGoogle() {
   return new Google(
@@ -173,8 +173,13 @@ export const authRoute = new OpenAPIHono<AppEnv>()
 
     return c.redirect('/', 302);
   })
-  .use('/auth/me', optionalAuth)
   .openapi(getMe, async (c) => {
+    // Inline optionalAuth: check session without requiring it
+    const sessionId = getCookie(c, SESSION_COOKIE_NAME);
+    if (sessionId) {
+      const session = await getSession(sessionId);
+      if (session) c.set('userId', session.userId);
+    }
     const userId = c.get('userId') as string | undefined;
     if (!userId) {
       return c.json({ user: null }, 200);

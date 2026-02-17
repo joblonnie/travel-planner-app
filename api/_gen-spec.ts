@@ -1,4 +1,4 @@
-import { app } from './_app';
+import { app } from './_app.js';
 
 const spec = app.getOpenAPI31Document({
   openapi: '3.1.0',

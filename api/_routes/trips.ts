@@ -1,16 +1,16 @@
 import { OpenAPIHono, createRoute } from '@hono/zod-openapi';
 import { eq } from 'drizzle-orm';
-import type { AppEnv } from '../_app';
+import type { AppEnv } from '../_app.js';
 import {
   TripSchema,
   TripListResponseSchema,
   TripResponseSchema,
   TripParamsSchema,
   DeleteResponseSchema,
-} from '../_schemas/trips';
-import { ErrorResponseSchema } from '../_schemas/common';
-import { getDb } from '../_db/index';
-import { trips } from '../_db/schema';
+} from '../_schemas/trips.js';
+import { ErrorResponseSchema } from '../_schemas/common.js';
+import { getDb } from '../_db/index.js';
+import { trips } from '../_db/schema.js';
 
 // --- Route definitions ---
 
