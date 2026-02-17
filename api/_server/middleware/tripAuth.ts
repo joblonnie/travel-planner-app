@@ -2,7 +2,7 @@ import { eq, and } from 'drizzle-orm';
 import { getDb } from '../db/index.js';
 import { tripMembers, trips } from '../db/schema.js';
 
-type MemberRole = 'owner' | 'editor' | 'viewer';
+export type MemberRole = 'owner' | 'editor' | 'viewer';
 
 /**
  * Check if a user has a specific minimum role on a trip.

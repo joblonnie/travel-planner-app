@@ -1,5 +1,6 @@
 import { OpenAPIHono, createRoute } from '@hono/zod-openapi';
 import { eq, inArray } from 'drizzle-orm';
+import type { z } from 'zod';
 import type { AppEnv } from '../app.js';
 import {
   TripSchema,
@@ -11,7 +12,9 @@ import {
 import { ErrorResponseSchema } from '../schemas/common.js';
 import { getDb } from '../db/index.js';
 import { trips, tripMembers } from '../db/schema.js';
-import { getTripRole, hasMinRole } from '../middleware/tripAuth.js';
+import { getTripRole, hasMinRole, type MemberRole } from '../middleware/tripAuth.js';
+
+type TripData = z.infer<typeof TripSchema>;
 
 // --- Route definitions ---
 
@@ -154,10 +157,10 @@ export const tripsRoute = new OpenAPIHono<AppEnv>()
       .from(tripMembers)
       .where(eq(tripMembers.userId, userId));
 
-    const roleMap: Record<string, string> = {};
+    const roleMap: Record<string, MemberRole> = {};
     const tripIdSet = new Set<string>();
     for (const r of memberRows) {
-      roleMap[r.tripId] = r.role;
+      roleMap[r.tripId] = r.role as MemberRole;
       tripIdSet.add(r.tripId);
     }
 
@@ -184,7 +187,7 @@ export const tripsRoute = new OpenAPIHono<AppEnv>()
       .where(inArray(trips.id, [...tripIdSet]));
 
     const tripList = rows.map((row) => ({
-      ...(row.data as Record<string, unknown>),
+      ...(row.data as TripData),
       role: roleMap[row.id] ?? 'owner',
     }));
 
@@ -209,7 +212,7 @@ export const tripsRoute = new OpenAPIHono<AppEnv>()
       return c.json({ error: 'Trip not found' }, 404);
     }
 
-    return c.json({ trip: { ...(row.data as Record<string, unknown>), role } }, 200);
+    return c.json({ trip: { ...(row.data as TripData), role } }, 200);
   })
   .openapi(createTrip, async (c) => {
     const userId = c.get('userId') as string;
