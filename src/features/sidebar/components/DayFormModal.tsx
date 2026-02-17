@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { X, Check, Trash2, Hotel, MapPin, Search } from 'lucide-react';
-import { GoogleMap, MarkerF } from '@react-google-maps/api';
+import { GoogleMap } from '@react-google-maps/api';
+import { AdvancedMarker } from '@/components/AdvancedMarker.tsx';
+import { mapId } from '@/hooks/useGoogleMaps.ts';
 import { useEscKey } from '@/hooks/useEscKey.ts';
 import { useTripActions } from '@/hooks/useTripActions.ts';
 import { useTripData } from '@/store/useCurrentTrip.ts';
@@ -289,11 +291,11 @@ export function DayFormModal({ day, onClose }: Props) {
                         center={accomMapCenter}
                         zoom={accommodation.lat ? 16 : 13}
                         onClick={handleAccomMapClick}
-                        options={{ disableDefaultUI: true, zoomControl: true }}
+                        options={{ disableDefaultUI: true, zoomControl: true, ...(mapId && { mapId }) }}
                         onLoad={(map) => { accomMapRef.current = map; }}
                       >
                         {accommodation.lat && accommodation.lng && (
-                          <MarkerF
+                          <AdvancedMarker
                             position={{ lat: accommodation.lat, lng: accommodation.lng }}
                           />
                         )}

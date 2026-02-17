@@ -1,8 +1,9 @@
-import { GoogleMap, MarkerF, PolylineF, OverlayViewF, OverlayView } from '@react-google-maps/api';
+import { GoogleMap, PolylineF, OverlayViewF, OverlayView } from '@react-google-maps/api';
 import { memo, useMemo, useCallback, useRef } from 'react';
 import type { ScheduledActivity } from '@/types/index.ts';
 import { useGeolocation } from '../hooks/useGeolocation.ts';
-import { useGoogleMaps } from '@/hooks/useGoogleMaps.ts';
+import { useGoogleMaps, mapId } from '@/hooks/useGoogleMaps.ts';
+import { AdvancedMarker } from '@/components/AdvancedMarker.tsx';
 import { MapPin, Navigation, Loader2 } from 'lucide-react';
 import { useI18n } from '@/i18n/useI18n.ts';
 
@@ -97,11 +98,11 @@ export const MapView = memo(function MapView({ activities, centerLat, centerLng 
         mapContainerStyle={{ width: '100%', height: '100%' }}
         center={{ lat: centerLat, lng: centerLng }}
         zoom={13}
-        options={{ styles: mapStyles, disableDefaultUI: true, zoomControl: true }}
+        options={{ styles: mapStyles, disableDefaultUI: true, zoomControl: true, ...(mapId && { mapId }) }}
         onLoad={onMapLoad}
       >
         {markers.map((m, i) => (
-          <MarkerF
+          <AdvancedMarker
             key={m.id}
             position={{ lat: m.lat!, lng: m.lng! }}
             label={{ text: `${i + 1}`, color: 'white', fontSize: '11px', fontWeight: 'bold' }}

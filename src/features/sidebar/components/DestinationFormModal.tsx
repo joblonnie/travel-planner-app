@@ -1,6 +1,8 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { X, Check, MapPin, Search } from 'lucide-react';
-import { GoogleMap, MarkerF } from '@react-google-maps/api';
+import { GoogleMap } from '@react-google-maps/api';
+import { AdvancedMarker } from '@/components/AdvancedMarker.tsx';
+import { mapId } from '@/hooks/useGoogleMaps.ts';
 import { useEscKey } from '@/hooks/useEscKey.ts';
 import { useTripActions } from '@/hooks/useTripActions.ts';
 import { useTripData } from '@/store/useCurrentTrip.ts';
@@ -195,11 +197,11 @@ export function DestinationFormModal({ onClose }: Props) {
                 center={mapCenter}
                 zoom={lat !== '' ? 12 : 5}
                 onClick={handleMapClick}
-                options={{ disableDefaultUI: true, zoomControl: true }}
+                options={{ disableDefaultUI: true, zoomControl: true, ...(mapId && { mapId }) }}
                 onLoad={(map) => { mapRef.current = map; }}
               >
                 {lat !== '' && lng !== '' && (
-                  <MarkerF position={{ lat: Number(lat), lng: Number(lng) }} />
+                  <AdvancedMarker position={{ lat: Number(lat), lng: Number(lng) }} />
                 )}
               </GoogleMap>
             </div>

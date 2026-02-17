@@ -1,7 +1,9 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useEscKey } from '@/hooks/useEscKey.ts';
 import { X, PlusCircle, Save, Trash2, MapPin, Landmark, ShoppingBag, UtensilsCrossed, Bus, Coffee, Search, Hotel, AlertTriangle, Zap } from 'lucide-react';
-import { GoogleMap, MarkerF } from '@react-google-maps/api';
+import { GoogleMap } from '@react-google-maps/api';
+import { AdvancedMarker } from '@/components/AdvancedMarker.tsx';
+import { mapId } from '@/hooks/useGoogleMaps.ts';
 import type { ScheduledActivity } from '@/types/index.ts';
 import { useTripActions } from '@/hooks/useTripActions.ts';
 import { useTripData } from '@/store/useCurrentTrip.ts';
@@ -239,13 +241,12 @@ export function ActivityFormModal({ dayId, onClose, insertAtIndex, activity, pla
                       center={mapCenter}
                       zoom={lat && lng ? 16 : 14}
                       onClick={handleMapClick}
-                      options={{ disableDefaultUI: true, zoomControl: true }}
+                      options={{ disableDefaultUI: true, zoomControl: true, ...(mapId && { mapId }) }}
                       onLoad={(map) => { mapRef.current = map; }}
                     >
                       {lat && lng && (
-                        <MarkerF
+                        <AdvancedMarker
                           position={{ lat: parseFloat(lat), lng: parseFloat(lng) }}
-                          animation={google.maps.Animation.DROP}
                         />
                       )}
                     </GoogleMap>
@@ -343,13 +344,12 @@ export function ActivityFormModal({ dayId, onClose, insertAtIndex, activity, pla
                         center={mapCenter}
                         zoom={lat && lng ? 16 : 14}
                         onClick={handleMapClick}
-                        options={{ disableDefaultUI: true, zoomControl: true }}
+                        options={{ disableDefaultUI: true, zoomControl: true, ...(mapId && { mapId }) }}
                         onLoad={(map) => { mapRef.current = map; }}
                       >
                         {lat && lng && (
-                          <MarkerF
+                          <AdvancedMarker
                             position={{ lat: parseFloat(lat), lng: parseFloat(lng) }}
-                            animation={google.maps.Animation.DROP}
                           />
                         )}
                       </GoogleMap>
