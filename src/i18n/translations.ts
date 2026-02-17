@@ -440,8 +440,17 @@ export const translations = {
   // Auth
   'auth.login': { ko: 'Google 로그인', en: 'Sign in with Google', es: 'Iniciar con Google' },
   'auth.logout': { ko: '로그아웃', en: 'Log out', es: 'Cerrar sesión' },
-  'auth.syncPrompt': { ko: '로그인하여 클라우드 동기화', en: 'Sign in for cloud sync', es: 'Inicia sesión para sincronizar' },
-  'auth.syncDesc': { ko: 'Google로 로그인하면 여행 데이터가 자동 저장됩니다', en: 'Sign in with Google to auto-save your trip data', es: 'Inicia sesión con Google para guardar automáticamente' },
+  'auth.editProfile': { ko: '프로필 수정', en: 'Edit Profile', es: 'Editar Perfil' },
+  'auth.nickname': { ko: '닉네임', en: 'Nickname', es: 'Apodo' },
+
+  // Login page
+  'login.subtitle': { ko: '완벽한 여행을 위한 올인원 플래너', en: 'All-in-one planner for your perfect trip', es: 'Planificador todo en uno para tu viaje perfecto' },
+  'login.feature1Title': { ko: '스마트 일정 관리', en: 'Smart Itinerary', es: 'Itinerario Inteligente' },
+  'login.feature1Desc': { ko: '드래그 앤 드롭으로 일정을 쉽게 관리하세요', en: 'Drag & drop to manage your schedule easily', es: 'Arrastra y suelta para gestionar tu horario' },
+  'login.feature2Title': { ko: '여행 가계부', en: 'Travel Budget', es: 'Presupuesto de Viaje' },
+  'login.feature2Desc': { ko: '실시간 환율로 지출을 추적하세요', en: 'Track expenses with live exchange rates', es: 'Rastrea gastos con tasas de cambio en vivo' },
+  'login.feature3Title': { ko: '클라우드 동기화', en: 'Cloud Sync', es: 'Sincronización en la Nube' },
+  'login.feature3Desc': { ko: '어디서든 여행 계획에 접근하세요', en: 'Access your plans from anywhere', es: 'Accede a tus planes desde cualquier lugar' },
 
   // Theme
   'theme.title': { ko: '테마', en: 'Theme', es: 'Tema' },

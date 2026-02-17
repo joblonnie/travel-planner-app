@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { X, Settings, Globe, Download, Upload, FileSpreadsheet, Palette, Check, RefreshCw } from 'lucide-react';
 import { useTripStore } from '@/store/useTripStore.ts';
 import { useTripData } from '@/store/useCurrentTrip.ts';
@@ -20,6 +21,7 @@ interface Props {
 }
 
 export function TripSettingsModal({ onClose }: Props) {
+  const navigate = useNavigate();
   const { t, language, setLanguage } = useI18n();
   const exchangeRateFromStore = useTripStore((s) => s.exchangeRate);
   const importTripData = useTripStore((s) => s.importTripData);
@@ -82,6 +84,7 @@ export function TripSettingsModal({ onClose }: Props) {
           setTotalBudget(ct.totalBudget);
         }
         setExchangeRate(s.exchangeRate);
+        navigate('/');
       }
     };
     reader.readAsText(file);

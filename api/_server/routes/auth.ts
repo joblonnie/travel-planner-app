@@ -11,7 +11,7 @@ import {
   SESSION_COOKIE_NAME,
   COOKIE_OPTIONS,
 } from '../lib/session.js';
-import { UserResponseSchema, LogoutResponseSchema } from '../schemas/auth.js';
+import { UserResponseSchema, LogoutResponseSchema, UpdateProfileSchema, UpdateProfileResponseSchema } from '../schemas/auth.js';
 import { ErrorResponseSchema } from '../schemas/common.js';
 
 // --- Edge-compatible OAuth helpers (replaces arctic) ---
@@ -116,6 +116,27 @@ const getMe = createRoute({
     200: {
       content: { 'application/json': { schema: UserResponseSchema } },
       description: 'Current user or null',
+    },
+  },
+});
+
+const updateMe = createRoute({
+  operationId: 'updateMe',
+  method: 'patch',
+  path: '/auth/me',
+  tags: ['Auth'],
+  summary: 'Update current user profile',
+  request: {
+    body: { content: { 'application/json': { schema: UpdateProfileSchema } } },
+  },
+  responses: {
+    200: {
+      content: { 'application/json': { schema: UpdateProfileResponseSchema } },
+      description: 'Updated user',
+    },
+    401: {
+      content: { 'application/json': { schema: ErrorResponseSchema } },
+      description: 'Unauthorized',
     },
   },
 });
@@ -243,6 +264,23 @@ export const authRoute = new OpenAPIHono<AppEnv>()
     if (!user) {
       return c.json({ user: null }, 200);
     }
+
+    return c.json({ user }, 200);
+  })
+  .openapi(updateMe, async (c) => {
+    const sessionId = getCookie(c, SESSION_COOKIE_NAME);
+    if (!sessionId) return c.json({ error: 'Unauthorized' }, 401);
+    const session = await getSession(sessionId);
+    if (!session) return c.json({ error: 'Unauthorized' }, 401);
+
+    const { name } = c.req.valid('json');
+    const db = getDb();
+    await db.update(users).set({ name }).where(eq(users.id, session.userId));
+
+    const [user] = await db
+      .select({ id: users.id, email: users.email, name: users.name })
+      .from(users)
+      .where(eq(users.id, session.userId));
 
     return c.json({ user }, 200);
   })

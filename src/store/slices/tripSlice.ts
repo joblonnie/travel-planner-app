@@ -35,7 +35,6 @@ export const createTripSlice: StateCreator<TripStore, [], [], TripSlice> = (set)
       return {
         trips: [...state.trips, newTrip],
         currentTripId: newTrip.id,
-        currentPage: 'planner',
       };
     }),
 
@@ -49,7 +48,7 @@ export const createTripSlice: StateCreator<TripStore, [], [], TripSlice> = (set)
     }),
 
   switchTrip: (tripId) =>
-    set({ currentTripId: tripId, currentPage: 'planner' }),
+    set({ currentTripId: tripId }),
 
   duplicateTrip: (tripId) =>
     set((state) => {
@@ -90,7 +89,6 @@ export const createTripSlice: StateCreator<TripStore, [], [], TripSlice> = (set)
         set((state) => ({
           trips: [...state.trips, ...importedTrips],
           currentTripId: importedTrips[0]?.id ?? state.currentTripId,
-          currentPage: 'planner' as const,
         }));
         return true;
       }
@@ -119,7 +117,6 @@ export const createTripSlice: StateCreator<TripStore, [], [], TripSlice> = (set)
       set((state) => ({
         trips: [...state.trips, newTrip],
         currentTripId: newTripId,
-        currentPage: 'planner' as const,
       }));
       return true;
     } catch {

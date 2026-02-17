@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Plus, Trash2, Copy, MapPin, Calendar, ArrowLeft } from 'lucide-react';
 import { useTripStore } from '@/store/useTripStore.ts';
 import { useI18n, type TranslationKey } from '@/i18n/useI18n.ts';
@@ -8,12 +9,12 @@ import { useDeleteTrip } from '@/hooks/useTrips.ts';
 import type { Trip } from '@/types/index.ts';
 
 export function TripListPage() {
+  const navigate = useNavigate();
   const trips = useTripStore((s) => s.trips);
   const currentTripId = useTripStore((s) => s.currentTripId);
   const switchTrip = useTripStore((s) => s.switchTrip);
   const deleteTrip = useTripStore((s) => s.deleteTrip);
   const duplicateTrip = useTripStore((s) => s.duplicateTrip);
-  const setCurrentPage = useTripStore((s) => s.setCurrentPage);
   const { t } = useI18n();
   const { format } = useCurrency();
   const [showCreate, setShowCreate] = useState(false);
@@ -22,7 +23,7 @@ export function TripListPage() {
 
   const handleSwitch = (tripId: string) => {
     switchTrip(tripId);
-    setCurrentPage('planner');
+    navigate('/');
   };
 
   const handleDelete = (tripId: string) => {
@@ -65,7 +66,7 @@ export function TripListPage() {
         </div>
         <div className="flex gap-2">
           <button
-            onClick={() => setCurrentPage('planner')}
+            onClick={() => navigate('/')}
             className="flex items-center gap-1.5 px-3 py-2 bg-gray-100 text-gray-600 rounded-xl text-xs font-bold hover:bg-gray-200 transition-colors min-h-[44px]"
           >
             <ArrowLeft size={14} />

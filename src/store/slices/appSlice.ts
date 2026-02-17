@@ -11,7 +11,6 @@ export interface AuthUser {
 }
 
 export interface AppSlice {
-  currentPage: 'planner' | 'budget' | 'trips';
   language: Language;
   currency: Currency;
   exchangeRate: number;
@@ -24,7 +23,6 @@ export interface AppSlice {
   isAuthenticated: boolean;
   tripsLoaded: boolean;
 
-  setCurrentPage: (page: 'planner' | 'budget' | 'trips') => void;
   setLanguage: (lang: Language) => void;
   setCurrency: (currency: Currency) => void;
   setExchangeRate: (rate: number) => void;
@@ -35,7 +33,6 @@ export interface AppSlice {
 }
 
 export const createAppSlice: StateCreator<TripStore, [], [], AppSlice> = (set) => ({
-  currentPage: 'planner' as const,
   language: 'ko' as Language,
   currency: 'EUR' as Currency,
   exchangeRate: 1450,
@@ -48,7 +45,6 @@ export const createAppSlice: StateCreator<TripStore, [], [], AppSlice> = (set) =
   isAuthenticated: false,
   tripsLoaded: false,
 
-  setCurrentPage: (page) => set({ currentPage: page }),
   setLanguage: (language) => set({ language }),
   setCurrency: (currency) => set({ currency }),
   setExchangeRate: (exchangeRate) => set({ exchangeRate }),

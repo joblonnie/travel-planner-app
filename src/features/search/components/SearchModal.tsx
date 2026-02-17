@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { X, Search, MapPin, Calendar } from 'lucide-react';
 import { useTripStore } from '@/store/useTripStore.ts';
 import { useTripData } from '@/store/useCurrentTrip.ts';
@@ -49,11 +50,11 @@ export function SearchModal({ onClose }: Props) {
         .filter(Boolean) as { day: typeof days[number]; dayIndex: number; activities: typeof days[number]['activities'] }[]
     : [];
 
-  const setCurrentPage = useTripStore((s) => s.setCurrentPage);
+  const navigate = useNavigate();
 
   const handleSelect = (dayIndex: number) => {
     setCurrentDay(dayIndex);
-    setCurrentPage('planner');
+    navigate('/');
     onClose();
   };
 

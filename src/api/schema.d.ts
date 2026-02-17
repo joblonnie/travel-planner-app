@@ -92,7 +92,8 @@ export interface paths {
         delete?: never;
         options?: never;
         head?: never;
-        patch?: never;
+        /** Update current user profile */
+        patch: operations["updateMe"];
         trace?: never;
     };
     "/api/auth/logout": {
@@ -202,6 +203,16 @@ export interface components {
                 email: string;
                 name: string | null;
             } | null;
+        };
+        UpdateProfileResponse: {
+            user: {
+                id: string;
+                email: string;
+                name: string | null;
+            };
+        };
+        UpdateProfile: {
+            name: string;
         };
         LogoutResponse: {
             success: boolean;
@@ -580,6 +591,39 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["UserResponse"];
+                };
+            };
+        };
+    };
+    updateMe: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        requestBody?: {
+            content: {
+                "application/json": components["schemas"]["UpdateProfile"];
+            };
+        };
+        responses: {
+            /** @description Updated user */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["UpdateProfileResponse"];
+                };
+            };
+            /** @description Unauthorized */
+            401: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
         };

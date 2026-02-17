@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { X, Check, Plane } from 'lucide-react';
 import { useTripStore } from '@/store/useTripStore.ts';
 import { useI18n, type TranslationKey } from '@/i18n/useI18n.ts';
@@ -13,6 +14,7 @@ interface Props {
 const emojiOptions = ['✈️', '🏖️', '🗺️', '🌍', '🏔️', '🌸', '🎒', '❤️', '🌴', '🏰'];
 
 export function TripCreateModal({ onClose }: Props) {
+  const navigate = useNavigate();
   const { t } = useI18n();
   const createTrip = useTripStore((s) => s.createTrip);
   const { currency, symbol, rate } = useCurrency();
@@ -50,6 +52,7 @@ export function TripCreateModal({ onClose }: Props) {
     };
 
     createTrip(trip);
+    navigate('/');
     onClose();
   };
 
