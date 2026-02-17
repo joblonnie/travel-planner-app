@@ -1,4 +1,3 @@
-import { randomBytes } from 'node:crypto';
 import { eq } from 'drizzle-orm';
 import { getDb } from '../db/index.js';
 import { sessions } from '../db/schema.js';
@@ -7,7 +6,9 @@ const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;   // 30 days
 const EXTEND_THRESHOLD_MS = 24 * 60 * 60 * 1000;    // 1 day
 
 export function generateSessionId(): string {
-  return randomBytes(20).toString('hex'); // 40-char hex
+  const bytes = new Uint8Array(20);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
 }
 
 export async function createSession(userId: string): Promise<string> {
