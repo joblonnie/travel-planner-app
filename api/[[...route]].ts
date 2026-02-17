@@ -1,14 +1,5 @@
-import { Hono } from 'hono';
-import { handle } from 'hono/vercel';
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-const app = new Hono().basePath('/api');
-
-app.get('/ping', (c) => c.json({ ok: true, time: new Date().toISOString() }));
-
-// Lazy import the full app only when needed
-app.all('/*', async (c) => {
-  const { app: fullApp } = await import('./_server/app.js');
-  return fullApp.fetch(c.req.raw);
-});
-
-export default handle(app);
+export default function handler(req: VercelRequest, res: VercelResponse) {
+  return res.json({ ok: true, path: req.url, time: new Date().toISOString() });
+}
