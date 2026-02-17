@@ -1,7 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import { eq } from 'drizzle-orm';
-import { getDb } from '../db/index.ts';
-import { sessions } from '../db/schema.ts';
+import { getDb } from '../_db/index.ts';
+import { sessions } from '../_db/schema.ts';
 
 const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000;   // 30 days
 const EXTEND_THRESHOLD_MS = 24 * 60 * 60 * 1000;    // 1 day

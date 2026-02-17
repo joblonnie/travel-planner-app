@@ -2,17 +2,17 @@ import { OpenAPIHono, createRoute } from '@hono/zod-openapi';
 import { setCookie, getCookie, deleteCookie } from 'hono/cookie';
 import { Google, generateCodeVerifier, generateState } from 'arctic';
 import { eq, and } from 'drizzle-orm';
-import { getDb } from '../db/index.ts';
-import { users } from '../db/schema.ts';
+import { getDb } from '../_db/index.ts';
+import { users } from '../_db/schema.ts';
 import {
   createSession,
   deleteSession,
   SESSION_COOKIE_NAME,
   COOKIE_OPTIONS,
-} from '../lib/session.ts';
-import { optionalAuth } from '../middleware/auth.ts';
-import { UserResponseSchema, LogoutResponseSchema } from '../schemas/auth.ts';
-import { ErrorResponseSchema } from '../schemas/common.ts';
+} from '../_lib/session.ts';
+import { optionalAuth } from '../_middleware/auth.ts';
+import { UserResponseSchema, LogoutResponseSchema } from '../_schemas/auth.ts';
+import { ErrorResponseSchema } from '../_schemas/common.ts';
 
 function getGoogle() {
   return new Google(

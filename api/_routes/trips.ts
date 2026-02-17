@@ -6,10 +6,10 @@ import {
   TripResponseSchema,
   TripParamsSchema,
   DeleteResponseSchema,
-} from '../schemas/trips.ts';
-import { ErrorResponseSchema } from '../schemas/common.ts';
-import { getDb } from '../db/index.ts';
-import { trips } from '../db/schema.ts';
+} from '../_schemas/trips.ts';
+import { ErrorResponseSchema } from '../_schemas/common.ts';
+import { getDb } from '../_db/index.ts';
+import { trips } from '../_db/schema.ts';
 
 // --- Route definitions ---
 

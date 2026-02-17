@@ -1,6 +1,6 @@
 import type { Context, Next } from 'hono';
 import { getCookie } from 'hono/cookie';
-import { getSession, SESSION_COOKIE_NAME } from '../lib/session.ts';
+import { getSession, SESSION_COOKIE_NAME } from '../_lib/session.ts';
 
 /**
  * Require a valid session. Returns 401 if not authenticated.
