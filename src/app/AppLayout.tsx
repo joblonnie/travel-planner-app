@@ -38,7 +38,7 @@ export function AppLayout() {
   const { currency, nextCurrency, symbol } = useCurrency();
   const [showSettings, setShowSettings] = useState(false);
   const [showCamera, setShowCamera] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth >= 640);
   const [showSearch, setShowSearch] = useState(false);
   const { setPendingCameraExpense } = useTripActions();
 
@@ -143,11 +143,11 @@ export function AppLayout() {
         </div>
 
         <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
-          {/* Sidebar Toggle (planner only, desktop) */}
+          {/* Sidebar Toggle (planner only) */}
           {isPlanner && (
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className={`hidden sm:flex items-center justify-center p-2.5 rounded-full transition-all duration-200 border min-w-[44px] min-h-[44px] cursor-pointer ${
+              className={`flex items-center justify-center p-2.5 rounded-full transition-all duration-200 border min-w-[44px] min-h-[44px] cursor-pointer ${
                 sidebarOpen
                   ? 'bg-primary/10 text-primary border-primary/20'
                   : 'bg-warm-100/80 text-warm-400 border-warm-200/50 hover:bg-primary/10 hover:text-primary'
@@ -221,7 +221,7 @@ export function AppLayout() {
           </button>
           <button
             onClick={nextCurrency}
-            className="hidden sm:flex items-center gap-1 px-3 py-1.5 bg-secondary/10 text-secondary-dark rounded-full text-[11px] font-semibold hover:bg-secondary/20 transition-all duration-200 border border-secondary/30"
+            className="flex items-center gap-1 px-3 py-1.5 bg-secondary/10 text-secondary-dark rounded-full text-[11px] font-semibold hover:bg-secondary/20 transition-all duration-200 border border-secondary/30"
             title={t('currency.toggle')}
           >
             <ArrowLeftRight size={11} />
@@ -262,21 +262,25 @@ export function AppLayout() {
       <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-30 bg-bottom-nav-bg backdrop-blur-2xl border-t border-card-border shadow-[0_-2px_10px_rgba(0,0,0,0.05)] pb-[env(safe-area-inset-bottom)]" aria-label={t('nav.planner')}>
         <div className="flex items-center justify-around px-2 h-14">
           <button
-            onClick={() => {
-              if (!isPlanner) {
-                navigate('/');
-                setSidebarOpen(true);
-              } else {
-                setSidebarOpen(!sidebarOpen);
-              }
-            }}
+            onClick={() => navigate('/trips')}
             className={`flex flex-col items-center gap-0.5 min-w-[48px] min-h-[48px] py-1.5 rounded-xl transition-colors focus-visible:ring-2 focus-visible:ring-primary/30 ${
-              isPlanner && sidebarOpen ? 'text-primary' : 'text-gray-400 active:text-primary'
+              isTrips ? 'text-primary' : 'text-gray-400 active:text-primary'
             }`}
-            aria-label={t('sidebar.schedule')}
+            aria-label={t('trips.manageTrips' as TranslationKey)}
           >
-            <PanelLeftOpen size={20} />
-            <span className="text-[10px] font-medium">{t('sidebar.schedule')}</span>
+            <Map size={20} />
+            <span className="text-[10px] font-medium">{t('trips.manageTrips' as TranslationKey)}</span>
+          </button>
+
+          <button
+            onClick={() => navigate('/')}
+            className={`flex flex-col items-center gap-0.5 min-w-[48px] min-h-[48px] py-1.5 rounded-xl transition-colors focus-visible:ring-2 focus-visible:ring-primary/30 ${
+              isPlanner ? 'text-primary' : 'text-gray-400 active:text-primary'
+            }`}
+            aria-label={t('nav.planner')}
+          >
+            <CalendarDays size={20} />
+            <span className="text-[10px] font-medium">{t('nav.planner')}</span>
           </button>
 
           <button
@@ -289,12 +293,14 @@ export function AppLayout() {
           </button>
 
           <button
-            onClick={nextCurrency}
-            className="flex flex-col items-center gap-0.5 min-w-[48px] min-h-[48px] py-1.5 rounded-xl text-gray-400 active:text-amber-500 transition-colors focus-visible:ring-2 focus-visible:ring-amber-300/50"
-            aria-label={t('currency.toggle')}
+            onClick={() => navigate('/budget')}
+            className={`flex flex-col items-center gap-0.5 min-w-[48px] min-h-[48px] py-1.5 rounded-xl transition-colors focus-visible:ring-2 focus-visible:ring-primary/30 ${
+              isBudget ? 'text-primary' : 'text-gray-400 active:text-primary'
+            }`}
+            aria-label={t('nav.budget')}
           >
-            <ArrowLeftRight size={20} />
-            <span className="text-[10px] font-semibold">{symbol} {currency}</span>
+            <Wallet size={20} />
+            <span className="text-[10px] font-medium">{t('nav.budget')}</span>
           </button>
 
           <button
@@ -304,17 +310,6 @@ export function AppLayout() {
           >
             <Search size={20} />
             <span className="text-[10px] font-medium">{t('feature.search')}</span>
-          </button>
-
-          <button
-            onClick={() => navigate('/trips')}
-            className={`flex flex-col items-center gap-0.5 min-w-[48px] min-h-[48px] py-1.5 rounded-xl transition-colors focus-visible:ring-2 focus-visible:ring-primary/30 ${
-              isTrips ? 'text-primary' : 'text-gray-400 active:text-primary'
-            }`}
-            aria-label={t('trips.manageTrips' as TranslationKey)}
-          >
-            <Map size={20} />
-            <span className="text-[10px] font-medium">{t('trips.manageTrips' as TranslationKey)}</span>
           </button>
         </div>
       </nav>
