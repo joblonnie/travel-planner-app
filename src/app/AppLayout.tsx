@@ -19,7 +19,6 @@ const TripSettingsModal = lazy(() => import('@/features/trips/components/TripSet
 const CameraOcrModal = lazy(() => import('@/features/budget/components/CameraOcrModal.tsx').then(m => ({ default: m.CameraOcrModal })));
 const SearchModal = lazy(() => import('@/features/search/components/SearchModal.tsx').then(m => ({ default: m.SearchModal })));
 const InvitationsBadge = lazy(() => import('@/features/sharing/components/InvitationsBadge.tsx').then(m => ({ default: m.InvitationsBadge })));
-const ExchangeCalculatorModal = lazy(() => import('@/components/ExchangeCalculatorModal.tsx').then(m => ({ default: m.ExchangeCalculatorModal })));
 
 export function AppLayout() {
   useExchangeRates();
@@ -42,7 +41,6 @@ export function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth >= 640);
   const [showSearch, setShowSearch] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
-  const [showCalc, setShowCalc] = useState(false);
   const { setPendingCameraExpense } = useTripActions();
 
   // Auto-open settings modal when navigated with ?settings=true
@@ -277,7 +275,6 @@ export function AppLayout() {
       {showSettings && <Suspense fallback={<LoadingSpinner />}><TripSettingsModal onClose={() => setShowSettings(false)} /></Suspense>}
       {showCamera && <Suspense fallback={<LoadingSpinner />}><CameraOcrModal onClose={() => setShowCamera(false)} onAddExpense={handleCameraExpense} /></Suspense>}
       {showSearch && <Suspense fallback={<LoadingSpinner />}><SearchModal onClose={() => setShowSearch(false)} /></Suspense>}
-      {showCalc && <Suspense fallback={<LoadingSpinner />}><ExchangeCalculatorModal onClose={() => setShowCalc(false)} /></Suspense>}
 
       {/* Mobile Bottom Navigation — context-aware */}
       <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-30 bg-bottom-nav-bg backdrop-blur-2xl border-t border-card-border shadow-[0_-2px_10px_rgba(0,0,0,0.05)] pb-[env(safe-area-inset-bottom)]" aria-label={t('nav.planner')}>
@@ -296,7 +293,7 @@ export function AppLayout() {
 
               {/* 환율 계산기 */}
               <button
-                onClick={() => setShowCalc(true)}
+                onClick={() => setShowCamera(true)}
                 className="flex flex-col items-center gap-0.5 min-w-[48px] min-h-[48px] py-1.5 rounded-xl text-gray-400 active:text-primary transition-colors"
                 aria-label={t('nav.exchange' as TranslationKey)}
               >
@@ -330,7 +327,7 @@ export function AppLayout() {
 
               {/* 환율 계산기 */}
               <button
-                onClick={() => setShowCalc(true)}
+                onClick={() => setShowCamera(true)}
                 className="flex flex-col items-center gap-0.5 min-w-[48px] min-h-[48px] py-1.5 rounded-xl text-gray-400 active:text-primary transition-colors"
                 aria-label={t('nav.exchange' as TranslationKey)}
               >
