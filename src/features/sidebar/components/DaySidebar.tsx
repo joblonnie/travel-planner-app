@@ -27,6 +27,8 @@ import { DestinationFormModal } from './DestinationFormModal.tsx';
 import { FlightFormModal } from './FlightFormModal.tsx';
 import { ImmigrationFormModal } from './ImmigrationFormModal.tsx';
 import { TransportFormModal } from './TransportFormModal.tsx';
+import { AccommodationFormModal } from '@/features/planner/components/AccommodationFormModal.tsx';
+import { destinations as staticDestinations } from '@/data/destinations.ts';
 import type { DayPlan, FlightInfo, ImmigrationSchedule, InterCityTransport } from '@/types/index.ts';
 
 /* ─── Destination accent colors ─── */
@@ -474,6 +476,11 @@ export function DaySidebar({ onClose }: { onClose: () => void }) {
   // Destination (place) modal state
   const [showDestModal, setShowDestModal] = useState(false);
 
+  // Accommodation modal state
+  const [showAccomModal, setShowAccomModal] = useState(false);
+  const customDestinations = useTripData((t) => t.customDestinations);
+  const allDestinations = [...staticDestinations, ...customDestinations];
+
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 400, tolerance: 8 } }),
@@ -560,6 +567,15 @@ export function DaySidebar({ onClose }: { onClose: () => void }) {
                   <MapPin size={12} />
                   {t('place.addPlace')}
                 </button>
+                {days.length > 0 && (
+                  <button
+                    onClick={() => setShowAccomModal(true)}
+                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold text-purple-500 hover:bg-purple-50/80 transition-all border border-purple-200/50"
+                  >
+                    <Hotel size={12} />
+                    {t('accommodation.title' as TranslationKey)}
+                  </button>
+                )}
                 <button
                   onClick={onClose}
                   className="p-2 rounded-lg text-gray-500 hover:text-gray-700 hover:bg-gray-100/80 transition-all min-w-[36px] min-h-[36px] flex items-center justify-center focus-visible:ring-2 focus-visible:ring-primary/30"
@@ -805,6 +821,19 @@ export function DaySidebar({ onClose }: { onClose: () => void }) {
           onClose={() => setTransportModal(null)}
         />
       )}
+      {showAccomModal && days[currentDayIndex] && (() => {
+        const currentDay = days[currentDayIndex];
+        const dest = allDestinations.find((d) => d.id === currentDay.destinationId);
+        return (
+          <AccommodationFormModal
+            destinationId={currentDay.destinationId}
+            destinationLat={dest?.lat}
+            destinationLng={dest?.lng}
+            accommodation={currentDay.accommodation}
+            onClose={() => setShowAccomModal(false)}
+          />
+        );
+      })()}
     </>
   );
 }

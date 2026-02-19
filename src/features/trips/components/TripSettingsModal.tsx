@@ -258,7 +258,7 @@ export function TripSettingsModal({ onClose }: Props) {
               <Globe size={12} /> {t('settings.language')}
             </label>
             <div className="flex gap-1 bg-gray-100/80 p-1 rounded-xl">
-              {(['ko', 'en', 'es'] as const).map((lang) => (
+              {(['ko', 'en'] as const).map((lang) => (
                 <button
                   key={lang}
                   onClick={() => setLanguage(lang)}

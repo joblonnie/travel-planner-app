@@ -13,7 +13,7 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { Calendar, Navigation, Plus, Clock, Compass, Hotel, ChevronLeft, ChevronRight, ChevronUp, AlertTriangle, ArrowUpDown, Footprints, MapPin } from 'lucide-react';
+import { Calendar, Navigation, Plus, Clock, Compass, Hotel, ChevronLeft, ChevronRight, ChevronUp, AlertTriangle, ArrowUpDown, Footprints, MapPin, Coffee, Pencil, Trash2 } from 'lucide-react';
 import { useState, useMemo, memo, useEffect, useCallback } from 'react';
 import { useTripData } from '@/store/useCurrentTrip.ts';
 import { useTripActions } from '@/hooks/useTripActions.ts';
@@ -21,8 +21,8 @@ import { getTotalCost, getDayCost, getDayActualCost, getTotalExpenses, getAllDes
 import { destinations as staticDestinations } from '@/data/destinations.ts';
 import { ActivityCard } from './ActivityCard.tsx';
 import { MapView } from './MapView.tsx';
-import { DestinationInfo } from './DestinationInfo.tsx';
 import { ActivityFormModal } from './ActivityFormModal.tsx';
+import { AccommodationFormModal } from './AccommodationFormModal.tsx';
 import { WeatherWidget } from './WeatherWidget.tsx';
 import { WeatherAnimation } from './WeatherAnimation.tsx';
 import { useLocalTime } from '../hooks/useLocalTime.ts';
@@ -109,7 +109,7 @@ export function DayContent() {
   const days = useTripData((t) => t.days);
   const currentDayIndex = useTripData((t) => t.currentDayIndex);
   const totalBudget = useTripData((t) => t.totalBudget);
-  const { reorderActivities, goToNextDay, goToPrevDay, setCurrentDay } = useTripActions();
+  const { reorderActivities, goToNextDay, goToPrevDay, setCurrentDay, addActivity, updateAccommodationByDestination } = useTripActions();
   const allDestinations = useTripData((t) => getAllDestinations(t, staticDestinations));
   const totalCostVal = useTripData((t) => getTotalCost(t));
   const totalExpensesVal = useTripData((t) => getTotalExpenses(t));
@@ -125,6 +125,7 @@ export function DayContent() {
   const [insertAtIndex, setInsertAtIndex] = useState<number | undefined>(undefined);
   const [reorderMode, setReorderMode] = useState(false);
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [showAccomModal, setShowAccomModal] = useState(false);
   const { format } = useCurrency();
 
   const handleScroll = useCallback(() => {
@@ -299,7 +300,7 @@ export function DayContent() {
                 <button
                   onClick={goToPrevDay}
                   disabled={currentDayIndex <= 0}
-                  className="flex items-center gap-0.5 text-[11px] text-white font-medium bg-white/15 hover:bg-white/25 backdrop-blur-md px-2 py-1.5 rounded-full border border-white/15 transition-all disabled:opacity-30 disabled:cursor-default min-w-[44px] min-h-[44px] justify-center cursor-pointer focus-visible:ring-2 focus-visible:ring-white/50"
+                  className="flex items-center gap-0.5 text-[11px] text-white font-medium bg-white/25 hover:bg-white/35 backdrop-blur-md px-2 py-1.5 rounded-full border border-white/20 transition-all disabled:opacity-30 disabled:cursor-default min-w-[44px] min-h-[44px] justify-center cursor-pointer focus-visible:ring-2 focus-visible:ring-white/50 shadow-sm"
                   aria-label={t('day.prevDay' as TranslationKey)}
                 >
                   <ChevronLeft size={14} />
@@ -307,7 +308,7 @@ export function DayContent() {
                 <button
                   onClick={goToNextDay}
                   disabled={currentDayIndex >= days.length - 1}
-                  className="flex items-center gap-0.5 text-[11px] text-white font-medium bg-white/15 hover:bg-white/25 backdrop-blur-md px-2 py-1.5 rounded-full border border-white/15 transition-all disabled:opacity-30 disabled:cursor-default min-w-[44px] min-h-[44px] justify-center cursor-pointer focus-visible:ring-2 focus-visible:ring-white/50"
+                  className="flex items-center gap-0.5 text-[11px] text-white font-medium bg-white/25 hover:bg-white/35 backdrop-blur-md px-2 py-1.5 rounded-full border border-white/20 transition-all disabled:opacity-30 disabled:cursor-default min-w-[44px] min-h-[44px] justify-center cursor-pointer focus-visible:ring-2 focus-visible:ring-white/50 shadow-sm"
                   aria-label={t('day.nextDay' as TranslationKey)}
                 >
                   <ChevronRight size={14} />
@@ -317,16 +318,16 @@ export function DayContent() {
               <div className="flex items-center gap-1.5">
                 <button
                   onClick={() => { setInsertAtIndex(undefined); setShowAdd(true); }}
-                  className="flex items-center gap-1 text-[11px] text-white font-medium bg-white/15 hover:bg-white/25 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/15 transition-all"
+                  className="flex items-center gap-1 text-[11px] text-white font-semibold bg-white/30 hover:bg-white/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/25 transition-all shadow-sm"
                 >
-                  <Plus size={12} />
+                  <Plus size={13} />
                   {t('day.addActivity')}
                 </button>
                 <button
                   onClick={() => { setInsertAtIndex(undefined); setShowAddPlace(true); }}
-                  className="flex items-center gap-1 text-[11px] text-white/80 font-medium bg-white/10 hover:bg-white/20 backdrop-blur-md px-2.5 py-1.5 rounded-full border border-white/10 transition-all"
+                  className="flex items-center gap-1 text-[11px] text-white font-semibold bg-white/25 hover:bg-white/35 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/20 transition-all shadow-sm"
                 >
-                  <MapPin size={11} />
+                  <MapPin size={12} />
                   {t('day.addPlace' as TranslationKey)}
                 </button>
               </div>
@@ -376,13 +377,28 @@ export function DayContent() {
         )}
 
         {/* ── Accommodation info ── */}
-        {currentDay.accommodation?.name && (
+        {currentDay.accommodation?.name ? (
           <div className="bg-purple-50/40 backdrop-blur-xl rounded-2xl border border-purple-200/30 px-4 py-3.5 shadow-[0_2px_10px_rgba(139,92,246,0.06)] animate-section">
             <div className="flex items-center gap-2 mb-1.5">
               <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-purple-500 to-violet-500 flex items-center justify-center shadow-sm">
                 <Hotel size={12} className="text-white" />
               </div>
               <span className="text-[10px] font-bold text-purple-600 uppercase tracking-wider">{t('accommodation.title' as TranslationKey)}</span>
+              <div className="ml-auto flex items-center gap-1">
+                <button onClick={() => setShowAccomModal(true)} className="p-1.5 text-purple-400 hover:text-purple-600 hover:bg-purple-100/60 rounded-lg transition-all">
+                  <Pencil size={12} />
+                </button>
+                <button
+                  onClick={() => {
+                    if (confirm(t('accommodation.deleteConfirm' as TranslationKey))) {
+                      updateAccommodationByDestination(currentDay.destinationId, undefined);
+                    }
+                  }}
+                  className="p-1.5 text-purple-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                >
+                  <Trash2 size={12} />
+                </button>
+              </div>
             </div>
             <p className="text-sm font-bold text-gray-800">{currentDay.accommodation.name}</p>
             {currentDay.accommodation.address && (
@@ -395,7 +411,30 @@ export function DayContent() {
             {currentDay.accommodation.confirmationNumber && (
               <p className="text-[10px] text-purple-500 font-mono mt-1.5 bg-purple-50 inline-block px-2 py-0.5 rounded-md">#{currentDay.accommodation.confirmationNumber}</p>
             )}
+            {currentDay.accommodation.notes && (
+              <p className="text-[11px] text-gray-500 mt-1.5 bg-purple-50/50 px-2.5 py-1 rounded-lg">{currentDay.accommodation.notes}</p>
+            )}
+            {currentDay.accommodation.lat && currentDay.accommodation.lng && (
+              <div className="mt-2.5 pt-2 border-t border-purple-100/40">
+                <a
+                  href={`https://www.google.com/maps/dir/?api=1&destination=${currentDay.accommodation.lat},${currentDay.accommodation.lng}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 px-2.5 py-1.5 text-[11px] font-semibold text-purple-600 bg-purple-100/60 hover:bg-purple-100 rounded-lg transition-all"
+                >
+                  <Navigation size={12} />
+                  {t('accommodation.directions' as TranslationKey)}
+                </a>
+              </div>
+            )}
           </div>
+        ) : (
+          <button
+            onClick={() => setShowAccomModal(true)}
+            className="w-full py-3 border border-dashed border-purple-200 rounded-2xl text-[11px] text-purple-400 hover:text-purple-600 hover:border-purple-300 hover:bg-purple-50/30 transition-all flex items-center justify-center gap-1.5"
+          >
+            <Hotel size={13} /> {t('accommodation.add' as TranslationKey)}
+          </button>
         )}
 
         {/* Activities (Drag & Drop) */}
@@ -458,7 +497,29 @@ export function DayContent() {
             <div className="text-center py-8 text-gray-400">
               <Calendar size={32} className="mx-auto mb-2 opacity-30" />
               <p className="text-sm font-medium">{t('day.noActivities')}</p>
-              <p className="text-xs mt-1">{t('day.noActivitiesDesc')}</p>
+              <p className="text-xs mt-1 mb-4">{t('day.noActivitiesDesc')}</p>
+              <div className="flex gap-2 max-w-sm mx-auto">
+                <button
+                  onClick={() => { setInsertAtIndex(undefined); setShowAdd(true); }}
+                  className="flex-1 py-2.5 border border-dashed border-gray-400 rounded-xl text-gray-500 hover:border-primary/50 hover:text-primary transition-all flex flex-col items-center justify-center gap-0.5 hover:bg-primary/5 shadow-sm"
+                >
+                  <span className="flex items-center gap-1.5 text-xs">
+                    <Plus size={14} />
+                    {t('day.addActivity')}
+                  </span>
+                  <span className="text-[9px] opacity-50">{t('day.addActivityDesc' as TranslationKey)}</span>
+                </button>
+                <button
+                  onClick={() => { setInsertAtIndex(undefined); setShowAddPlace(true); }}
+                  className="flex-1 py-2.5 border border-dashed border-blue-300 rounded-xl text-blue-500 hover:border-blue-400 hover:text-blue-600 transition-all flex flex-col items-center justify-center gap-0.5 hover:bg-blue-50/30 shadow-sm"
+                >
+                  <span className="flex items-center gap-1.5 text-xs">
+                    <MapPin size={14} />
+                    {t('day.addPlace' as TranslationKey)}
+                  </span>
+                  <span className="text-[9px] opacity-50">{t('day.addPlaceDesc' as TranslationKey)}</span>
+                </button>
+              </div>
             </div>
           ) : (
           <DndContext sensors={reorderMode ? sensors : undefined} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
@@ -495,14 +556,64 @@ export function DayContent() {
                     </div>
                     {/* Insert button between activities */}
                     {!reorderMode && index < currentDay.activities.length - 1 && (
-                      <div className="pl-[72px]">
+                      <div className="pl-[72px] flex items-center gap-1">
                         <InsertButton onClick={() => { setInsertAtIndex(index + 1); setShowAdd(true); }} label={t('day.insertHere' as TranslationKey)} />
+                        {currentDay.accommodation?.name && currentDay.accommodation?.lat && (
+                          <button
+                            onClick={() => {
+                              const accom = currentDay.accommodation!;
+                              addActivity(currentDay.id, {
+                                id: crypto.randomUUID(),
+                                name: `Rest at ${accom.name}`,
+                                nameKo: `${accom.name}에서 휴식`,
+                                time: '',
+                                duration: '1h',
+                                type: 'free',
+                                estimatedCost: 0,
+                                currency: 'EUR',
+                                isBooked: false,
+                                lat: accom.lat,
+                                lng: accom.lng,
+                              }, index + 1);
+                            }}
+                            className="flex items-center gap-1 px-2 py-0.5 text-[10px] text-purple-400 hover:text-purple-600 hover:bg-purple-50 rounded-full transition-all opacity-40 hover:opacity-100"
+                            title={t('accommodation.restHere' as TranslationKey)}
+                          >
+                            <Coffee size={10} />
+                            <span className="hidden sm:inline">{t('accommodation.restHere' as TranslationKey)}</span>
+                          </button>
+                        )}
                       </div>
                     )}
                     {/* Insert button after last activity */}
                     {!reorderMode && index === currentDay.activities.length - 1 && (
-                      <div className="pl-[72px]">
+                      <div className="pl-[72px] flex items-center gap-1">
                         <InsertButton onClick={() => { setInsertAtIndex(index + 1); setShowAdd(true); }} label={t('day.insertHere' as TranslationKey)} />
+                        {currentDay.accommodation?.name && currentDay.accommodation?.lat && (
+                          <button
+                            onClick={() => {
+                              const accom = currentDay.accommodation!;
+                              addActivity(currentDay.id, {
+                                id: crypto.randomUUID(),
+                                name: `Rest at ${accom.name}`,
+                                nameKo: `${accom.name}에서 휴식`,
+                                time: '',
+                                duration: '1h',
+                                type: 'free',
+                                estimatedCost: 0,
+                                currency: 'EUR',
+                                isBooked: false,
+                                lat: accom.lat,
+                                lng: accom.lng,
+                              }, index + 1);
+                            }}
+                            className="flex items-center gap-1 px-2 py-0.5 text-[10px] text-purple-400 hover:text-purple-600 hover:bg-purple-50 rounded-full transition-all opacity-40 hover:opacity-100"
+                            title={t('accommodation.restHere' as TranslationKey)}
+                          >
+                            <Coffee size={10} />
+                            <span className="hidden sm:inline">{t('accommodation.restHere' as TranslationKey)}</span>
+                          </button>
+                        )}
                       </div>
                     )}
                   </div>
@@ -513,33 +624,7 @@ export function DayContent() {
           </DndContext>
           )}
 
-          {/* Bottom add buttons */}
-          <div className="flex gap-2 mt-2">
-            <button
-              onClick={() => { setInsertAtIndex(undefined); setShowAdd(true); }}
-              className="flex-1 py-2.5 border border-dashed border-gray-300/80 rounded-xl text-gray-400 hover:border-primary/30 hover:text-primary transition-all flex flex-col items-center justify-center gap-0.5 hover:bg-primary/5"
-            >
-              <span className="flex items-center gap-1.5 text-xs">
-                <Plus size={14} />
-                {t('day.addActivity')}
-              </span>
-              <span className="text-[9px] opacity-50">{t('day.addActivityDesc' as TranslationKey)}</span>
-            </button>
-            <button
-              onClick={() => { setInsertAtIndex(undefined); setShowAddPlace(true); }}
-              className="flex-1 py-2.5 border border-dashed border-blue-200/60 rounded-xl text-blue-400 hover:border-blue-400/50 hover:text-blue-500 transition-all flex flex-col items-center justify-center gap-0.5 hover:bg-blue-50/20"
-            >
-              <span className="flex items-center gap-1.5 text-xs">
-                <MapPin size={14} />
-                {t('day.addPlace' as TranslationKey)}
-              </span>
-              <span className="text-[9px] opacity-50">{t('day.addPlaceDesc' as TranslationKey)}</span>
-            </button>
-          </div>
         </div>
-
-        {/* Destination Guide */}
-        {destination && <DestinationInfo destination={destination} />}
       </div>
 
       {showAdd && (
@@ -556,6 +641,16 @@ export function DayContent() {
           insertAtIndex={insertAtIndex}
           placeOnly
           onClose={() => { setShowAddPlace(false); setInsertAtIndex(undefined); }}
+        />
+      )}
+
+      {showAccomModal && (
+        <AccommodationFormModal
+          destinationId={currentDay.destinationId}
+          destinationLat={destination?.lat}
+          destinationLng={destination?.lng}
+          accommodation={currentDay.accommodation}
+          onClose={() => setShowAccomModal(false)}
         />
       )}
 

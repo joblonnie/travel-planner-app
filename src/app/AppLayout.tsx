@@ -70,7 +70,7 @@ export function AppLayout() {
     navigate('/budget');
   };
 
-  const languages = ['ko', 'en', 'es'] as const;
+  const languages = ['ko', 'en'] as const;
   const nextLanguage = () => {
     const idx = languages.indexOf(language);
     setLanguage(languages[(idx + 1) % languages.length]);
