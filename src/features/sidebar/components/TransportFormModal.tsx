@@ -65,9 +65,9 @@ export function TransportFormModal({ fromDayId, toDayId, fromCity, toCity, trans
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-md sm:p-4 animate-backdrop" onClick={onClose}>
       <div className="bg-surface rounded-t-3xl sm:rounded-3xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto border border-gray-300/80 animate-sheet-up sm:animate-modal-pop" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200/80 sticky top-0 bg-white/95 backdrop-blur-sm z-10 rounded-t-3xl">
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 sticky top-0 bg-gradient-to-r from-warm-50 to-accent-cream/30 backdrop-blur-sm z-10 rounded-t-3xl">
           <h3 className="font-bold text-gray-800 flex items-center gap-2.5">
-            <div className="w-7 h-7 bg-gradient-to-br from-amber-500 to-orange-600 rounded-lg flex items-center justify-center shadow-sm">
+            <div className="w-7 h-7 bg-primary rounded-lg flex items-center justify-center shadow-sm">
               {isEdit ? <Pencil size={14} className="text-white" /> : <Train size={14} className="text-white" />}
             </div>
             {isEdit ? t('activity.edit') : t('intercity.add')}
@@ -149,13 +149,21 @@ export function TransportFormModal({ fromDayId, toDayId, fromCity, toCity, trans
 
         {/* Save */}
         <div className="p-4 border-t border-gray-200 bg-gray-50/30 rounded-b-3xl">
-          <button
-            onClick={handleSave}
-            className="w-full bg-gradient-to-r from-amber-500 to-orange-600 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:shadow-lg transition-all active:scale-[0.98]"
-          >
-            {isEdit ? <Pencil size={16} /> : <Plus size={16} />}
-            {isEdit ? t('activityForm.save') : t('activityForm.add')}
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={onClose}
+              className="flex-1 bg-gray-100 text-gray-600 py-3 rounded-xl font-bold hover:bg-gray-200 transition-colors min-h-[44px]"
+            >
+              {t('activity.cancel')}
+            </button>
+            <button
+              onClick={handleSave}
+              className="flex-[2] bg-primary hover:bg-primary-dark text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-primary/20 transition-all active:scale-[0.98] min-h-[44px]"
+            >
+              {isEdit ? <Pencil size={16} /> : <Plus size={16} />}
+              {isEdit ? t('activityForm.save') : t('activityForm.add')}
+            </button>
+          </div>
         </div>
       </div>
     </div>

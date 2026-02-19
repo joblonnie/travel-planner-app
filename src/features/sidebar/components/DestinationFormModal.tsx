@@ -159,7 +159,7 @@ export function DestinationFormModal({ onClose }: Props) {
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-md sm:p-4 animate-backdrop" onClick={onClose}>
       <div className="bg-surface rounded-t-3xl sm:rounded-3xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto border border-gray-200/80 animate-sheet-up sm:animate-modal-pop" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-gray-200 sticky top-0 bg-white/95 backdrop-blur-sm z-10 rounded-t-3xl">
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 sticky top-0 bg-gradient-to-r from-warm-50 to-accent-cream/30 backdrop-blur-sm z-10 rounded-t-3xl">
           <h3 className="font-bold text-gray-800 flex items-center gap-2">
             <MapPin size={16} className="text-emerald-500" />
             {t('place.addPlace')}
@@ -268,15 +268,23 @@ export function DestinationFormModal({ onClose }: Props) {
         </div>
 
         {/* Save button */}
-        <div className="p-4 border-t border-gray-200 bg-gray-50/30 rounded-b-3xl sticky bottom-0">
-          <button
-            onClick={handleSave}
-            disabled={!name.trim()}
-            className="w-full bg-gradient-to-r from-emerald-500 to-green-500 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-emerald-500/20 transition-all disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98]"
-          >
-            <Check size={16} />
-            {t('activityForm.add')}
-          </button>
+        <div className="p-4 border-t border-gray-200 bg-gray-50/30 rounded-b-3xl">
+          <div className="flex gap-2">
+            <button
+              onClick={onClose}
+              className="flex-1 bg-gray-100 text-gray-600 py-3 rounded-xl font-bold hover:bg-gray-200 transition-colors min-h-[44px]"
+            >
+              {t('activity.cancel')}
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={!name.trim()}
+              className="flex-[2] bg-primary hover:bg-primary-dark text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-primary/20 transition-all disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] min-h-[44px]"
+            >
+              <Check size={16} />
+              {t('activityForm.add')}
+            </button>
+          </div>
         </div>
       </div>
     </div>

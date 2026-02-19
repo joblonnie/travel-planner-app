@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
-import { X, Check, Trash2, Hotel, Search } from 'lucide-react';
+import { useState, useRef, useEffect, useCallback, type KeyboardEvent } from 'react';
+import { X, Check, Hotel, Search, Plus, Tag } from 'lucide-react';
 import { GoogleMap } from '@react-google-maps/api';
 import { AdvancedMarker } from '@/components/AdvancedMarker.tsx';
 import { mapId } from '@/hooks/useGoogleMaps.ts';
@@ -29,7 +29,7 @@ export function AccommodationFormModal({ destinationId, destinationLat, destinat
       name: '',
       address: '',
       cost: 0,
-      currency: 'EUR',
+      currency: 'KRW',
     }
   );
 
@@ -81,13 +81,6 @@ export function AccommodationFormModal({ destinationId, destinationLat, destinat
     if (!accom.name.trim()) return;
     updateAccommodationByDestination(destinationId, accom);
     onClose();
-  };
-
-  const handleDelete = () => {
-    if (confirm(t('accommodation.deleteConfirm' as TranslationKey))) {
-      updateAccommodationByDestination(destinationId, undefined);
-      onClose();
-    }
   };
 
   const mapCenter = {
@@ -191,7 +184,7 @@ export function AccommodationFormModal({ destinationId, destinationLat, destinat
             <div>
               <label className="text-[10px] text-purple-400 font-medium">{t('accommodation.costPerNight' as TranslationKey)}</label>
               <div className="flex items-center gap-1">
-                <span className="text-sm text-gray-400 font-bold">€</span>
+                <span className="text-sm text-gray-400 font-bold">₩</span>
                 <input
                   type="number"
                   value={accom.cost}
@@ -221,26 +214,89 @@ export function AccommodationFormModal({ destinationId, destinationLat, destinat
             placeholder={t('accommodation.notesPlaceholder' as TranslationKey)}
             className="w-full text-sm px-3 py-2.5 border border-purple-200/50 rounded-xl bg-white focus:ring-2 focus:ring-purple-200 outline-none"
           />
+
+          {/* Tags (특이사항 칩) */}
+          <div>
+            <label className="text-[10px] text-purple-400 font-medium flex items-center gap-1 mb-1">
+              <Tag size={10} />
+              {t('accommodation.tags' as TranslationKey)}
+            </label>
+            <div className="flex flex-wrap gap-1.5 mb-1.5">
+              {(accom.tags || []).map((tag, i) => (
+                <span key={i} className="inline-flex items-center gap-1 px-2.5 py-1 bg-purple-100/80 text-purple-700 rounded-full text-xs font-medium">
+                  {tag}
+                  <button
+                    type="button"
+                    onClick={() => setAccom({ ...accom, tags: accom.tags?.filter((_, j) => j !== i) })}
+                    className="text-purple-400 hover:text-purple-600 -mr-0.5"
+                  >
+                    <X size={12} />
+                  </button>
+                </span>
+              ))}
+            </div>
+            <div className="flex gap-1.5">
+              <input
+                type="text"
+                placeholder={t('accommodation.tagPlaceholder' as TranslationKey)}
+                className="flex-1 text-sm px-3 py-2 border border-purple-200/50 rounded-xl bg-white focus:ring-2 focus:ring-purple-200 outline-none min-w-0"
+                onKeyDown={(e: KeyboardEvent<HTMLInputElement>) => {
+                  if (e.key === 'Enter' && e.currentTarget.value.trim()) {
+                    e.preventDefault();
+                    const val = e.currentTarget.value.trim();
+                    setAccom({ ...accom, tags: [...(accom.tags || []), val] });
+                    e.currentTarget.value = '';
+                  }
+                }}
+              />
+              <button
+                type="button"
+                onClick={(e) => {
+                  const input = (e.currentTarget.previousElementSibling as HTMLInputElement);
+                  if (input?.value.trim()) {
+                    setAccom({ ...accom, tags: [...(accom.tags || []), input.value.trim()] });
+                    input.value = '';
+                  }
+                }}
+                className="px-3 py-2 bg-purple-100/80 text-purple-600 rounded-xl hover:bg-purple-200/80 transition-all"
+              >
+                <Plus size={16} />
+              </button>
+            </div>
+            {/* Quick tag suggestions */}
+            <div className="flex flex-wrap gap-1 mt-1.5">
+              {['Wi-Fi', '주차 가능', '조식 포함', '수영장', '공항 셔틀', '키친', '세탁기'].filter(s => !(accom.tags || []).includes(s)).slice(0, 5).map((suggestion) => (
+                <button
+                  key={suggestion}
+                  type="button"
+                  onClick={() => setAccom({ ...accom, tags: [...(accom.tags || []), suggestion] })}
+                  className="px-2 py-0.5 text-[10px] text-purple-400 border border-purple-200/50 rounded-full hover:bg-purple-50 hover:text-purple-600 transition-all"
+                >
+                  + {suggestion}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* Footer buttons */}
-        <div className="p-4 border-t border-gray-200 bg-gray-50/30 rounded-b-3xl sticky bottom-0 flex gap-2">
-          {existing && (
+        <div className="p-4 border-t border-gray-200 bg-gray-50/30 rounded-b-3xl space-y-2">
+          <div className="flex gap-2">
             <button
-              onClick={handleDelete}
-              className="px-4 py-3 border border-red-200 text-red-500 rounded-xl font-bold text-sm hover:bg-red-50 transition-all"
+              onClick={onClose}
+              className="flex-1 bg-gray-100 text-gray-600 py-3 rounded-xl font-bold hover:bg-gray-200 transition-colors min-h-[44px]"
             >
-              <Trash2 size={16} />
+              {t('activity.cancel')}
             </button>
-          )}
-          <button
-            onClick={handleSave}
-            disabled={!accom.name.trim()}
-            className="flex-1 bg-gradient-to-r from-purple-500 to-violet-500 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-purple-200 transition-all disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98]"
-          >
-            <Check size={16} />
-            {t('accommodation.save' as TranslationKey)}
-          </button>
+            <button
+              onClick={handleSave}
+              disabled={!accom.name.trim()}
+              className="flex-[2] bg-primary hover:bg-primary-dark text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-primary/20 transition-all disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] min-h-[44px]"
+            >
+              <Check size={16} />
+              {t('accommodation.save' as TranslationKey)}
+            </button>
+          </div>
         </div>
       </div>
     </div>

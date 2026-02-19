@@ -38,7 +38,7 @@ export function InvitationsBadge() {
             {/* Header */}
             <div className="flex items-center justify-between p-4 border-b border-gray-200">
               <div className="flex items-center gap-2.5">
-                <div className="w-7 h-7 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center shadow-sm">
+                <div className="w-7 h-7 bg-primary rounded-lg flex items-center justify-center shadow-sm">
                   <Mail size={14} className="text-white" />
                 </div>
                 <h3 className="font-bold text-gray-800">{t('sharing.pendingInvitations' as TranslationKey)}</h3>

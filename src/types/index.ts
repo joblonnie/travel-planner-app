@@ -91,6 +91,7 @@ export interface AccommodationInfo {
   cost: number;
   currency: string;
   notes?: string;
+  tags?: string[];
   lat?: number;
   lng?: number;
 }
@@ -131,6 +132,7 @@ export interface DayPlan {
   notes: string;
   flights?: FlightInfo[];
   accommodation?: AccommodationInfo;
+  accommodations?: AccommodationInfo[];
 }
 
 export interface ScheduledActivity {
@@ -221,7 +223,7 @@ export interface TripExpense {
   dayId?: string;
   category: 'accommodation' | 'food' | 'transport' | 'attraction' | 'shopping' | 'entertainment' | 'other';
   amount: number;
-  currency: 'EUR';
+  currency: 'KRW';
   description: string;
   date: string;
   owner: ExpenseOwner;

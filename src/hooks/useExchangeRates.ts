@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { useTripStore } from '@/store/useTripStore.ts';
 import { apiClient } from '@/api/client.ts';
 
-const FALLBACK_URL = 'https://api.frankfurter.dev/v1/latest?base=EUR&symbols=KRW,USD,JPY,CNY';
+const FALLBACK_URL = 'https://api.frankfurter.dev/v1/latest?base=KRW&symbols=EUR,USD,JPY,CNY';
 
 async function fetchRates(): Promise<{ rates: Record<string, number> }> {
   // Try our proxy first, fallback to direct API (for local dev without backend)
@@ -20,7 +20,6 @@ async function fetchRates(): Promise<{ rates: Record<string, number> }> {
 
 export function useExchangeRates() {
   const setFetchedRates = useTripStore((s) => s.setFetchedRates);
-  const setExchangeRate = useTripStore((s) => s.setExchangeRate);
 
   const query = useQuery({
     queryKey: ['exchange-rates'],
@@ -34,11 +33,8 @@ export function useExchangeRates() {
   useEffect(() => {
     if (query.data?.rates) {
       setFetchedRates(query.data.rates);
-      if (query.data.rates.KRW) {
-        setExchangeRate(query.data.rates.KRW);
-      }
     }
-  }, [query.data, setFetchedRates, setExchangeRate]);
+  }, [query.data, setFetchedRates]);
 
   return { refreshRates: () => query.refetch() };
 }

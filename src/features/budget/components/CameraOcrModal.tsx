@@ -71,7 +71,7 @@ function extractCurrencyAmount(text: string): ExtractedAmount | null {
     }
   }
 
-  // Fallback: any decimal number (assume EUR for European travel)
+  // Fallback: any decimal number (assume EUR for European travel receipts)
   const fallback = text.match(/(\d{1,6}[.,]\d{2})/);
   if (fallback) {
     const val = parseFloat(fallback[1].replace(',', '.'));
@@ -86,7 +86,7 @@ function extractCurrencyAmount(text: string): ExtractedAmount | null {
 export function CameraOcrModal({ onClose, onAddExpense }: Props) {
   const { t } = useI18n();
   const fetchedRates = useTripStore((s) => s.fetchedRates);
-  const ratesMap: Record<Currency, number> = { EUR: 1, KRW: 1450, USD: 1.08, JPY: 165, CNY: 7.8, ...(fetchedRates as Partial<Record<Currency, number>>) };
+  const ratesMap: Record<Currency, number> = { KRW: 1, EUR: 0.00069, USD: 0.00074, JPY: 0.114, CNY: 0.0054, ...(fetchedRates as Partial<Record<Currency, number>>) };
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
@@ -230,8 +230,9 @@ export function CameraOcrModal({ onClose, onAddExpense }: Props) {
   const ocrCurrentAmount = isManualMode ? parseFloat(manualAmount) || 0 : detectedAmount || 0;
 
   const toKrw = (amount: number, cur: DetectedCurrency): number => {
-    const amountInEur = cur === 'EUR' ? amount : amount / ratesMap[cur];
-    return Math.round(amountInEur * ratesMap['KRW'] * 100) / 100;
+    const rate = ratesMap[cur];
+    if (!rate || rate === 0) return Math.round(amount);
+    return Math.round(amount / rate);
   };
 
   const formatKrw = (krw: number): string => {
@@ -338,7 +339,7 @@ export function CameraOcrModal({ onClose, onAddExpense }: Props) {
               <button
                 onClick={handleCalcAddExpense}
                 disabled={calcParsed <= 0}
-                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-primary to-cta-end text-white py-3.5 rounded-xl font-bold hover:shadow-lg hover:shadow-primary/20 transition-all min-h-[44px] disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98]"
+                className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-white py-3.5 rounded-xl font-bold hover:shadow-lg hover:shadow-primary/20 transition-all min-h-[44px] disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98]"
               >
                 <Plus size={16} /> {t('camera.addExpense')}
               </button>
@@ -466,7 +467,7 @@ export function CameraOcrModal({ onClose, onAddExpense }: Props) {
                     <button
                       onClick={handleOcrAddExpense}
                       disabled={ocrCurrentAmount <= 0}
-                      className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-primary to-cta-end text-white py-3 rounded-xl font-bold hover:shadow-lg hover:shadow-primary/20 transition-all min-h-[44px] disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98]"
+                      className="flex-1 flex items-center justify-center gap-2 bg-primary hover:bg-primary-dark text-white py-3 rounded-xl font-bold hover:shadow-lg hover:shadow-primary/20 transition-all min-h-[44px] disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98]"
                     >
                       <Plus size={16} /> {t('camera.addExpense')}
                     </button>

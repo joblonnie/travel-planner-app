@@ -12,8 +12,8 @@ export interface paths {
             cookie?: never;
         };
         /**
-         * Get current EUR exchange rates
-         * @description Proxies Frankfurter API with 24h edge caching. Returns EUR-based rates for KRW, USD, JPY, CNY.
+         * Get current KRW exchange rates
+         * @description Proxies Frankfurter API with 24h edge caching. Returns KRW-based rates for EUR, USD, JPY, CNY.
          */
         get: operations["getExchangeRates"];
         put?: never;
@@ -267,16 +267,16 @@ export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
         ExchangeRatesResponse: {
-            /** @example EUR */
+            /** @example KRW */
             base: string;
             /** @example 2026-02-17 */
             date: string;
             /**
              * @example {
-             *       "KRW": 1450,
-             *       "USD": 1.08,
-             *       "JPY": 160,
-             *       "CNY": 7.8
+             *       "EUR": 0.00069,
+             *       "USD": 0.00074,
+             *       "JPY": 0.114,
+             *       "CNY": 0.0054
              *     }
              */
             rates: {
@@ -412,7 +412,7 @@ export interface components {
                 category: "accommodation" | "food" | "transport" | "attraction" | "shopping" | "entertainment" | "other";
                 amount: number;
                 /** @enum {string} */
-                currency: "EUR";
+                currency: "KRW";
                 description: string;
                 date: string;
                 owner: string;

@@ -10,50 +10,54 @@
 /* ── Theme variable definitions (per-theme overrides) ── */
 
 :root, [data-theme="cloud-dancer"] {
-  --theme-primary: #1E2D4F;
-  --theme-primary-dark: #152038;
-  --theme-primary-light: #2E4268;
-  --theme-secondary: #8B734A;
-  --theme-secondary-dark: #705C3A;
-  --theme-secondary-light: #A68D60;
-  --theme-accent-rose: #9E7B8A;
-  --theme-accent-rose-dark: #876774;
-  --theme-accent-rose-light: #B89DA8;
-  --theme-accent-cream: #F5F3EE;
-  --theme-accent-cream-dark: #EBE8E2;
-  --theme-dark: #1A1715;
-  --theme-navy: #2D2926;
+  /* Pantone 2026 — powdery pastel palette
+     Ice Melt #A8CFD9 · Peach Dust #EDCDB5 · Almost Aqua #ADC4B0
+     Lemon Icing #F0E5B8 · Orchid Tint #D1B8CE · Nimbus Cloud #B3C3D1
+     Cloud Dancer #F0EEE9 */
+  --theme-primary: #5C8EA0;
+  --theme-primary-dark: #48778A;
+  --theme-primary-light: #78A8B7;
+  --theme-secondary: #C4A285;
+  --theme-secondary-dark: #A88A6F;
+  --theme-secondary-light: #D8BCA3;
+  --theme-accent-rose: #B898B4;
+  --theme-accent-rose-dark: #9B7B97;
+  --theme-accent-rose-light: #D1B8CE;
+  --theme-accent-cream: #E8F0EA;
+  --theme-accent-cream-dark: #D8E5DB;
+  --theme-dark: #2A3640;
+  --theme-navy: #364550;
   --theme-warm-50: #F0EEE9;
-  --theme-warm-100: #E6E4DF;
-  --theme-warm-200: #D4D1CC;
-  --theme-warm-300: #B8B5AF;
-  --theme-warm-400: #8C8880;
+  --theme-warm-100: #E5E2DD;
+  --theme-warm-200: #D0CEC9;
+  --theme-warm-300: #B5B3AE;
+  --theme-warm-400: #8A8882;
   --theme-sidebar-bg: #F0EEE9;
-  --theme-sidebar-active: #F5F3EE;
-  --theme-body-bg: #ECEAE5;
-  --theme-gradient-1: #152038;
-  --theme-gradient-2: #1E2D4F;
-  --theme-gradient-3: #8B734A;
-  --theme-gradient-4: #A68D60;
-  --theme-selection-bg: rgba(30,45,79,0.12);
-  --theme-selection-color: #152038;
-  --theme-focus-ring: #1E2D4F;
-  --theme-scrollbar: #D4D1CC;
-  --theme-scrollbar-hover: #8C8880;
+  --theme-sidebar-active: #F5ECCE;
+  --theme-body-bg: #ECE9E4;
+  --theme-gradient-1: #48778A;
+  --theme-gradient-2: #5C8EA0;
+  --theme-gradient-3: #8DB7A8;
+  --theme-gradient-4: #A8CFD9;
+  --theme-selection-bg: rgba(92,142,160,0.12);
+  --theme-selection-color: #48778A;
+  --theme-focus-ring: #5C8EA0;
+  --theme-scrollbar: #D0CEC9;
+  --theme-scrollbar-hover: #8A8882;
   /* Surface & UI tokens */
-  --theme-cta-end: #7B6A85;
+  --theme-cta-end: #9B7B97;
   --theme-surface: #FEFDFB;
   --theme-surface-alt: rgba(254,253,251,0.7);
-  --theme-card-border: rgba(30,45,79,0.08);
-  --theme-input-ring: rgba(30,45,79,0.15);
-  --theme-input-border: rgba(30,45,79,0.25);
+  --theme-card-border: rgba(92,142,160,0.08);
+  --theme-input-ring: rgba(92,142,160,0.15);
+  --theme-input-border: rgba(92,142,160,0.25);
   --theme-header-bg: rgba(240,238,233,0.75);
   --theme-bottom-nav-bg: rgba(240,238,233,0.85);
   --theme-modal-tint: #F0EEE9;
-  --theme-badge-bg: rgba(30,45,79,0.06);
-  --theme-hero-from: #152038;
-  --theme-hero-via: #1E2D4F;
-  --theme-hero-to: #2E4268;
+  --theme-badge-bg: rgba(92,142,160,0.06);
+  --theme-hero-from: #48778A;
+  --theme-hero-via: #5C8EA0;
+  --theme-hero-to: #78A8B7;
 }
 
 [data-theme="classic-spain"] {
@@ -152,6 +156,10 @@
 
 /* ── Tailwind CSS 4 @theme tokens ── */
 @theme {
+  /* ═══════════════════════════════════════════════════════
+     THEME TOKENS — change per data-theme
+     ═══════════════════════════════════════════════════════ */
+
   /* Primary */
   --color-primary: var(--theme-primary);
   --color-primary-dark: var(--theme-primary-dark);
@@ -200,6 +208,141 @@
   --color-hero-from: var(--theme-hero-from);
   --color-hero-via: var(--theme-hero-via);
   --color-hero-to: var(--theme-hero-to);
+
+  /* ═══════════════════════════════════════════════════════
+     PRIMITIVE TOKENS — fixed palette, same in all themes
+     ═══════════════════════════════════════════════════════ */
+
+  /* ── Gray (neutral UI) ── */
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #f3f4f6;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d1d5db;
+  --color-gray-400: #9ca3af;
+  --color-gray-500: #6b7280;
+  --color-gray-600: #4b5563;
+  --color-gray-700: #374151;
+  --color-gray-800: #1f2937;
+  --color-gray-900: #111827;
+
+  /* ── Red (error / destructive) ── */
+  --color-red-50: #fef2f2;
+  --color-red-100: #fee2e2;
+  --color-red-200: #fecaca;
+  --color-red-400: #f87171;
+  --color-red-500: #ef4444;
+  --color-red-600: #dc2626;
+  --color-red-700: #b91c1c;
+
+  /* ── Emerald (success / completion) ── */
+  --color-emerald-50: #ecfdf5;
+  --color-emerald-100: #d1fae5;
+  --color-emerald-200: #a7f3d0;
+  --color-emerald-400: #34d399;
+  --color-emerald-500: #10b981;
+  --color-emerald-600: #059669;
+
+  /* ── Green (success variant) ── */
+  --color-green-50: #f0fdf4;
+  --color-green-400: #4ade80;
+  --color-green-500: #22c55e;
+  --color-green-700: #15803d;
+
+  /* ── Amber (warning / caution) ── */
+  --color-amber-50: #fffbeb;
+  --color-amber-100: #fef3c7;
+  --color-amber-200: #fde68a;
+  --color-amber-300: #fcd34d;
+  --color-amber-400: #fbbf24;
+  --color-amber-500: #f59e0b;
+  --color-amber-600: #d97706;
+  --color-amber-700: #b45309;
+
+  /* ── Yellow (entertainment category) ── */
+  --color-yellow-50: #fefce8;
+  --color-yellow-100: #fef9c3;
+  --color-yellow-400: #facc15;
+  --color-yellow-500: #eab308;
+  --color-yellow-700: #a16207;
+
+  /* ── Blue (info / memo) ── */
+  --color-blue-50: #eff6ff;
+  --color-blue-100: #dbeafe;
+  --color-blue-200: #bfdbfe;
+  --color-blue-300: #93c5fd;
+  --color-blue-400: #60a5fa;
+  --color-blue-500: #3b82f6;
+  --color-blue-600: #2563eb;
+  --color-blue-700: #1d4ed8;
+
+  /* ── Orange (meal / transport category) ── */
+  --color-orange-50: #fff7ed;
+  --color-orange-100: #ffedd5;
+  --color-orange-200: #fed7aa;
+  --color-orange-500: #f97316;
+  --color-orange-600: #ea580c;
+  --color-orange-700: #c2410c;
+
+  /* ── Indigo (attraction category) ── */
+  --color-indigo-200: #c7d2fe;
+  --color-indigo-400: #818cf8;
+  --color-indigo-500: #6366f1;
+  --color-indigo-600: #4f46e5;
+
+  /* ── Purple (accommodation) ── */
+  --color-purple-50: #faf5ff;
+  --color-purple-100: #f3e8ff;
+  --color-purple-200: #e9d5ff;
+  --color-purple-400: #c084fc;
+  --color-purple-500: #a855f7;
+  --color-purple-600: #9333ea;
+  --color-purple-700: #7e22ce;
+  --color-purple-800: #6b21a8;
+
+  /* ── Violet (destination / owner) ── */
+  --color-violet-50: #f5f3ff;
+  --color-violet-100: #ede9fe;
+  --color-violet-500: #8b5cf6;
+  --color-violet-600: #7c3aed;
+
+  /* ── Pink (shopping / owner) ── */
+  --color-pink-50: #fdf2f8;
+  --color-pink-100: #fce7f3;
+  --color-pink-200: #fbcfe8;
+  --color-pink-500: #ec4899;
+  --color-pink-600: #db2777;
+
+  /* ── Rose (owner / weather) ── */
+  --color-rose-50: #fff1f2;
+  --color-rose-300: #fda4af;
+  --color-rose-400: #fb7185;
+  --color-rose-500: #f43f5e;
+
+  /* ── Cyan (destination / owner) ── */
+  --color-cyan-100: #cffafe;
+  --color-cyan-500: #06b6d4;
+
+  /* ── Sky (destination / weather) ── */
+  --color-sky-50: #f0f9ff;
+  --color-sky-200: #bae6fd;
+  --color-sky-300: #7dd3fc;
+  --color-sky-400: #38bdf8;
+
+  /* ── Slate (transport type) ── */
+  --color-slate-200: #e2e8f0;
+  --color-slate-300: #cbd5e1;
+  --color-slate-400: #94a3b8;
+  --color-slate-500: #64748b;
+
+  /* ── Semantic aliases ── */
+  --color-success: #10b981;
+  --color-success-light: #ecfdf5;
+  --color-error: #ef4444;
+  --color-error-light: #fef2f2;
+  --color-warning: #f59e0b;
+  --color-warning-light: #fffbeb;
+  --color-info: #3b82f6;
+  --color-info-light: #eff6ff;
 }
 
 /* ── Keyframes ── */

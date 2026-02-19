@@ -66,7 +66,7 @@ export function ActivityDetailModal({ activity, dayId, onClose }: Props) {
       addActivityExpense(dayId, activity.id, {
         id: crypto.randomUUID(),
         amount,
-        currency: 'EUR',
+        currency: 'KRW',
         description: expenseDesc.trim(),
         createdAt: new Date().toISOString(),
         owner: expenseOwner,

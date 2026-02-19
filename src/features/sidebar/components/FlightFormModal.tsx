@@ -52,11 +52,11 @@ export function FlightFormModal({ dayId, flight, onClose }: Props) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-md sm:p-4 animate-backdrop" onClick={onClose}>
-      <div className="bg-surface rounded-t-3xl sm:rounded-3xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto border border-blue-100/30 animate-sheet-up sm:animate-modal-pop" onClick={(e) => e.stopPropagation()}>
+      <div className="bg-surface rounded-t-3xl sm:rounded-3xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto border border-gray-200/80 animate-sheet-up sm:animate-modal-pop" onClick={(e) => e.stopPropagation()}>
         {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b border-blue-100/50 sticky top-0 bg-gradient-to-r from-white to-blue-50/30 backdrop-blur-sm z-10 rounded-t-3xl">
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 sticky top-0 bg-gradient-to-r from-warm-50 to-accent-cream/30 backdrop-blur-sm z-10 rounded-t-3xl">
           <h3 className="font-bold text-gray-800 flex items-center gap-2.5">
-            <div className="w-7 h-7 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center shadow-sm">
+            <div className="w-7 h-7 bg-primary rounded-lg flex items-center justify-center shadow-sm">
               <Plane size={14} className="text-white" />
             </div>
             {isEdit ? t('flight.editTitle' as TranslationKey) : t('flight.addTitle' as TranslationKey)}
@@ -165,14 +165,22 @@ export function FlightFormModal({ dayId, flight, onClose }: Props) {
 
         {/* Save */}
         <div className="p-4 border-t border-gray-200 bg-gray-50/30 rounded-b-3xl">
-          <button
-            onClick={handleSave}
-            disabled={!airline.trim() && !flightNumber.trim()}
-            className="w-full bg-gradient-to-r from-blue-500 to-blue-600 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-blue-500/20 transition-all disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98]"
-          >
-            <Check size={16} />
-            {isEdit ? t('activityForm.save' as TranslationKey) : t('activityForm.add' as TranslationKey)}
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={onClose}
+              className="flex-1 bg-gray-100 text-gray-600 py-3 rounded-xl font-bold hover:bg-gray-200 transition-colors min-h-[44px]"
+            >
+              {t('activity.cancel')}
+            </button>
+            <button
+              onClick={handleSave}
+              disabled={!airline.trim() && !flightNumber.trim()}
+              className="flex-[2] bg-primary hover:bg-primary-dark text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-primary/20 transition-all disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] min-h-[44px]"
+            >
+              <Check size={16} />
+              {isEdit ? t('activityForm.save' as TranslationKey) : t('activityForm.add' as TranslationKey)}
+            </button>
+          </div>
         </div>
       </div>
     </div>

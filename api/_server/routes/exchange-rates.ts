@@ -7,8 +7,8 @@ const getExchangeRates = createRoute({
   method: 'get',
   path: '/exchange-rates',
   tags: ['Currency'],
-  summary: 'Get current EUR exchange rates',
-  description: 'Proxies Frankfurter API with 24h edge caching. Returns EUR-based rates for KRW, USD, JPY, CNY.',
+  summary: 'Get current KRW exchange rates',
+  description: 'Proxies Frankfurter API with 24h edge caching. Returns KRW-based rates for EUR, USD, JPY, CNY.',
   responses: {
     200: {
       content: { 'application/json': { schema: ExchangeRatesResponseSchema } },
@@ -30,7 +30,7 @@ export const exchangeRatesRoute = new OpenAPIHono().openapi(
   async (c) => {
     try {
       const res = await fetch(
-        'https://api.frankfurter.dev/v1/latest?base=EUR&symbols=KRW,USD,JPY,CNY'
+        'https://api.frankfurter.dev/v1/latest?base=KRW&symbols=EUR,USD,JPY,CNY'
       );
       if (!res.ok) {
         return c.json({ error: 'Failed to fetch rates' }, 502);

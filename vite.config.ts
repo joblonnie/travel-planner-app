@@ -28,7 +28,7 @@ export default defineConfig({
         name: 'Travel Planner',
         short_name: '여행플래너',
         description: '여행 일정 플래너',
-        theme_color: '#1E2D4F',
+        theme_color: '#5C8EA0',
         background_color: '#ffffff',
         display: 'standalone',
         orientation: 'portrait',

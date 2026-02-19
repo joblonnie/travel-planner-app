@@ -12,7 +12,7 @@
         "properties": {
           "base": {
             "type": "string",
-            "example": "EUR"
+            "example": "KRW"
           },
           "date": {
             "type": "string",
@@ -24,10 +24,10 @@
               "type": "number"
             },
             "example": {
-              "KRW": 1450,
-              "USD": 1.08,
-              "JPY": 160,
-              "CNY": 7.8
+              "EUR": 0.00069,
+              "USD": 0.00074,
+              "JPY": 0.114,
+              "CNY": 0.0054
             }
           }
         },
@@ -519,7 +519,7 @@
                 "currency": {
                   "type": "string",
                   "enum": [
-                    "EUR"
+                    "KRW"
                   ]
                 },
                 "description": {
@@ -1262,8 +1262,8 @@
         "tags": [
           "Currency"
         ],
-        "summary": "Get current EUR exchange rates",
-        "description": "Proxies Frankfurter API with 24h edge caching. Returns EUR-based rates for KRW, USD, JPY, CNY.",
+        "summary": "Get current KRW exchange rates",
+        "description": "Proxies Frankfurter API with 24h edge caching. Returns KRW-based rates for EUR, USD, JPY, CNY.",
         "responses": {
           "200": {
             "description": "Current exchange rates",

@@ -38,7 +38,7 @@ export function AppLayout() {
   const { currency, nextCurrency, symbol } = useCurrency();
   const [showSettings, setShowSettings] = useState(false);
   const [showCamera, setShowCamera] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth >= 640);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const { setPendingCameraExpense } = useTripActions();
@@ -87,7 +87,7 @@ export function AppLayout() {
       <div className="min-h-screen bg-warm-50">
         <header className="sticky top-0 z-30 bg-header-bg backdrop-blur-2xl border-b border-card-border px-3 sm:px-5 py-2.5 sm:py-3 flex items-center justify-between flex-shrink-0">
           <div className="flex items-center gap-2.5">
-            <div className="bg-gradient-to-br from-primary to-primary-dark text-white p-1.5 sm:p-2 rounded-xl shadow-[0_2px_8px_rgba(190,18,60,0.25)]">
+            <div className="bg-gradient-to-br from-primary to-primary-dark text-white p-1.5 sm:p-2 rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.15)]">
               <Plane size={16} />
             </div>
             <span className="font-semibold text-theme-dark text-sm">Travel Planner</span>
@@ -103,18 +103,31 @@ export function AppLayout() {
   const startDate = currentTrip?.startDate ?? '';
   const endDate = currentTrip?.endDate ?? '';
   const daysLength = currentTrip
-    ? currentTrip.days.length > 0
-      ? currentTrip.days.length
-      : currentTrip.startDate && currentTrip.endDate
-        ? Math.max(1, Math.ceil((new Date(currentTrip.endDate).getTime() - new Date(currentTrip.startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1)
-        : 0
+    ? currentTrip.startDate && currentTrip.endDate
+      ? Math.max(1, Math.ceil((new Date(currentTrip.endDate).getTime() - new Date(currentTrip.startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1)
+      : currentTrip.days.length
     : 0;
   return (
     <div className="min-h-screen flex flex-col bg-warm-50">
       {/* Top Header */}
       <header className="sticky top-0 z-30 bg-header-bg backdrop-blur-2xl border-b border-card-border px-3 sm:px-5 py-2.5 sm:py-3 flex items-center justify-between flex-shrink-0 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_8px_24px_rgba(0,0,0,0.04)]">
         <div className="flex items-center gap-1.5 sm:gap-3.5 min-w-0">
-          {!isTrips && (
+          {/* Sidebar Toggle — leftmost on planner (mobile + desktop) */}
+          {!isTrips && isPlanner && (
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className={`flex items-center justify-center p-2 -ml-1 rounded-full transition-all duration-200 flex-shrink-0 min-w-[36px] min-h-[36px] sm:min-w-[40px] sm:min-h-[40px] ${
+                sidebarOpen
+                  ? 'bg-primary/10 text-primary'
+                  : 'text-warm-400 hover:bg-primary/10 hover:text-primary'
+              }`}
+              title={t('sidebar.schedule')}
+              aria-label={t('sidebar.schedule')}
+            >
+              <PanelLeftOpen size={16} />
+            </button>
+          )}
+          {!isTrips && !isPlanner && (
             <button
               onClick={() => navigate('/trips')}
               className="flex items-center justify-center p-1.5 -ml-1 rounded-full text-warm-400 hover:text-primary hover:bg-primary/10 transition-all flex-shrink-0 sm:hidden"
@@ -123,7 +136,7 @@ export function AppLayout() {
               <ChevronLeft size={20} />
             </button>
           )}
-          <div className="bg-gradient-to-br from-primary to-primary-dark text-white p-1.5 sm:p-2 rounded-xl shadow-[0_2px_8px_rgba(190,18,60,0.25)] flex-shrink-0">
+          <div className="bg-gradient-to-br from-primary to-primary-dark text-white p-1.5 sm:p-2 rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.15)] flex-shrink-0">
             <Plane size={16} className="sm:w-[18px] sm:h-[18px]" />
           </div>
           {isTrips ? (
@@ -148,24 +161,18 @@ export function AppLayout() {
         <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
           {!isTrips && (
             <>
-              {/* Sidebar Toggle (planner only) */}
-              {isPlanner && (
-                <button
-                  onClick={() => setSidebarOpen(!sidebarOpen)}
-                  className={`flex items-center justify-center p-2.5 rounded-full transition-all duration-200 border min-w-[44px] min-h-[44px] cursor-pointer ${
-                    sidebarOpen
-                      ? 'bg-primary/10 text-primary border-primary/20'
-                      : 'bg-warm-100/80 text-warm-400 border-warm-200/50 hover:bg-primary/10 hover:text-primary'
-                  }`}
-                  title={t('sidebar.schedule')}
-                  aria-label={t('sidebar.schedule')}
-                >
-                  <PanelLeftOpen size={14} />
-                </button>
-              )}
-
               {/* Page Navigation (desktop only — mobile uses bottom nav) */}
+              {/* Order: 여행 관리 → 일정 → 가계부 → 가이드 */}
               <div className="hidden sm:flex bg-warm-100/80 rounded-full p-0.5 border border-warm-300/60" role="tablist">
+                <button
+                  onClick={() => navigate('/trips')}
+                  role="tab"
+                  aria-selected={false}
+                  className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium transition-all duration-200 text-warm-400 hover:text-theme-dark focus-visible:ring-2 focus-visible:ring-primary/30"
+                >
+                  <Map size={13} />
+                  <span>{t('trips.manageTrips' as TranslationKey)}</span>
+                </button>
                 <button
                   onClick={() => navigate('/')}
                   role="tab"
@@ -204,15 +211,6 @@ export function AppLayout() {
                 >
                   <FileText size={13} />
                   <span>{t('guide.title' as TranslationKey)}</span>
-                </button>
-                <button
-                  onClick={() => navigate('/trips')}
-                  role="tab"
-                  aria-selected={false}
-                  className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium transition-all duration-200 text-warm-400 hover:text-theme-dark focus-visible:ring-2 focus-visible:ring-primary/30"
-                >
-                  <Map size={13} />
-                  <span>{t('trips.manageTrips' as TranslationKey)}</span>
                 </button>
               </div>
 
@@ -263,14 +261,15 @@ export function AppLayout() {
       </header>
 
       {/* Main Layout */}
-      <div className="flex-1 pb-16 sm:pb-0">
-        <Outlet />
+      <div className="flex-1 flex pb-16 sm:pb-0">
+        {/* Desktop: side panel that takes layout space */}
+        {isPlanner && sidebarOpen && (
+          <Suspense fallback={<LoadingSpinner />}><DaySidebar onClose={() => setSidebarOpen(false)} /></Suspense>
+        )}
+        <div className="flex-1 min-w-0">
+          <Outlet />
+        </div>
       </div>
-
-      {/* Sidebar Overlay */}
-      {isPlanner && sidebarOpen && (
-        <Suspense fallback={<LoadingSpinner />}><DaySidebar onClose={() => setSidebarOpen(false)} /></Suspense>
-      )}
 
       {showSettings && <Suspense fallback={<LoadingSpinner />}><TripSettingsModal onClose={() => setShowSettings(false)} /></Suspense>}
       {showCamera && <Suspense fallback={<LoadingSpinner />}><CameraOcrModal onClose={() => setShowCamera(false)} onAddExpense={handleCameraExpense} /></Suspense>}

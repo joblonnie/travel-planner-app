@@ -12,7 +12,6 @@ export interface AuthUser {
 export interface AppSlice {
   language: Language;
   currency: Currency;
-  exchangeRate: number;
   theme: ThemeId;
   fetchedRates: Record<string, number> | null;
   ratesUpdatedAt: string | null;
@@ -28,7 +27,6 @@ export interface AppSlice {
 
   setLanguage: (lang: Language) => void;
   setCurrency: (currency: Currency) => void;
-  setExchangeRate: (rate: number) => void;
   setTheme: (theme: ThemeId) => void;
   setFetchedRates: (rates: Record<string, number>) => void;
   setCurrentTripId: (id: string) => void;
@@ -39,8 +37,7 @@ export interface AppSlice {
 
 export const createAppSlice: StateCreator<AppSlice> = (set) => ({
   language: 'ko' as Language,
-  currency: 'EUR' as Currency,
-  exchangeRate: 1450,
+  currency: 'KRW' as Currency,
   theme: 'cloud-dancer' as ThemeId,
   fetchedRates: null,
   ratesUpdatedAt: null,
@@ -56,7 +53,6 @@ export const createAppSlice: StateCreator<AppSlice> = (set) => ({
 
   setLanguage: (language) => set({ language }),
   setCurrency: (currency) => set({ currency }),
-  setExchangeRate: (exchangeRate) => set({ exchangeRate }),
   setTheme: (theme) => {
     document.documentElement.dataset.theme = theme;
     set({ theme });

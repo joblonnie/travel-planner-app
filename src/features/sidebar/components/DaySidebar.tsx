@@ -150,25 +150,25 @@ function InterCityIndicator({ fromCity, toCity, transports, onAdd, onEdit, onDel
     <div className="my-1">
       <div className="relative py-1.5">
         {/* Connector line */}
-        <div className="absolute left-[calc(50%-0.5px)] top-0 bottom-0 w-px border-l border-dashed border-amber-300/60" />
+        <div className="absolute left-[calc(50%-0.5px)] top-0 bottom-0 w-px border-l border-dashed border-secondary/40" />
 
         {/* Existing transports */}
         {transports.map((tr) => (
-          <div key={tr.id} className="group/tr relative mx-2 my-1 bg-gradient-to-r from-amber-50/80 to-orange-50/60 rounded-xl border border-amber-200/60 px-2.5 py-1.5 flex items-center gap-2 cursor-pointer hover:border-amber-300 transition-all" onClick={() => onEdit(tr)}>
+          <div key={tr.id} className="group/tr relative mx-2 my-1 bg-secondary/[0.08] rounded-xl border border-secondary/30 px-2.5 py-1.5 flex items-center gap-2 cursor-pointer hover:border-secondary/50 transition-all" onClick={() => onEdit(tr)}>
             <TransportIcon type={tr.type} />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1">
-                <span className="text-[11px] font-bold text-amber-700 uppercase">{t(`transport.${tr.type}`)}</span>
-                {tr.operator && <span className="text-[11px] text-gray-400">{tr.operator}</span>}
+                <span className="text-[11px] font-bold text-gray-700 uppercase">{t(`transport.${tr.type}`)}</span>
+                {tr.operator && <span className="text-[11px] text-gray-500">{tr.operator}</span>}
               </div>
               <div className="flex items-center gap-1 text-[11px] text-gray-500">
                 <span>{tr.departure || fromCity}</span>
-                <span className="text-amber-400">→</span>
+                <span className="text-secondary">→</span>
                 <span>{tr.arrival || toCity}</span>
-                {tr.departureTime && <span className="text-[11px] text-amber-600 font-mono ml-1">{tr.departureTime}</span>}
+                {tr.departureTime && <span className="text-[11px] text-gray-600 font-mono ml-1">{tr.departureTime}</span>}
               </div>
             </div>
-            <div className="p-1.5 text-amber-500 rounded-lg min-w-[36px] min-h-[36px] flex items-center justify-center">
+            <div className="p-1.5 text-secondary rounded-lg min-w-[36px] min-h-[36px] flex items-center justify-center">
               <Pencil size={13} />
             </div>
             <button
@@ -185,10 +185,10 @@ function InterCityIndicator({ fromCity, toCity, transports, onAdd, onEdit, onDel
         {transports.length === 0 && (
           <button
             onClick={onAdd}
-            className="relative mx-4 flex items-center justify-center gap-1 py-1 text-[11px] text-amber-400 hover:text-amber-600 transition-all group/add"
+            className="relative mx-4 flex items-center justify-center gap-1 py-1 text-[11px] text-secondary hover:text-secondary-dark transition-all group/add"
           >
-            <div className="w-4 h-4 rounded-full bg-amber-100 group-hover/add:bg-amber-200 flex items-center justify-center transition-colors">
-              <Plus size={8} className="text-amber-500" />
+            <div className="w-4 h-4 rounded-full bg-secondary/15 group-hover/add:bg-secondary/25 flex items-center justify-center transition-colors">
+              <Plus size={8} className="text-secondary" />
             </div>
             <span className="font-medium">{fromCity} → {toCity}</span>
           </button>
@@ -196,7 +196,7 @@ function InterCityIndicator({ fromCity, toCity, transports, onAdd, onEdit, onDel
         {transports.length > 0 && (
           <button
             onClick={onAdd}
-            className="relative mx-4 mt-0.5 flex items-center justify-center gap-0.5 py-0.5 text-[11px] text-amber-300 hover:text-amber-500 transition-all"
+            className="relative mx-4 mt-0.5 flex items-center justify-center gap-0.5 py-0.5 text-[11px] text-secondary/60 hover:text-secondary transition-all"
           >
             <Plus size={7} />
             <span>{t('intercity.add')}</span>
@@ -549,11 +549,11 @@ export function DaySidebar({ onClose }: { onClose: () => void }) {
 
   return (
     <>
-      {/* Backdrop */}
-      <div className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm animate-backdrop" onClick={onClose} />
+      {/* Mobile: Backdrop overlay */}
+      <div className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm animate-backdrop sm:hidden" onClick={onClose} />
 
-      {/* Sidebar Panel */}
-      <aside className="fixed top-0 left-0 z-50 w-80 max-w-[85vw] h-full bg-surface/95 backdrop-blur-2xl border-r border-card-border shadow-2xl overflow-y-auto scrollbar-hide scroll-smooth animate-sidebar-in pt-[env(safe-area-inset-top)] pl-[env(safe-area-inset-left)]" role="navigation" aria-label={t('sidebar.schedule')}>
+      {/* Mobile: fixed drawer / Desktop: inline panel */}
+      <aside className="fixed top-0 left-0 z-50 w-80 max-w-[85vw] h-full bg-surface/95 backdrop-blur-2xl border-r border-card-border shadow-2xl overflow-y-auto scrollbar-hide scroll-smooth animate-sidebar-in pt-[env(safe-area-inset-top)] pl-[env(safe-area-inset-left)] sm:static sm:z-auto sm:max-w-none sm:flex-shrink-0 sm:shadow-none sm:animate-none sm:pt-0 sm:pl-0" role="navigation" aria-label={t('sidebar.schedule')}>
         <div className="p-3 pt-3">
           {/* ── Header ── */}
           <div className="mb-4 px-1">
@@ -614,11 +614,11 @@ export function DaySidebar({ onClose }: { onClose: () => void }) {
                   <div key={sched.id} className="p-3 bg-red-50/80 backdrop-blur-sm rounded-2xl border border-red-200/50">
                     <p className="text-[10px] text-red-600 font-bold mb-1">{t('immigration.deleteConfirm')}</p>
                     <div className="flex gap-1.5">
-                      <button onClick={handleDeleteImmigration} className="flex-1 bg-gradient-to-r from-red-500 to-red-600 text-white text-[11px] py-1.5 rounded-xl font-bold transition-all">
-                        {t('immigration.delete')}
-                      </button>
-                      <button onClick={() => setDeleteImmId(null)} className="flex-1 bg-white text-gray-500 text-[11px] py-1.5 rounded-xl border border-gray-300/80 hover:bg-gray-50 transition-colors">
+                      <button onClick={() => setDeleteImmId(null)} className="flex-1 bg-gray-100 text-gray-600 text-[11px] py-1.5 rounded-xl font-bold hover:bg-gray-200 transition-colors">
                         {t('activity.cancel')}
+                      </button>
+                      <button onClick={handleDeleteImmigration} className="flex-1 bg-red-500 hover:bg-red-600 text-white text-[11px] py-1.5 rounded-xl font-bold transition-all">
+                        {t('immigration.delete')}
                       </button>
                     </div>
                   </div>
@@ -637,7 +637,7 @@ export function DaySidebar({ onClose }: { onClose: () => void }) {
             {departureSchedules.length === 0 && (
               <button
                 onClick={() => { setImmModalType('departure'); setEditingImmigration(undefined); }}
-                className="w-full flex items-center justify-center gap-1.5 py-2 px-3 text-[10px] text-blue-400 hover:text-blue-600 rounded-xl border border-dashed border-blue-200/40 hover:border-blue-300/60 hover:bg-blue-50/30 transition-all"
+                className="w-full flex items-center justify-center gap-1.5 py-2 px-3 text-[10px] text-primary hover:text-primary-dark rounded-xl border border-dashed border-primary/30 hover:border-primary/50 hover:bg-primary/5 transition-all"
               >
                 <PlaneTakeoff size={11} />
                 <span className="font-medium">{t('immigration.addDeparture')}</span>
@@ -661,11 +661,11 @@ export function DaySidebar({ onClose }: { onClose: () => void }) {
                         <p className="text-[10px] text-red-600 font-bold mb-0.5">{t('day.day')} {day.dayNumber} · {day.destination}</p>
                         <p className="text-[10px] text-red-500 mb-2">{t('day.deleteDayConfirm')}</p>
                         <div className="flex gap-1.5">
-                          <button onClick={() => handleDelete(day.id)} className="flex-1 bg-gradient-to-r from-red-500 to-red-600 text-white text-[10px] py-1.5 rounded-xl font-bold hover:shadow-md transition-all flex items-center justify-center gap-1">
-                            <Trash2 size={10} /> {t('activity.delete')}
-                          </button>
-                          <button onClick={() => setDeleteConfirmId(null)} className="flex-1 bg-white text-gray-500 text-[10px] py-1.5 rounded-xl border border-gray-300/80 hover:bg-gray-50 transition-colors">
+                          <button onClick={() => setDeleteConfirmId(null)} className="flex-1 bg-gray-100 text-gray-600 text-[10px] py-1.5 rounded-xl font-bold hover:bg-gray-200 transition-colors">
                             {t('activity.cancel')}
+                          </button>
+                          <button onClick={() => handleDelete(day.id)} className="flex-1 bg-red-500 hover:bg-red-600 text-white text-[10px] py-1.5 rounded-xl font-bold transition-all flex items-center justify-center gap-1">
+                            <Trash2 size={10} /> {t('activity.delete')}
                           </button>
                         </div>
                       </div>
@@ -704,11 +704,11 @@ export function DaySidebar({ onClose }: { onClose: () => void }) {
                                       {flight.airline} {flight.flightNumber} - {t('flight.deleteConfirm' as TranslationKey)}
                                     </p>
                                     <div className="flex gap-1.5">
-                                      <button onClick={handleDeleteFlight} className="flex-1 bg-gradient-to-r from-red-500 to-red-600 text-white text-[11px] py-1.5 rounded-xl font-bold transition-all">
-                                        {t('activity.delete')}
-                                      </button>
-                                      <button onClick={() => setDeleteFlightInfo(null)} className="flex-1 bg-white text-gray-500 text-[11px] py-1.5 rounded-xl border border-gray-300/80 hover:bg-gray-50 transition-colors">
+                                      <button onClick={() => setDeleteFlightInfo(null)} className="flex-1 bg-gray-100 text-gray-600 text-[11px] py-1.5 rounded-xl font-bold hover:bg-gray-200 transition-colors">
                                         {t('activity.cancel')}
+                                      </button>
+                                      <button onClick={handleDeleteFlight} className="flex-1 bg-red-500 hover:bg-red-600 text-white text-[11px] py-1.5 rounded-xl font-bold transition-all">
+                                        {t('activity.delete')}
                                       </button>
                                     </div>
                                   </div>
@@ -756,11 +756,11 @@ export function DaySidebar({ onClose }: { onClose: () => void }) {
                   <div key={sched.id} className="p-3 bg-red-50/80 backdrop-blur-sm rounded-2xl border border-red-200/50">
                     <p className="text-[10px] text-red-600 font-bold mb-1">{t('immigration.deleteConfirm')}</p>
                     <div className="flex gap-1.5">
-                      <button onClick={handleDeleteImmigration} className="flex-1 bg-gradient-to-r from-red-500 to-red-600 text-white text-[11px] py-1.5 rounded-xl font-bold transition-all">
-                        {t('immigration.delete')}
-                      </button>
-                      <button onClick={() => setDeleteImmId(null)} className="flex-1 bg-white text-gray-500 text-[11px] py-1.5 rounded-xl border border-gray-300/80 hover:bg-gray-50 transition-colors">
+                      <button onClick={() => setDeleteImmId(null)} className="flex-1 bg-gray-100 text-gray-600 text-[11px] py-1.5 rounded-xl font-bold hover:bg-gray-200 transition-colors">
                         {t('activity.cancel')}
+                      </button>
+                      <button onClick={handleDeleteImmigration} className="flex-1 bg-red-500 hover:bg-red-600 text-white text-[11px] py-1.5 rounded-xl font-bold transition-all">
+                        {t('immigration.delete')}
                       </button>
                     </div>
                   </div>
@@ -779,7 +779,7 @@ export function DaySidebar({ onClose }: { onClose: () => void }) {
             {arrivalSchedules.length === 0 && (
               <button
                 onClick={() => { setImmModalType('arrival'); setEditingImmigration(undefined); }}
-                className="w-full flex items-center justify-center gap-1.5 py-2 px-3 text-[10px] text-emerald-400 hover:text-emerald-600 rounded-xl border border-dashed border-emerald-200/40 hover:border-emerald-300/60 hover:bg-emerald-50/30 transition-all"
+                className="w-full flex items-center justify-center gap-1.5 py-2 px-3 text-[10px] text-primary hover:text-primary-dark rounded-xl border border-dashed border-primary/30 hover:border-primary/50 hover:bg-primary/5 transition-all"
               >
                 <PlaneLanding size={11} />
                 <span className="font-medium">{t('immigration.addArrival')}</span>

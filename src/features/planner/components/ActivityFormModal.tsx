@@ -1,6 +1,6 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { useEscKey } from '@/hooks/useEscKey.ts';
-import { X, PlusCircle, Save, Trash2, MapPin, Landmark, ShoppingBag, UtensilsCrossed, Bus, Coffee, Search, Hotel, AlertTriangle, Zap } from 'lucide-react';
+import { X, PlusCircle, Save, MapPin, Landmark, ShoppingBag, UtensilsCrossed, Bus, Coffee, Search, Hotel, AlertTriangle, Zap } from 'lucide-react';
 import { GoogleMap } from '@react-google-maps/api';
 import { AdvancedMarker } from '@/components/AdvancedMarker.tsx';
 import { mapId } from '@/hooks/useGoogleMaps.ts';
@@ -32,7 +32,7 @@ const typeConfig: { value: ScheduledActivity['type']; labelKey: string; icon: Re
 const durationPresetKeys = ['duration.30min', 'duration.1h', 'duration.1h30', 'duration.2h', 'duration.3h', 'duration.halfDay'] as const;
 
 export function ActivityFormModal({ dayId, onClose, insertAtIndex, activity, placeOnly, locationOnly }: Props) {
-  const { addActivity, updateActivity, removeActivity } = useTripActions();
+  const { addActivity, updateActivity } = useTripActions();
   const days = useTripData((t) => t.days);
   const customDestinations = useTripData((t) => t.customDestinations);
   const allDestinations = [...staticDestinations, ...customDestinations];
@@ -61,7 +61,6 @@ export function ActivityFormModal({ dayId, onClose, insertAtIndex, activity, pla
   const [lng, setLng] = useState(activity?.lng?.toString() ?? '');
   const [notes, setNotes] = useState(activity?.booking?.notes ?? '');
   const showMap = true;
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showContentSuggestions, setShowContentSuggestions] = useState(false);
 
   // Time conflict detection
@@ -183,18 +182,11 @@ export function ActivityFormModal({ dayId, onClose, insertAtIndex, activity, pla
         duration,
         type,
         estimatedCost: estimatedCostEur,
-        currency: 'EUR',
+        currency: 'KRW',
         isBooked: false,
         ...(lat && lng ? { lat: parseFloat(lat), lng: parseFloat(lng) } : {}),
       };
       addActivity(dayId, newActivity, insertAtIndex);
-    }
-    onClose();
-  };
-
-  const handleDelete = () => {
-    if (activity) {
-      removeActivity(dayId, activity.id);
     }
     onClose();
   };
@@ -207,7 +199,7 @@ export function ActivityFormModal({ dayId, onClose, insertAtIndex, activity, pla
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-md sm:p-4 animate-backdrop" onClick={onClose}>
       <div className="bg-surface rounded-t-3xl sm:rounded-3xl shadow-2xl max-w-lg w-full max-h-[85vh] sm:max-h-[90vh] overflow-y-auto border border-gray-200/80 animate-sheet-up sm:animate-modal-pop" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gradient-to-r from-warm-50 to-accent-cream/30 rounded-t-3xl">
           <h3 className="font-bold text-gray-800">
             {locationOnly ? (
               <>{t('activity.addLocation' as TranslationKey)}{activity?.nameKo && <span className="text-sm font-normal text-gray-400 ml-1.5">— {activity.nameKo}</span>}</>
@@ -442,7 +434,7 @@ export function ActivityFormModal({ dayId, onClose, insertAtIndex, activity, pla
                   onClick={() => setDuration(label)}
                   className={`text-[10px] px-2.5 py-1 rounded-full border transition-all ${
                     duration === label
-                      ? 'bg-gradient-to-r from-primary to-cta-end text-white border-primary shadow-sm'
+                      ? 'bg-primary text-white border-primary shadow-sm'
                       : 'bg-gray-50/80 text-gray-500 border-gray-100 hover:bg-gray-100 hover:border-gray-200'
                   }`}
                 >
@@ -476,7 +468,7 @@ export function ActivityFormModal({ dayId, onClose, insertAtIndex, activity, pla
                     onClick={() => setCostInput(v)}
                     className={`text-[10px] px-2.5 py-1 rounded-full border transition-all ${
                       costInput === v
-                        ? 'bg-gradient-to-r from-primary to-cta-end text-white border-primary shadow-sm'
+                        ? 'bg-primary text-white border-primary shadow-sm'
                         : 'bg-gray-50/80 text-gray-400 border-gray-100 hover:bg-gray-100 hover:border-gray-200'
                     }`}
                   >
@@ -543,50 +535,22 @@ export function ActivityFormModal({ dayId, onClose, insertAtIndex, activity, pla
           )}
         </div>
 
-        <div className="p-4 border-t border-gray-200 bg-gray-50/30 rounded-b-3xl space-y-2">
+        <div className="p-4 border-t border-gray-200 bg-gray-50/30 rounded-b-3xl">
           <div className="flex gap-2">
             <button
               onClick={onClose}
-              className="flex-1 bg-white text-gray-500 border border-gray-200 py-3 rounded-xl font-bold hover:bg-gray-50 transition-colors"
+              className="flex-1 bg-gray-100 text-gray-600 py-3 rounded-xl font-bold hover:bg-gray-200 transition-colors min-h-[44px]"
             >
               {t('activity.cancel')}
             </button>
             <button
               onClick={handleSubmit}
               disabled={locationOnly ? !(lat && lng) : !nameKo.trim()}
-              className="flex-[2] bg-gradient-to-r from-primary to-cta-end text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-primary/20 transition-all disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98]"
+              className="flex-[2] bg-primary hover:bg-primary-dark text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-primary/20 transition-all disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.98] min-h-[44px]"
             >
               {isEdit ? <><Save size={16} /> {t('activityForm.save')}</> : <><PlusCircle size={16} /> {t('activityForm.add')}</>}
             </button>
           </div>
-
-          {isEdit && !locationOnly && (
-            <>
-              {!showDeleteConfirm ? (
-                <button
-                  onClick={() => setShowDeleteConfirm(true)}
-                  className="w-full bg-white text-red-500 border border-red-200 py-2.5 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-red-50 hover:border-red-300 transition-all"
-                >
-                  <Trash2 size={16} /> {t('activity.delete')}
-                </button>
-              ) : (
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => setShowDeleteConfirm(false)}
-                    className="flex-1 bg-gray-100 text-gray-600 py-2.5 rounded-xl font-bold hover:bg-gray-200 transition-colors"
-                  >
-                    {t('activity.cancel')}
-                  </button>
-                  <button
-                    onClick={handleDelete}
-                    className="flex-1 bg-gradient-to-r from-red-600 to-red-500 text-white py-2.5 rounded-xl font-bold flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-red-500/20 transition-all active:scale-[0.98]"
-                  >
-                    <Trash2 size={16} /> {t('activity.deleteConfirm')}
-                  </button>
-                </div>
-              )}
-            </>
-          )}
         </div>
       </div>
     </div>

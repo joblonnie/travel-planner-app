@@ -104,6 +104,8 @@ export const translations = {
   // Weather
   'weather.weather': { ko: '날씨', en: 'Weather' },
   'weather.rainfall': { ko: '강수', en: 'Rainfall' },
+  'weather.humidity': { ko: '습도', en: 'Humidity' },
+  'weather.clothing': { ko: '옷차림', en: 'Clothing' },
 
   // Budget Page
   'budget.title': { ko: '여행 가계부', en: 'Travel Budget' },
@@ -270,9 +272,21 @@ export const translations = {
   'budget.activityExpenses': { ko: '활동별 지출', en: 'Activity Expenses' },
 
   // Guide
-  'guide.title': { ko: '가이드', en: 'Guide' },
+  'guide.title': { ko: '메모장', en: 'Memo' },
   'guide.placeholder': { ko: '여행 메모, 팁, 준비물 등을 자유롭게 적어보세요...', en: 'Write travel notes, tips, packing lists...' },
   'guide.saved': { ko: '저장됨', en: 'Saved' },
+  'guide.addItem': { ko: '메모 추가', en: 'Add Memo' },
+  'guide.editItem': { ko: '수정', en: 'Edit' },
+  'guide.deleteItem': { ko: '삭제', en: 'Delete' },
+  'guide.deleteConfirm': { ko: '이 메모를 삭제하시겠습니까?', en: 'Delete this memo?' },
+  'guide.titlePlaceholder': { ko: '제목 (예: 준비물, 주의사항...)', en: 'Title (e.g. Packing list, Tips...)' },
+  'guide.contentPlaceholder': { ko: '내용을 입력하세요...', en: 'Enter content...' },
+  'guide.noItems': { ko: '아직 메모가 없습니다', en: 'No memos yet' },
+  'guide.noItemsDesc': { ko: '여행 메모, 팁, 준비물 등을 추가해보세요', en: 'Add travel notes, tips, packing lists...' },
+  'guide.moveUp': { ko: '위로', en: 'Move up' },
+  'guide.moveDown': { ko: '아래로', en: 'Move down' },
+  'guide.cancel': { ko: '취소', en: 'Cancel' },
+  'guide.save': { ko: '저장', en: 'Save' },
 
   // Place / Destination
   'place.addPlace': { ko: '도시 추가', en: 'Add City' },
@@ -420,6 +434,9 @@ export const translations = {
   'accommodation.add': { ko: '숙소 추가', en: 'Add Accommodation' },
   'accommodation.deleteConfirm': { ko: '숙소 정보를 삭제하시겠습니까?', en: 'Delete accommodation info?' },
   'accommodation.save': { ko: '저장', en: 'Save' },
+  'accommodation.tags': { ko: '특이사항', en: 'Tags' },
+  'accommodation.tagPlaceholder': { ko: '특이사항 입력 후 Enter (예: Wi-Fi, 조식 포함)', en: 'Enter tag and press Enter' },
+  'accommodation.addMore': { ko: '숙소 추가', en: 'Add Accommodation' },
   'form.notesPlaceholder': { ko: '메모를 입력하세요...', en: 'Enter notes...' },
 
   // Flight form (FlightFormModal)

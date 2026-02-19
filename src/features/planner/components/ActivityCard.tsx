@@ -67,7 +67,7 @@ export const ActivityCard = memo(function ActivityCard({ activity, dayId, reorde
   const memoInputRef = useRef<HTMLInputElement>(null);
   const { removeActivity, duplicateActivity, toggleCompleted, toggleSkipped, addMemo, removeMemo, addActivityExpense, updateActivityExpense, removeActivityExpense } = useTripActions();
 
-  const { format, convert, symbol: currencySymbol, toEur } = useCurrency();
+  const { format, convert, symbol: currencySymbol, toBase } = useCurrency();
   const { t } = useI18n();
   const sortable = useSortable({
     id: activity.id,
@@ -118,10 +118,10 @@ export const ActivityCard = memo(function ActivityCard({ activity, dayId, reorde
   const handleAddExpense = () => {
     const inputAmount = parseFloat(expenseAmount);
     if (!isNaN(inputAmount) && inputAmount > 0 && expenseDesc.trim()) {
-      const amountInEur = toEur(inputAmount);
+      const amountInBase = toBase(inputAmount);
       if (editingExpenseId) {
         updateActivityExpense(dayId, activity.id, editingExpenseId, {
-          amount: Math.round(amountInEur * 1000000) / 1000000,
+          amount: Math.round(amountInBase * 1000000) / 1000000,
           description: expenseDesc.trim(),
           owner: expenseOwner,
         });
@@ -129,8 +129,8 @@ export const ActivityCard = memo(function ActivityCard({ activity, dayId, reorde
       } else {
         addActivityExpense(dayId, activity.id, {
           id: crypto.randomUUID(),
-          amount: Math.round(amountInEur * 1000000) / 1000000,
-          currency: 'EUR',
+          amount: Math.round(amountInBase * 1000000) / 1000000,
+          currency: 'KRW',
           description: expenseDesc.trim(),
           createdAt: new Date().toISOString(),
           owner: expenseOwner,
@@ -530,13 +530,13 @@ export const ActivityCard = memo(function ActivityCard({ activity, dayId, reorde
             <div className="flex gap-2">
               <button
                 onClick={() => setShowDeleteConfirm(false)}
-                className="flex-1 bg-gray-100 text-gray-600 py-2.5 rounded-xl font-bold hover:bg-gray-200 transition-colors"
+                className="flex-1 bg-gray-100 text-gray-600 py-3 rounded-xl font-bold hover:bg-gray-200 transition-colors min-h-[44px]"
               >
                 {t('activity.cancel')}
               </button>
               <button
                 onClick={handleDelete}
-                className="flex-1 bg-gradient-to-r from-red-500 to-red-600 text-white py-2.5 rounded-xl font-bold flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-red-500/20 transition-all"
+                className="flex-1 bg-red-500 hover:bg-red-600 text-white py-3 rounded-xl font-bold flex items-center justify-center gap-1.5 transition-all active:scale-[0.98] min-h-[44px]"
               >
                 <Trash2 size={14} /> {t('activity.delete')}
               </button>

@@ -36,7 +36,7 @@ function InsertButton({ onClick, label }: { onClick: () => void; label: string }
       <div className="flex-1 h-px bg-gradient-to-r from-transparent via-gray-200/40 to-transparent group-hover/insert:via-primary/15 transition-colors" />
       <button
         onClick={onClick}
-        className="flex items-center gap-1 px-2.5 py-0.5 text-[10px] text-gray-300 hover:text-primary hover:bg-primary/5 rounded-full transition-all opacity-40 group-hover/insert:opacity-100 focus:opacity-100 backdrop-blur-sm"
+        className="flex items-center gap-1 px-2.5 py-0.5 text-[10px] text-gray-400 hover:text-primary hover:bg-primary/5 rounded-full transition-all opacity-60 group-hover/insert:opacity-100 focus:opacity-100 backdrop-blur-sm"
         aria-label={label}
       >
         <Plus size={10} strokeWidth={2.5} />
@@ -45,6 +45,10 @@ function InsertButton({ onClick, label }: { onClick: () => void; label: string }
       <div className="flex-1 h-px bg-gradient-to-r from-transparent via-gray-200/40 to-transparent group-hover/insert:via-primary/15 transition-colors" />
     </div>
   );
+}
+
+function isRestActivity(activity: { name: string; type: string }) {
+  return activity.type === 'free' && (activity.name.includes('Rest at') || activity.name.includes('에서 휴식'));
 }
 
 /** Haversine distance in meters between two lat/lng points */
@@ -411,6 +415,15 @@ export function DayContent() {
             {currentDay.accommodation.confirmationNumber && (
               <p className="text-[10px] text-purple-500 font-mono mt-1.5 bg-purple-50 inline-block px-2 py-0.5 rounded-md">#{currentDay.accommodation.confirmationNumber}</p>
             )}
+            {currentDay.accommodation.tags && currentDay.accommodation.tags.length > 0 && (
+              <div className="flex flex-wrap gap-1 mt-1.5">
+                {currentDay.accommodation.tags.map((tag, i) => (
+                  <span key={i} className="inline-flex items-center px-2 py-0.5 bg-purple-100/80 text-purple-600 rounded-full text-[10px] font-medium">
+                    {tag}
+                  </span>
+                ))}
+              </div>
+            )}
             {currentDay.accommodation.notes && (
               <p className="text-[11px] text-gray-500 mt-1.5 bg-purple-50/50 px-2.5 py-1 rounded-lg">{currentDay.accommodation.notes}</p>
             )}
@@ -525,8 +538,35 @@ export function DayContent() {
           <DndContext sensors={reorderMode ? sensors : undefined} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <SortableContext items={currentDay.activities.map((a) => a.id)} strategy={verticalListSortingStrategy}>
               <div className="space-y-1">
-                {/* Insert button before first activity */}
-                {!reorderMode && <InsertButton onClick={() => { setInsertAtIndex(0); setShowAdd(true); }} label={t('day.insertHere' as TranslationKey)} />}
+                {/* Insert button + rest button before first activity */}
+                {!reorderMode && (
+                  <div className="pl-[72px] flex items-center gap-1">
+                    <InsertButton onClick={() => { setInsertAtIndex(0); setShowAdd(true); }} label={t('day.insertHere' as TranslationKey)} />
+                    <button
+                      disabled={!currentDay.accommodation?.name || (currentDay.activities[0] && isRestActivity(currentDay.activities[0]))}
+                      onClick={() => {
+                        const accom = currentDay.accommodation!;
+                        addActivity(currentDay.id, {
+                          id: crypto.randomUUID(),
+                          name: `Rest at ${accom.name}`,
+                          nameKo: `${accom.name}에서 휴식`,
+                          time: '',
+                          duration: '1h',
+                          type: 'free',
+                          estimatedCost: 0,
+                          currency: 'KRW',
+                          isBooked: false,
+                          ...(accom.lat && accom.lng ? { lat: accom.lat, lng: accom.lng } : {}),
+                        }, 0);
+                      }}
+                      className="flex items-center gap-1 px-2 py-0.5 text-[11px] text-purple-500 bg-purple-50/60 hover:text-purple-700 hover:bg-purple-100 rounded-full transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+                      title={currentDay.accommodation?.name ? t('accommodation.restHere' as TranslationKey) : t('accommodation.add' as TranslationKey)}
+                    >
+                      <Coffee size={12} />
+                      <span>{t('accommodation.restHere' as TranslationKey)}</span>
+                    </button>
+                  </div>
+                )}
                 {currentDay.activities.map((activity, index) => {
                   const next = index < currentDay.activities.length - 1 ? currentDay.activities[index + 1] : null;
                   const hasCoords = !!(next && activity.lat && activity.lng && next.lat && next.lng);
@@ -559,7 +599,7 @@ export function DayContent() {
                       <div className="pl-[72px] flex items-center gap-1">
                         <InsertButton onClick={() => { setInsertAtIndex(index + 1); setShowAdd(true); }} label={t('day.insertHere' as TranslationKey)} />
                         <button
-                          disabled={!currentDay.accommodation?.name}
+                          disabled={!currentDay.accommodation?.name || (currentDay.activities[index + 1] && isRestActivity(currentDay.activities[index + 1]))}
                           onClick={() => {
                             const accom = currentDay.accommodation!;
                             addActivity(currentDay.id, {
@@ -570,12 +610,12 @@ export function DayContent() {
                               duration: '1h',
                               type: 'free',
                               estimatedCost: 0,
-                              currency: 'EUR',
+                              currency: 'KRW',
                               isBooked: false,
                               ...(accom.lat && accom.lng ? { lat: accom.lat, lng: accom.lng } : {}),
                             }, index + 1);
                           }}
-                          className="flex items-center gap-1 px-2 py-0.5 text-[11px] text-purple-400 hover:text-purple-600 bg-purple-50/30 hover:bg-purple-50 rounded-full transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-purple-50/30 disabled:hover:text-purple-400"
+                          className="flex items-center gap-1 px-2 py-0.5 text-[11px] text-purple-500 bg-purple-50/60 hover:text-purple-700 hover:bg-purple-100 rounded-full transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                           title={currentDay.accommodation?.name ? t('accommodation.restHere' as TranslationKey) : t('accommodation.add' as TranslationKey)}
                         >
                           <Coffee size={12} />
@@ -599,12 +639,12 @@ export function DayContent() {
                               duration: '1h',
                               type: 'free',
                               estimatedCost: 0,
-                              currency: 'EUR',
+                              currency: 'KRW',
                               isBooked: false,
                               ...(accom.lat && accom.lng ? { lat: accom.lat, lng: accom.lng } : {}),
                             }, index + 1);
                           }}
-                          className="flex items-center gap-1 px-2 py-0.5 text-[11px] text-purple-400 hover:text-purple-600 bg-purple-50/30 hover:bg-purple-50 rounded-full transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-purple-50/30 disabled:hover:text-purple-400"
+                          className="flex items-center gap-1 px-2 py-0.5 text-[11px] text-purple-500 bg-purple-50/60 hover:text-purple-700 hover:bg-purple-100 rounded-full transition-all disabled:opacity-30 disabled:cursor-not-allowed"
                           title={currentDay.accommodation?.name ? t('accommodation.restHere' as TranslationKey) : t('accommodation.add' as TranslationKey)}
                         >
                           <Coffee size={12} />

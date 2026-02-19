@@ -34,7 +34,7 @@ export function BookingModal({ activity, dayId, onClose }: Props) {
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-secondary/25 bg-gradient-to-r from-warm-50 to-accent-cream/30 rounded-t-3xl">
           <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 bg-gradient-to-br from-secondary to-amber-400 rounded-xl flex items-center justify-center shadow-sm">
+            <div className="w-8 h-8 bg-secondary rounded-xl flex items-center justify-center shadow-sm">
               <Ticket size={16} className="text-white" />
             </div>
             <h3 className="font-bold text-theme-dark">{t('booking.title')}</h3>
@@ -127,7 +127,7 @@ export function BookingModal({ activity, dayId, onClose }: Props) {
           </button>
           <button
             onClick={handleSave}
-            className="flex-1 bg-gradient-to-r from-primary to-cta-end text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-primary/20 transition-all active:scale-[0.98] min-h-[44px]"
+            className="flex-1 bg-primary hover:bg-primary-dark text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-primary/20 transition-all active:scale-[0.98] min-h-[44px]"
           >
             <Save size={16} /> {t('booking.save')}
           </button>

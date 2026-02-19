@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { Plus, Trash2, Copy, MapPin, Calendar, ArrowLeft, Settings, Users, Crown, Pencil, Eye, UserPlus, Send } from 'lucide-react';
 import { useTripStore } from '@/store/useTripStore.ts';
@@ -109,9 +109,10 @@ export function TripListPage() {
     navigate('/');
   };
 
+  const [, setSearchParams] = useSearchParams();
   const handleEdit = (tripId: string) => {
     setCurrentTripId(tripId);
-    navigate('/?settings=true');
+    setSearchParams({ settings: 'true' });
   };
 
   const handleDelete = (tripId: string) => {
@@ -162,7 +163,7 @@ export function TripListPage() {
           </button>
           <button
             onClick={() => setShowCreate(true)}
-            className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-xl text-xs font-bold hover:shadow-lg hover:shadow-emerald-500/20 transition-all min-h-[44px]"
+            className="flex items-center gap-1.5 px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-xl text-xs font-bold hover:shadow-lg hover:shadow-primary/20 transition-all min-h-[44px]"
           >
             <Plus size={14} />
             {t('trips.create' as TranslationKey)}
@@ -188,13 +189,13 @@ export function TripListPage() {
               key={trip.id}
               className={`relative bg-surface rounded-2xl border transition-all ${
                 isCurrent
-                  ? 'border-emerald-300 shadow-lg shadow-emerald-500/10 ring-1 ring-emerald-200/50'
+                  ? 'border-[#EBD8DC] shadow-lg shadow-[#EBD8DC]/20 ring-1 ring-[#EBD8DC]/60'
                   : 'border-gray-300/80 shadow-sm hover:shadow-md hover:border-gray-300'
               }`}
             >
               {/* Current badge */}
               {isCurrent && (
-                <div className="absolute -top-2.5 left-4 px-2.5 py-0.5 bg-emerald-500 text-white text-[10px] font-bold rounded-full">
+                <div className="absolute -top-2.5 left-4 px-2.5 py-0.5 bg-primary text-white text-[10px] font-bold rounded-full">
                   {t('trips.current' as TranslationKey)}
                 </div>
               )}
@@ -208,7 +209,7 @@ export function TripListPage() {
                   <div className={`w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0 ${
                     trip.emoji
                       ? 'bg-gray-50 border border-gray-100 text-2xl'
-                      : 'bg-gradient-to-br from-primary to-cta-end shadow-sm shadow-primary/20'
+                      : 'bg-primary shadow-sm shadow-primary/20'
                   }`}>
                     {trip.emoji || <MapPin size={20} className="text-white" />}
                   </div>

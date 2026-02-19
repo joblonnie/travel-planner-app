@@ -16,7 +16,7 @@ import type { ThemeId, Trip } from '@/types/index.ts';
 const TripMembersSection = lazy(() => import('@/features/sharing/components/TripMembersSection.tsx').then(m => ({ default: m.TripMembersSection })));
 
 const themes: { id: ThemeId; nameKey: TranslationKey; descKey: TranslationKey; colors: string[] }[] = [
-  { id: 'cloud-dancer', nameKey: 'theme.cloudDancer' as TranslationKey, descKey: 'theme.cloudDancerDesc' as TranslationKey, colors: ['#1E2D4F', '#8B734A', '#9E7B8A', '#F0EEE9'] },
+  { id: 'cloud-dancer', nameKey: 'theme.cloudDancer' as TranslationKey, descKey: 'theme.cloudDancerDesc' as TranslationKey, colors: ['#5C8EA0', '#C4A285', '#B898B4', '#F0EEE9'] },
   { id: 'classic-spain', nameKey: 'theme.classicSpain' as TranslationKey, descKey: 'theme.classicSpainDesc' as TranslationKey, colors: ['#be123c', '#d97706', '#fb7185', '#fafaf9'] },
   { id: 'mocha-mousse', nameKey: 'theme.mochaMousse' as TranslationKey, descKey: 'theme.mochaMousseDesc' as TranslationKey, colors: ['#6B4C3B', '#A47864', '#D4A889', '#FAF8F5'] },
 ];
@@ -28,15 +28,13 @@ interface Props {
 export function TripSettingsModal({ onClose }: Props) {
   const navigate = useNavigate();
   const { t, language, setLanguage } = useI18n();
-  const exchangeRateFromStore = useTripStore((s) => s.exchangeRate);
-  const setExchangeRateAction = useTripStore((s) => s.setExchangeRate);
   const theme = useTripStore((s) => s.theme);
   const setTheme = useTripStore((s) => s.setTheme);
   const ratesUpdatedAt = useTripStore((s) => s.ratesUpdatedAt);
   const queryClient = useQueryClient();
   const { setTripName: setTripNameAction, setStartDate: setStartDateAction, setEndDate: setEndDateAction, setTotalBudget: setTotalBudgetAction, importTripData } = useTripActions();
   const tripData = useTripData((trip) => trip);
-  const { currency, convert, toEur } = useCurrency();
+  const { currency, convert, toBase } = useCurrency();
   const { refreshRates } = useExchangeRates();
   const [refreshing, setRefreshing] = useState(false);
   useEscKey(onClose);
@@ -44,8 +42,7 @@ export function TripSettingsModal({ onClose }: Props) {
   const [tripName, setTripName] = useState(tripData.tripName);
   const [startDate, setStartDate] = useState(tripData.startDate);
   const [endDate, setEndDate] = useState(tripData.endDate);
-  const [totalBudget, setTotalBudget] = useState(convert(tripData.totalBudget));
-  const [exchangeRate, setExchangeRate] = useState(exchangeRateFromStore);
+  const [totalBudget, setTotalBudget] = useState(convert(tripData.totalBudget) ? String(convert(tripData.totalBudget)) : '');
   const [importMsg, setImportMsg] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -53,12 +50,10 @@ export function TripSettingsModal({ onClose }: Props) {
     const trips = queryClient.getQueryData<Trip[]>(TRIPS_QUERY_KEY);
     const trip = trips?.find((t) => t.id === useTripStore.getState().currentTripId);
     if (!trip) return;
-    const exchangeRateVal = useTripStore.getState().exchangeRate;
     const exportData = {
       trips: [trip],
-      exchangeRate: exchangeRateVal,
       exportedAt: new Date().toISOString(),
-      version: 5,
+      version: 6,
     };
     const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
@@ -84,9 +79,8 @@ export function TripSettingsModal({ onClose }: Props) {
           setTripName(ct.tripName);
           setStartDate(ct.startDate);
           setEndDate(ct.endDate);
-          setTotalBudget(convert(ct.totalBudget));
+          setTotalBudget(convert(ct.totalBudget) ? String(convert(ct.totalBudget)) : '');
         }
-        setExchangeRate(useTripStore.getState().exchangeRate);
         navigate('/');
       }
     };
@@ -101,7 +95,7 @@ export function TripSettingsModal({ onClose }: Props) {
     const allExpenses: string[] = ['Date,Day,Category,Description,Amount,Currency,Owner'];
     trip.expenses.forEach((e) => {
       const day = trip.days.find((d) => d.id === e.dayId);
-      allExpenses.push(`${e.date},${day ? 'Day ' + day.dayNumber : ''},${e.category},"${e.description}",${e.amount},${e.currency || 'EUR'},${e.owner}`);
+      allExpenses.push(`${e.date},${day ? 'Day ' + day.dayNumber : ''},${e.category},"${e.description}",${e.amount},${e.currency || 'KRW'},${e.owner}`);
     });
     trip.days.forEach((day) => {
       day.activities.forEach((act) => {
@@ -123,16 +117,13 @@ export function TripSettingsModal({ onClose }: Props) {
     setTripNameAction(tripName);
     setStartDateAction(startDate);
     setEndDateAction(endDate);
-    setTotalBudgetAction(toEur(totalBudget));
-    setExchangeRateAction(exchangeRate);
+    setTotalBudgetAction(toBase(Number(totalBudget) || 0));
     onClose();
   };
 
   const handleRefreshRates = async () => {
     setRefreshing(true);
     await refreshRates();
-    const newRate = useTripStore.getState().fetchedRates?.KRW;
-    if (newRate) setExchangeRate(newRate);
     setRefreshing(false);
   };
 
@@ -143,9 +134,9 @@ export function TripSettingsModal({ onClose }: Props) {
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-md sm:p-4 animate-backdrop" onClick={onClose}>
       <div className="bg-surface rounded-t-3xl sm:rounded-3xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-hidden flex flex-col border border-gray-200/80 animate-sheet-up sm:animate-modal-pop" onClick={(e) => e.stopPropagation()}>
-        <div className="flex items-center justify-between p-4 border-b border-gray-200">
+        <div className="flex items-center justify-between p-4 border-b border-gray-200 bg-gradient-to-r from-warm-50 to-accent-cream/30 rounded-t-3xl">
           <div className="flex items-center gap-2.5">
-            <div className="w-7 h-7 bg-gradient-to-br from-gray-600 to-gray-700 rounded-lg flex items-center justify-center shadow-sm">
+            <div className="w-7 h-7 bg-primary rounded-lg flex items-center justify-center shadow-sm">
               <Settings size={14} className="text-white" />
             </div>
             <h3 className="font-bold text-gray-800">{t('settings.tripSettings')}</h3>
@@ -191,42 +182,30 @@ export function TripSettingsModal({ onClose }: Props) {
             <p className="text-xs text-gray-400">{dayCount}{t('app.days')}</p>
           )}
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">{t('budget.totalBudget')} ({currency})</label>
-              <input
-                type="number"
-                value={totalBudget}
-                onChange={(e) => setTotalBudget(Number(e.target.value))}
-                min={0}
-                className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary/40 outline-none bg-gray-50/30 focus:bg-white transition-colors"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-gray-500 mb-1">{t('currency.rate')} (₩/€)</label>
-              <input
-                type="number"
-                value={exchangeRate}
-                onChange={(e) => setExchangeRate(Number(e.target.value))}
-                min={1}
-                className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary/40 outline-none bg-gray-50/30 focus:bg-white transition-colors"
-              />
-              <div className="flex items-center justify-between mt-1.5">
-                <span className="text-[10px] text-gray-400">
-                  {ratesUpdatedAt
-                    ? `${t('currency.lastUpdated' as TranslationKey)}: ${new Date(ratesUpdatedAt).toLocaleString()}`
-                    : ''}
-                </span>
-                <button
-                  type="button"
-                  onClick={handleRefreshRates}
-                  disabled={refreshing}
-                  className="flex items-center gap-1 text-[10px] text-primary hover:text-primary-dark transition-colors disabled:opacity-50"
-                >
-                  <RefreshCw size={10} className={refreshing ? 'animate-spin' : ''} />
-                  {t('currency.refresh' as TranslationKey)}
-                </button>
-              </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-500 mb-1">{t('budget.totalBudget')} ({currency})</label>
+            <input
+              type="number"
+              value={totalBudget}
+              onChange={(e) => setTotalBudget(e.target.value)}
+              min={0}
+              className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary/40 outline-none bg-gray-50/30 focus:bg-white transition-colors"
+            />
+            <div className="flex items-center justify-between mt-1.5">
+              <span className="text-[10px] text-gray-400">
+                {ratesUpdatedAt
+                  ? `${t('currency.lastUpdated' as TranslationKey)}: ${new Date(ratesUpdatedAt).toLocaleString()}`
+                  : ''}
+              </span>
+              <button
+                type="button"
+                onClick={handleRefreshRates}
+                disabled={refreshing}
+                className="flex items-center gap-1 text-[10px] text-primary hover:text-primary-dark transition-colors disabled:opacity-50"
+              >
+                <RefreshCw size={10} className={refreshing ? 'animate-spin' : ''} />
+                {t('currency.refresh' as TranslationKey)}
+              </button>
             </div>
           </div>
 
@@ -316,12 +295,20 @@ export function TripSettingsModal({ onClose }: Props) {
         </div>
 
         <div className="p-4 border-t border-gray-200 bg-gray-50/30 rounded-b-3xl">
-          <button
-            onClick={handleSave}
-            className="w-full bg-gradient-to-r from-primary to-cta-end text-white py-2.5 rounded-xl font-bold hover:shadow-lg hover:shadow-primary/20 transition-all active:scale-[0.98]"
-          >
-            {t('settings.save')}
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={onClose}
+              className="flex-1 bg-gray-100 text-gray-600 py-3 rounded-xl font-bold hover:bg-gray-200 transition-colors min-h-[44px]"
+            >
+              {t('activity.cancel')}
+            </button>
+            <button
+              onClick={handleSave}
+              className="flex-[2] bg-primary hover:bg-primary-dark text-white py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-primary/20 transition-all active:scale-[0.98] min-h-[44px]"
+            >
+              {t('settings.save')}
+            </button>
+          </div>
         </div>
       </div>
     </div>

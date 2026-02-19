@@ -53,7 +53,7 @@ type OwnerFilter = ExpenseOwner | 'all';
 
 export function BudgetPage() {
   const { t } = useI18n();
-  const { format, formatWithBoth, currency, symbol, toEur } = useCurrency();
+  const { format, formatWithBoth, currency, symbol, toBase } = useCurrency();
   const expenses = useTripData((t) => t.expenses);
   const totalBudget = useTripData((t) => t.totalBudget);
   const days = useTripData((t) => t.days);
@@ -78,7 +78,7 @@ export function BudgetPage() {
   const [form, setForm] = useState({
     category: 'food' as Expense['category'],
     amount: '',
-    currency: 'EUR',
+    currency: 'KRW',
     description: '',
     date: new Date().toISOString().split('T')[0],
     dayId: '',
@@ -143,18 +143,18 @@ export function BudgetPage() {
   const handleAddExpense = () => {
     if (!form.amount || !form.description) return;
     const inputAmount = parseFloat(form.amount);
-    const amountInEur = toEur(inputAmount);
+    const amountInBase = toBase(inputAmount);
     addExpense({
       id: crypto.randomUUID(),
       category: form.category,
-      amount: Math.round(amountInEur * 1000000) / 1000000,
-      currency: 'EUR',
+      amount: Math.round(amountInBase * 1000000) / 1000000,
+      currency: 'KRW',
       description: form.description,
       date: form.date,
       dayId: form.dayId || undefined,
       owner: form.owner,
     });
-    setForm({ category: 'food', amount: '', currency: 'EUR', description: '', date: new Date().toISOString().split('T')[0], dayId: '', owner: 'shared' });
+    setForm({ category: 'food', amount: '', currency: 'KRW', description: '', date: new Date().toISOString().split('T')[0], dayId: '', owner: 'shared' });
     setShowAddForm(false);
   };
 
@@ -847,7 +847,7 @@ export function BudgetPage() {
               <button
                 onClick={handleAddExpense}
                 disabled={!form.amount || !form.description}
-                className="flex-1 bg-gradient-to-r from-primary to-cta-end text-white py-2.5 rounded-xl font-bold hover:shadow-lg hover:shadow-primary/20 transition-all flex items-center justify-center gap-2 active:scale-[0.98] min-h-[44px] disabled:opacity-40 disabled:cursor-not-allowed"
+                className="flex-1 bg-primary hover:bg-primary-dark text-white py-2.5 rounded-xl font-bold hover:shadow-lg hover:shadow-primary/20 transition-all flex items-center justify-center gap-2 active:scale-[0.98] min-h-[44px] disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <Plus size={16} /> {t('budget.addExpense')}
               </button>
@@ -879,7 +879,7 @@ export function BudgetPage() {
               <button onClick={() => setShowBudgetEdit(false)} className="flex-1 bg-gray-100 text-gray-600 py-2.5 rounded-xl font-bold hover:bg-gray-200 transition-colors min-h-[44px]">
                 {t('activity.cancel')}
               </button>
-              <button onClick={handleSetBudget} className="flex-1 bg-gradient-to-r from-primary to-cta-end text-white py-2.5 rounded-xl font-bold hover:shadow-lg hover:shadow-primary/20 transition-all active:scale-[0.98] min-h-[44px]">
+              <button onClick={handleSetBudget} className="flex-1 bg-primary hover:bg-primary-dark text-white py-2.5 rounded-xl font-bold hover:shadow-lg hover:shadow-primary/20 transition-all active:scale-[0.98] min-h-[44px]">
                 {t('booking.save')}
               </button>
             </div>

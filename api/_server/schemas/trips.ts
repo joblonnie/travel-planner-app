@@ -170,7 +170,7 @@ const TripExpenseSchema = z.object({
   dayId: z.string().optional(),
   category: z.enum(['accommodation', 'food', 'transport', 'attraction', 'shopping', 'entertainment', 'other']),
   amount: z.number(),
-  currency: z.literal('EUR'),
+  currency: z.literal('KRW'),
   description: z.string(),
   date: z.string(),
   owner: z.string(),
