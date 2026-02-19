@@ -554,66 +554,62 @@ export function DayContent() {
                         <ActivityCard activity={activity} dayId={currentDay.id} index={index} totalCount={currentDay.activities.length} reorderMode={reorderMode} />
                       </div>
                     </div>
-                    {/* Insert button between activities */}
+                    {/* Insert buttons between activities */}
                     {!reorderMode && index < currentDay.activities.length - 1 && (
                       <div className="pl-[72px] flex items-center gap-1">
                         <InsertButton onClick={() => { setInsertAtIndex(index + 1); setShowAdd(true); }} label={t('day.insertHere' as TranslationKey)} />
-                        {currentDay.accommodation?.name && currentDay.accommodation?.lat && (
-                          <button
-                            onClick={() => {
-                              const accom = currentDay.accommodation!;
-                              addActivity(currentDay.id, {
-                                id: crypto.randomUUID(),
-                                name: `Rest at ${accom.name}`,
-                                nameKo: `${accom.name}에서 휴식`,
-                                time: '',
-                                duration: '1h',
-                                type: 'free',
-                                estimatedCost: 0,
-                                currency: 'EUR',
-                                isBooked: false,
-                                lat: accom.lat,
-                                lng: accom.lng,
-                              }, index + 1);
-                            }}
-                            className="flex items-center gap-1 px-2 py-0.5 text-[10px] text-purple-400 hover:text-purple-600 hover:bg-purple-50 rounded-full transition-all opacity-40 hover:opacity-100"
-                            title={t('accommodation.restHere' as TranslationKey)}
-                          >
-                            <Coffee size={10} />
-                            <span className="hidden sm:inline">{t('accommodation.restHere' as TranslationKey)}</span>
-                          </button>
-                        )}
+                        <button
+                          disabled={!currentDay.accommodation?.name}
+                          onClick={() => {
+                            const accom = currentDay.accommodation!;
+                            addActivity(currentDay.id, {
+                              id: crypto.randomUUID(),
+                              name: `Rest at ${accom.name}`,
+                              nameKo: `${accom.name}에서 휴식`,
+                              time: '',
+                              duration: '1h',
+                              type: 'free',
+                              estimatedCost: 0,
+                              currency: 'EUR',
+                              isBooked: false,
+                              ...(accom.lat && accom.lng ? { lat: accom.lat, lng: accom.lng } : {}),
+                            }, index + 1);
+                          }}
+                          className="flex items-center gap-1 px-2 py-0.5 text-[11px] text-purple-400 hover:text-purple-600 bg-purple-50/30 hover:bg-purple-50 rounded-full transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-purple-50/30 disabled:hover:text-purple-400"
+                          title={currentDay.accommodation?.name ? t('accommodation.restHere' as TranslationKey) : t('accommodation.add' as TranslationKey)}
+                        >
+                          <Coffee size={12} />
+                          <span>{t('accommodation.restHere' as TranslationKey)}</span>
+                        </button>
                       </div>
                     )}
-                    {/* Insert button after last activity */}
+                    {/* Insert buttons after last activity */}
                     {!reorderMode && index === currentDay.activities.length - 1 && (
                       <div className="pl-[72px] flex items-center gap-1">
                         <InsertButton onClick={() => { setInsertAtIndex(index + 1); setShowAdd(true); }} label={t('day.insertHere' as TranslationKey)} />
-                        {currentDay.accommodation?.name && currentDay.accommodation?.lat && (
-                          <button
-                            onClick={() => {
-                              const accom = currentDay.accommodation!;
-                              addActivity(currentDay.id, {
-                                id: crypto.randomUUID(),
-                                name: `Rest at ${accom.name}`,
-                                nameKo: `${accom.name}에서 휴식`,
-                                time: '',
-                                duration: '1h',
-                                type: 'free',
-                                estimatedCost: 0,
-                                currency: 'EUR',
-                                isBooked: false,
-                                lat: accom.lat,
-                                lng: accom.lng,
-                              }, index + 1);
-                            }}
-                            className="flex items-center gap-1 px-2 py-0.5 text-[10px] text-purple-400 hover:text-purple-600 hover:bg-purple-50 rounded-full transition-all opacity-40 hover:opacity-100"
-                            title={t('accommodation.restHere' as TranslationKey)}
-                          >
-                            <Coffee size={10} />
-                            <span className="hidden sm:inline">{t('accommodation.restHere' as TranslationKey)}</span>
-                          </button>
-                        )}
+                        <button
+                          disabled={!currentDay.accommodation?.name}
+                          onClick={() => {
+                            const accom = currentDay.accommodation!;
+                            addActivity(currentDay.id, {
+                              id: crypto.randomUUID(),
+                              name: `Rest at ${accom.name}`,
+                              nameKo: `${accom.name}에서 휴식`,
+                              time: '',
+                              duration: '1h',
+                              type: 'free',
+                              estimatedCost: 0,
+                              currency: 'EUR',
+                              isBooked: false,
+                              ...(accom.lat && accom.lng ? { lat: accom.lat, lng: accom.lng } : {}),
+                            }, index + 1);
+                          }}
+                          className="flex items-center gap-1 px-2 py-0.5 text-[11px] text-purple-400 hover:text-purple-600 bg-purple-50/30 hover:bg-purple-50 rounded-full transition-all disabled:opacity-30 disabled:cursor-not-allowed disabled:hover:bg-purple-50/30 disabled:hover:text-purple-400"
+                          title={currentDay.accommodation?.name ? t('accommodation.restHere' as TranslationKey) : t('accommodation.add' as TranslationKey)}
+                        >
+                          <Coffee size={12} />
+                          <span>{t('accommodation.restHere' as TranslationKey)}</span>
+                        </button>
                       </div>
                     )}
                   </div>

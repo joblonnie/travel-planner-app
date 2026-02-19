@@ -192,25 +192,14 @@ export const authRoute = new OpenAPIHono<AppEnv>()
     deleteCookie(c, 'oauth_redirect_uri', { path: '/' });
 
     if (!code || !state || !storedState || state !== storedState || !codeVerifier) {
-      return c.json({
-        error: 'Invalid OAuth callback',
-        debug: {
-          hasCode: !!code,
-          hasState: !!state,
-          hasStoredState: !!storedState,
-          stateMatch: state === storedState,
-          hasCodeVerifier: !!codeVerifier,
-        },
-      }, 400);
+      return c.json({ error: 'Invalid OAuth callback' }, 400);
     }
 
     let tokens;
     try {
       tokens = await exchangeCodeForTokens(code, codeVerifier, redirectUri);
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Unknown error';
-      console.error('Token exchange failed:', msg);
-      return c.json({ error: 'Failed to validate authorization code', detail: msg }, 400);
+    } catch {
+      return c.json({ error: 'Failed to validate authorization code' }, 400);
     }
 
     // Fetch user info from Google
