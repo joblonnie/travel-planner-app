@@ -1,4 +1,4 @@
-import { Resend } from 'resend';
+import nodemailer from 'nodemailer';
 
 interface InvitationEmailParams {
   to: string;
@@ -14,8 +14,6 @@ interface SendResult {
   success: boolean;
   error?: string;
 }
-
-const RESEND_FROM_EMAIL = process.env.RESEND_FROM_EMAIL || 'noreply@resend.dev';
 
 function getRoleLabel(role: string): string {
   switch (role) {
@@ -122,33 +120,39 @@ function escapeHtml(str: string): string {
     .replace(/'/g, '&#39;');
 }
 
+function createTransport() {
+  const user = process.env.GMAIL_USER;
+  const pass = process.env.GMAIL_APP_PASSWORD;
+
+  if (!user || !pass) return null;
+
+  return nodemailer.createTransport({
+    service: 'gmail',
+    auth: { user, pass },
+  });
+}
+
 export async function sendInvitationEmail(params: InvitationEmailParams): Promise<SendResult> {
-  const apiKey = process.env.RESEND_API_KEY;
-  if (!apiKey) {
-    console.warn('[email] RESEND_API_KEY not set — skipping invitation email');
-    return { success: false, error: 'RESEND_API_KEY not configured' };
+  const transport = createTransport();
+  if (!transport) {
+    console.warn('[email] GMAIL_USER/GMAIL_APP_PASSWORD not set — skipping invitation email');
+    return { success: false, error: 'Gmail credentials not configured' };
   }
 
   try {
-    const resend = new Resend(apiKey);
     const html = buildInvitationHtml(params);
 
-    const { error } = await resend.emails.send({
-      from: RESEND_FROM_EMAIL,
+    await transport.sendMail({
+      from: `여행 플래너 <${process.env.GMAIL_USER}>`,
       to: params.to,
       subject: `[여행 플래너] ${params.tripName} 여행에 초대되었습니다`,
       html,
     });
 
-    if (error) {
-      console.error('[email] Resend API error:', error);
-      return { success: false, error: error.message };
-    }
-
     return { success: true };
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    console.error('[email] Unexpected error:', message);
+    console.error('[email] Send error:', message);
     return { success: false, error: message };
   }
 }
