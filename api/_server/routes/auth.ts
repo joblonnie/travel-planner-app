@@ -192,7 +192,16 @@ export const authRoute = new OpenAPIHono<AppEnv>()
     deleteCookie(c, 'oauth_redirect_uri', { path: '/' });
 
     if (!code || !state || !storedState || state !== storedState || !codeVerifier) {
-      return c.json({ error: 'Invalid OAuth callback' }, 400);
+      return c.json({
+        error: 'Invalid OAuth callback',
+        debug: {
+          hasCode: !!code,
+          hasState: !!state,
+          hasStoredState: !!storedState,
+          stateMatch: state === storedState,
+          hasCodeVerifier: !!codeVerifier,
+        },
+      }, 400);
     }
 
     let tokens;
