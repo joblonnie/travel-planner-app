@@ -198,8 +198,10 @@ export const authRoute = new OpenAPIHono<AppEnv>()
     let tokens;
     try {
       tokens = await exchangeCodeForTokens(code, codeVerifier, redirectUri);
-    } catch {
-      return c.json({ error: 'Failed to validate authorization code' }, 400);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Unknown error';
+      console.error('Token exchange failed:', msg);
+      return c.json({ error: 'Failed to validate authorization code', detail: msg }, 400);
     }
 
     // Fetch user info from Google
