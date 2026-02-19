@@ -41,10 +41,16 @@ async function generateCodeChallenge(verifier: string): Promise<string> {
   return btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 
-function buildGoogleAuthUrl(state: string, codeChallenge: string): string {
+function getRedirectUri(requestUrl: string): string {
+  if (process.env.AUTH_REDIRECT_URI) return process.env.AUTH_REDIRECT_URI;
+  const url = new URL(requestUrl);
+  return `${url.protocol}//${url.host}/api/auth/google/callback`;
+}
+
+function buildGoogleAuthUrl(state: string, codeChallenge: string, redirectUri: string): string {
   const params = new URLSearchParams({
     client_id: process.env.GOOGLE_CLIENT_ID!,
-    redirect_uri: process.env.AUTH_REDIRECT_URI!,
+    redirect_uri: redirectUri,
     response_type: 'code',
     scope: 'openid email profile',
     state,
@@ -56,14 +62,14 @@ function buildGoogleAuthUrl(state: string, codeChallenge: string): string {
   return `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`;
 }
 
-async function exchangeCodeForTokens(code: string, codeVerifier: string) {
+async function exchangeCodeForTokens(code: string, codeVerifier: string, redirectUri: string) {
   const res = await fetch('https://oauth2.googleapis.com/token', {
     method: 'POST',
     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({
       client_id: process.env.GOOGLE_CLIENT_ID!,
       client_secret: process.env.GOOGLE_CLIENT_SECRET!,
-      redirect_uri: process.env.AUTH_REDIRECT_URI!,
+      redirect_uri: redirectUri,
       grant_type: 'authorization_code',
       code,
       code_verifier: codeVerifier,
@@ -159,20 +165,17 @@ const logout = createRoute({
 
 export const authRoute = new OpenAPIHono<AppEnv>()
   .openapi(googleLogin, async (c) => {
+    const redirectUri = getRedirectUri(c.req.url);
     const state = generateState();
     const codeVerifier = generateCodeVerifier();
     const codeChallenge = await generateCodeChallenge(codeVerifier);
-    const url = buildGoogleAuthUrl(state, codeChallenge);
+    const url = buildGoogleAuthUrl(state, codeChallenge, redirectUri);
 
-    // Store state and codeVerifier in short-lived cookies
-    setCookie(c, 'oauth_state', state, {
-      ...COOKIE_OPTIONS,
-      maxAge: 600, // 10 minutes
-    });
-    setCookie(c, 'oauth_code_verifier', codeVerifier, {
-      ...COOKIE_OPTIONS,
-      maxAge: 600,
-    });
+    // Store state, codeVerifier, and redirectUri in short-lived cookies
+    const oauthCookieOpts = { ...COOKIE_OPTIONS, maxAge: 600 };
+    setCookie(c, 'oauth_state', state, oauthCookieOpts);
+    setCookie(c, 'oauth_code_verifier', codeVerifier, oauthCookieOpts);
+    setCookie(c, 'oauth_redirect_uri', redirectUri, oauthCookieOpts);
 
     return c.redirect(url, 302);
   })
@@ -181,10 +184,12 @@ export const authRoute = new OpenAPIHono<AppEnv>()
     const state = c.req.query('state');
     const storedState = getCookie(c, 'oauth_state');
     const codeVerifier = getCookie(c, 'oauth_code_verifier');
+    const redirectUri = getCookie(c, 'oauth_redirect_uri') ?? getRedirectUri(c.req.url);
 
     // Clean up OAuth cookies
     deleteCookie(c, 'oauth_state', { path: '/' });
     deleteCookie(c, 'oauth_code_verifier', { path: '/' });
+    deleteCookie(c, 'oauth_redirect_uri', { path: '/' });
 
     if (!code || !state || !storedState || state !== storedState || !codeVerifier) {
       return c.json({ error: 'Invalid OAuth callback' }, 400);
@@ -192,7 +197,7 @@ export const authRoute = new OpenAPIHono<AppEnv>()
 
     let tokens;
     try {
-      tokens = await exchangeCodeForTokens(code, codeVerifier);
+      tokens = await exchangeCodeForTokens(code, codeVerifier, redirectUri);
     } catch {
       return c.json({ error: 'Failed to validate authorization code' }, 400);
     }

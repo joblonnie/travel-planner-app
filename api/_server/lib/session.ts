@@ -52,9 +52,11 @@ export async function deleteSession(sessionId: string) {
 
 export const SESSION_COOKIE_NAME = 'session';
 
+const isProduction = process.env.NODE_ENV === 'production' || process.env.VERCEL_ENV === 'production';
+
 export const COOKIE_OPTIONS = {
   httpOnly: true,
-  secure: true,
+  secure: isProduction,
   sameSite: 'Lax' as const,
   path: '/',
   maxAge: 30 * 24 * 60 * 60, // 30 days in seconds
