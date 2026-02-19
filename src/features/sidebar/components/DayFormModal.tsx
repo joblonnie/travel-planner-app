@@ -70,7 +70,7 @@ export function DayFormModal({ day, onClose }: Props) {
 
     const autocomplete = new google.maps.places.Autocomplete(accomSearchRef.current, {
       fields: ['geometry', 'name', 'formatted_address'],
-      types: ['lodging', 'establishment'],
+      types: ['lodging'],
     });
 
     autocomplete.addListener('place_changed', () => {

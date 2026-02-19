@@ -42,7 +42,7 @@ export function AccommodationFormModal({ destinationId, destinationLat, destinat
 
     const autocomplete = new google.maps.places.Autocomplete(searchRef.current, {
       fields: ['geometry', 'name', 'formatted_address'],
-      types: ['lodging', 'establishment'],
+      types: ['lodging'],
     });
 
     autocomplete.addListener('place_changed', () => {
