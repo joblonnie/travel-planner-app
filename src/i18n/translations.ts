@@ -520,6 +520,28 @@ export const translations = {
   'sharing.you': { ko: '나', en: 'You' },
   'sharing.leaveTrip': { ko: '여행 나가기', en: 'Leave trip' },
   'sharing.leaveConfirm': { ko: '이 여행에서 나가시겠습니까?', en: 'Leave this trip?' },
+
+  // Invite accept page
+  'invite.title': { ko: '여행 초대', en: 'Trip Invitation' },
+  'invite.invitedBy': { ko: '님의 초대', en: 'invited you' },
+  'invite.tripName': { ko: '여행', en: 'Trip' },
+  'invite.role': { ko: '역할', en: 'Role' },
+  'invite.roleEditor': { ko: '편집자', en: 'Editor' },
+  'invite.roleViewer': { ko: '뷰어', en: 'Viewer' },
+  'invite.loginToAccept': { ko: 'Google 로그인하여 수락', en: 'Login with Google to Accept' },
+  'invite.accepting': { ko: '초대 수락 중...', en: 'Accepting invitation...' },
+  'invite.accepted': { ko: '초대를 수락했습니다!', en: 'Invitation accepted!' },
+  'invite.redirecting': { ko: '여행 페이지로 이동합니다...', en: 'Redirecting to your trip...' },
+  'invite.expired': { ko: '초대가 만료되었습니다', en: 'This invitation has expired' },
+  'invite.expiredDesc': { ko: '초대한 분에게 다시 요청해주세요', en: 'Please ask the inviter to send a new invitation' },
+  'invite.notFound': { ko: '초대를 찾을 수 없습니다', en: 'Invitation not found' },
+  'invite.notFoundDesc': { ko: '유효하지 않은 링크입니다', en: 'This link is not valid' },
+  'invite.alreadyDone': { ko: '이미 처리된 초대입니다', en: 'This invitation has already been processed' },
+  'invite.emailMismatch': { ko: '로그인한 이메일이 초대된 이메일과 다릅니다', en: 'Your email doesn\'t match the invitation' },
+  'invite.emailMismatchDesc': { ko: '다른 계정으로 로그인해주세요', en: 'Please log in with the correct account' },
+  'invite.goToTrips': { ko: '여행 목록으로', en: 'Go to Trips' },
+  'invite.logoutAndRetry': { ko: '로그아웃 후 다시 시도', en: 'Log out and try again' },
+  'invite.expiresAt': { ko: '만료일', en: 'Expires' },
 } as const;
 
 export type TranslationKey = keyof typeof translations;

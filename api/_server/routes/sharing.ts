@@ -16,6 +16,7 @@ import { ErrorResponseSchema } from '../schemas/common.js';
 import { getDb } from '../db/index.js';
 import { tripMembers, tripInvitations, trips, users } from '../db/schema.js';
 import { getTripRole, hasMinRole } from '../middleware/tripAuth.js';
+import { sendInvitationEmail } from '../lib/email.js';
 
 const DeletedResponseSchema = ErrorResponseSchema; // reuse for simple { error?: } shape
 
@@ -218,6 +219,19 @@ export const sharingRoute = new OpenAPIHono<AppEnv>()
         expiresAt,
       });
     }
+
+    // Fire-and-forget email
+    const url = new URL(c.req.url);
+    const baseUrl = process.env.APP_BASE_URL || `${url.protocol}//${url.host}`;
+    sendInvitationEmail({
+      to: email,
+      inviterName: inviter?.name ?? null,
+      inviterEmail: inviter?.email ?? '',
+      tripName: trip?.tripName ?? '',
+      role,
+      invitationId,
+      baseUrl,
+    }).catch((err) => console.error('[email] Send failed:', err));
 
     return c.json({
       invitation: {
@@ -450,4 +464,63 @@ export const sharingRoute = new OpenAPIHono<AppEnv>()
       .where(eq(tripInvitations.id, invitationId));
 
     return c.json({ error: '' }, 200); // empty error means success
+  });
+
+// --- Public invitation details (no auth) ---
+
+const getInvitationDetails = createRoute({
+  operationId: 'getInvitationDetails',
+  method: 'get',
+  path: '/invitations/{invitationId}/details',
+  tags: ['Sharing'],
+  summary: 'Get invitation details (public)',
+  request: { params: InvitationIdParamSchema },
+  responses: {
+    200: { content: { 'application/json': { schema: InviteResponseSchema } }, description: 'Invitation details' },
+    404: { content: { 'application/json': { schema: ErrorResponseSchema } }, description: 'Not found' },
+  },
+});
+
+export const publicSharingRoute = new OpenAPIHono()
+  .openapi(getInvitationDetails, async (c) => {
+    const { invitationId } = c.req.valid('param');
+    const db = getDb();
+
+    // Get invitation with trip name
+    const [invitation] = await db
+      .select({
+        id: tripInvitations.id,
+        tripId: tripInvitations.tripId,
+        tripName: trips.tripName,
+        inviterId: tripInvitations.inviterId,
+        inviteeEmail: tripInvitations.inviteeEmail,
+        role: tripInvitations.role,
+        status: tripInvitations.status,
+        createdAt: tripInvitations.createdAt,
+        expiresAt: tripInvitations.expiresAt,
+      })
+      .from(tripInvitations)
+      .innerJoin(trips, eq(trips.id, tripInvitations.tripId))
+      .where(eq(tripInvitations.id, invitationId));
+
+    if (!invitation) return c.json({ error: 'Invitation not found' }, 404);
+
+    const [inviter] = await db
+      .select({ name: users.name, email: users.email })
+      .from(users)
+      .where(eq(users.id, invitation.inviterId));
+
+    return c.json({
+      invitation: {
+        id: invitation.id,
+        tripId: invitation.tripId,
+        tripName: invitation.tripName,
+        inviterName: inviter?.name ?? null,
+        inviterEmail: inviter?.email ?? '',
+        role: invitation.role,
+        status: invitation.status,
+        createdAt: invitation.createdAt.toISOString(),
+        expiresAt: invitation.expiresAt.toISOString(),
+      },
+    }, 200);
   });

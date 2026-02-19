@@ -4,7 +4,7 @@ import { exchangeRatesRoute } from './routes/exchange-rates.js';
 import { visionRoute } from './routes/vision.js';
 import { tripsRoute } from './routes/trips.js';
 import { authRoute } from './routes/auth.js';
-import { sharingRoute } from './routes/sharing.js';
+import { sharingRoute, publicSharingRoute } from './routes/sharing.js';
 import { requireAuth } from './middleware/auth.js';
 
 export type AppEnv = {
@@ -26,6 +26,7 @@ export const app = new OpenAPIHono<AppEnv>({
 app.route('/', exchangeRatesRoute);
 app.route('/', visionRoute);
 app.route('/', authRoute);
+app.route('/', publicSharingRoute);  // Public invitation details
 
 // Protected routes — require session auth
 app.use('/trips/*', requireAuth);

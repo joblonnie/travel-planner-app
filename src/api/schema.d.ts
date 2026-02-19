@@ -113,6 +113,23 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/invitations/{invitationId}/details": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get invitation details (public) */
+        get: operations["getInvitationDetails"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/trips": {
         parameters: {
             query?: never;
@@ -319,6 +336,20 @@ export interface components {
         };
         LogoutResponse: {
             success: boolean;
+        };
+        InviteResponse: {
+            invitation: components["schemas"]["Invitation"];
+        };
+        Invitation: {
+            id: string;
+            tripId: string;
+            tripName: string;
+            inviterName: string | null;
+            inviterEmail: string;
+            role: string;
+            status: string;
+            createdAt: string;
+            expiresAt: string;
         };
         TripListFullResponse: {
             trips: components["schemas"]["Trip"][];
@@ -555,20 +586,6 @@ export interface components {
             role: string;
             joinedAt: string;
         };
-        InviteResponse: {
-            invitation: components["schemas"]["Invitation"];
-        };
-        Invitation: {
-            id: string;
-            tripId: string;
-            tripName: string;
-            inviterName: string | null;
-            inviterEmail: string;
-            role: string;
-            status: string;
-            createdAt: string;
-            expiresAt: string;
-        };
         InviteRequest: {
             /** Format: email */
             email: string;
@@ -797,6 +814,37 @@ export interface operations {
                 };
                 content: {
                     "application/json": components["schemas"]["LogoutResponse"];
+                };
+            };
+        };
+    };
+    getInvitationDetails: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                invitationId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Invitation details */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["InviteResponse"];
+                };
+            };
+            /** @description Not found */
+            404: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["ErrorResponse"];
                 };
             };
         };

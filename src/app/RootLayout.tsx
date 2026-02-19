@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
 import { Plane } from 'lucide-react';
 import { useTripStore } from '@/store/useTripStore.ts';
 import { useTheme } from '@/hooks/useTheme.ts';
@@ -9,6 +9,7 @@ import { apiClient } from '@/api/client.ts';
 export function RootLayout() {
   useTheme();
   const setUser = useTripStore((s) => s.setUser);
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -16,6 +17,16 @@ export function RootLayout() {
       if (data?.user) setUser(data.user);
     }).catch(() => {}).finally(() => setLoading(false));
   }, [setUser]);
+
+  // Handle invite return URL after OAuth login
+  useEffect(() => {
+    if (loading) return;
+    const returnUrl = sessionStorage.getItem('invite_return_url');
+    if (returnUrl) {
+      sessionStorage.removeItem('invite_return_url');
+      navigate(returnUrl, { replace: true });
+    }
+  }, [loading, navigate]);
 
   if (loading) {
     return (
