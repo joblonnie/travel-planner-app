@@ -13,7 +13,7 @@ import {
   sortableKeyboardCoordinates,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import { Calendar, Navigation, Plus, Clock, Compass, Hotel, ChevronLeft, ChevronRight, ChevronUp, AlertTriangle, ArrowUpDown, Footprints, MapPin, Coffee, Pencil, Trash2 } from 'lucide-react';
+import { Calendar, CalendarDays, Navigation, Plus, Clock, Compass, Hotel, ChevronLeft, ChevronRight, ChevronUp, AlertTriangle, ArrowUpDown, Footprints, MapPin, Coffee, Pencil, Trash2 } from 'lucide-react';
 import { useState, useMemo, memo, useEffect, useCallback } from 'react';
 import { useTripData } from '@/store/useCurrentTrip.ts';
 import { useTripActions } from '@/hooks/useTripActions.ts';
@@ -29,6 +29,7 @@ import { useLocalTime } from '../hooks/useLocalTime.ts';
 import { useGeolocation } from '../hooks/useGeolocation.ts';
 import { useCurrency } from '@/hooks/useCurrency.ts';
 import { useI18n, type TranslationKey } from '@/i18n/useI18n.ts';
+import { useCanEdit } from '@/features/sharing/hooks/useMyRole.ts';
 
 function InsertButton({ onClick, label }: { onClick: () => void; label: string }) {
   return (
@@ -131,6 +132,7 @@ export function DayContent() {
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [showAccomModal, setShowAccomModal] = useState(false);
   const { format } = useCurrency();
+  const canEdit = useCanEdit();
 
   const handleScroll = useCallback(() => {
     setShowScrollTop(window.scrollY > 300);
@@ -209,20 +211,19 @@ export function DayContent() {
           {/* Weather animation background */}
           {destination && <WeatherAnimation rainfall={destination.weatherInfo.rainfall} />}
 
-          {/* Glassmorphism overlay */}
-          <div className="absolute inset-0 bg-gradient-to-b from-black/10 via-transparent to-black/20 z-[1]" />
+          {/* No dark overlay — keep background bright, rely on text-shadow + glass chips */}
 
           {/* Content overlay */}
           <div className="relative z-10 max-w-4xl mx-auto px-3 py-3 sm:px-6 sm:py-4 md:px-8">
             <div className="flex items-start justify-between gap-2 sm:gap-3">
               <div className="min-w-0">
                 <div className="flex items-center gap-2 sm:gap-3 mb-0.5">
-                  <span className="text-[10px] font-bold tracking-widest text-white/80 uppercase drop-shadow-sm bg-white/10 backdrop-blur-sm px-2 py-0.5 rounded-full">
+                  <span className="text-[10px] font-bold tracking-widest text-white uppercase [text-shadow:0_1px_2px_rgba(0,0,0,0.6)] bg-white/50 backdrop-blur-md px-2 py-0.5 rounded-lg">
                     {t('day.day')} {currentDay.dayNumber}
                   </span>
-                  <span className="text-[10px] text-white/90 font-mono drop-shadow-sm">{currentDay.date}</span>
+                  <span className="text-[10px] text-white font-mono [text-shadow:0_1px_2px_rgba(0,0,0,0.6)]">{currentDay.date}</span>
                 </div>
-                <h1 className="text-lg sm:text-xl md:text-2xl font-black text-white tracking-tight drop-shadow-lg truncate">
+                <h1 className="text-lg sm:text-xl md:text-2xl font-black text-white tracking-tight [text-shadow:0_2px_8px_rgba(0,0,0,0.5),0_1px_2px_rgba(0,0,0,0.4)] truncate">
                   {currentDay.destination}
                 </h1>
               </div>
@@ -230,7 +231,7 @@ export function DayContent() {
               <div className="flex items-center gap-1.5 sm:gap-2.5 flex-shrink-0">
                 {/* Weather compact */}
                 {destination && (
-                  <div className="bg-white/10 backdrop-blur-md rounded-2xl px-2.5 py-1.5 sm:px-3 sm:py-2 border border-white/10 shadow-lg shadow-black/5">
+                  <div className="bg-white/50 backdrop-blur-md rounded-2xl px-2.5 py-1.5 sm:px-3 sm:py-2 shadow-sm border border-white/60">
                     <WeatherWidget
                       weather={destination.weatherInfo}
                       cityName={destination.nameKo}
@@ -240,7 +241,7 @@ export function DayContent() {
                 )}
 
                 {/* Clock - hidden on small mobile */}
-                <div className="hidden sm:block bg-white/10 backdrop-blur-md rounded-2xl px-3 py-2 text-white border border-white/10 shadow-lg shadow-black/5">
+                <div className="hidden sm:block bg-white/50 backdrop-blur-md rounded-2xl px-3 py-2 text-white shadow-sm border border-white/60 [text-shadow:0_1px_2px_rgba(0,0,0,0.4)]">
                   <div className="flex items-center gap-1.5">
                     <Clock size={14} className="text-amber-300" />
                     <p className="text-base font-bold font-mono tracking-wider">{localTimeStr}</p>
@@ -249,12 +250,12 @@ export function DayContent() {
 
                 {gpsEnabled ? (
                   watching && position ? (
-                    <div className="hidden sm:flex items-center gap-1 bg-emerald-400/20 backdrop-blur-md rounded-xl px-2.5 py-1.5 text-[11px] text-white font-medium border border-emerald-400/20">
+                    <div className="hidden sm:flex items-center gap-1 bg-emerald-400/40 backdrop-blur-md rounded-xl px-2.5 py-1.5 text-[11px] text-white font-medium border border-emerald-300/40 [text-shadow:0_1px_2px_rgba(0,0,0,0.4)]">
                       <Navigation size={13} />
                       GPS
                     </div>
                   ) : (
-                    <div className="hidden sm:flex items-center gap-1 bg-amber-400/20 backdrop-blur-md rounded-xl px-2.5 py-1.5 text-[11px] text-white/80 font-medium border border-amber-400/20">
+                    <div className="hidden sm:flex items-center gap-1 bg-amber-400/40 backdrop-blur-md rounded-xl px-2.5 py-1.5 text-[11px] text-white font-medium border border-amber-300/40 [text-shadow:0_1px_2px_rgba(0,0,0,0.4)]">
                       <Navigation size={13} className="animate-pulse" />
                       GPS...
                     </div>
@@ -262,7 +263,7 @@ export function DayContent() {
                 ) : (
                   <button
                     onClick={enableGps}
-                    className="hidden sm:flex items-center gap-1 bg-white/10 backdrop-blur-md rounded-xl px-2.5 py-1.5 text-[11px] text-white/70 font-medium hover:bg-white/20 transition-colors border border-white/10 cursor-pointer"
+                    className="hidden sm:flex items-center gap-1 bg-white/40 backdrop-blur-md rounded-xl px-2.5 py-1.5 text-[11px] text-white font-medium border border-white/50 hover:bg-white/50 transition-colors cursor-pointer [text-shadow:0_1px_2px_rgba(0,0,0,0.4)]"
                   >
                     <Navigation size={13} />
                     GPS
@@ -273,26 +274,26 @@ export function DayContent() {
 
             {/* Stats row */}
             <div className="flex items-center gap-1.5 sm:gap-2 mt-2.5 flex-wrap">
-              <div className="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-[11px] text-white bg-white/10 backdrop-blur-md px-2.5 sm:px-3 py-1 rounded-full border border-white/10">
+              <div className="flex items-center gap-1 sm:gap-1.5 text-[10px] sm:text-[11px] text-gray-700 font-semibold bg-white/55 backdrop-blur-md px-2.5 sm:px-3 py-1.5 rounded-xl border border-white/60">
                 <Calendar size={11} />
                 <span>{totalCount}{t('day.schedule')}</span>
                 {completedCount > 0 && (
-                  <span className="text-emerald-400 font-bold">({completedCount})</span>
+                  <span className="text-emerald-300 font-bold">({completedCount})</span>
                 )}
                 {skippedCount > 0 && (
-                  <span className="text-amber-400 font-bold">({skippedCount})</span>
+                  <span className="text-amber-300 font-bold">({skippedCount})</span>
                 )}
               </div>
               {/* Day cost: estimated only */}
-              <div className="text-[10px] sm:text-[11px] text-white backdrop-blur-md px-2.5 sm:px-3 py-1 rounded-full border border-white/10 flex items-center gap-1.5 bg-white/10">
-                <span className="opacity-70">{t('budget.estimated')}</span>
+              <div className="text-[10px] sm:text-[11px] text-gray-700 font-semibold backdrop-blur-md px-2.5 sm:px-3 py-1.5 rounded-xl flex items-center gap-1.5 bg-white/55 border border-white/60">
+                <span className="opacity-80">{t('budget.estimated')}</span>
                 <span className="font-bold">{format(dayCostVal)}</span>
               </div>
-              <div className="hidden sm:flex items-center gap-1.5 text-[11px] text-white/80 bg-white/10 backdrop-blur-md px-3 py-1 rounded-full border border-white/10">
-                <span>{t('day.total')}</span>
+              <div className="hidden sm:flex items-center gap-1.5 text-[11px] text-gray-700 font-semibold bg-white/55 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/60">
+                <span className="opacity-80">{t('day.total')}</span>
                 <span>{format(totalCostVal)}</span>
                 {totalExpensesVal > 0 && (
-                  <span className="text-white/50">/ {format(totalExpensesVal)}</span>
+                  <span className="text-white/60">/ {format(totalExpensesVal)}</span>
                 )}
               </div>
             </div>
@@ -300,45 +301,47 @@ export function DayContent() {
             {/* Quick action buttons + Day Nav */}
             <div className="flex items-center gap-1.5 mt-2.5">
               {/* Prev/Next Day */}
-              <div className="flex items-center gap-0.5 mr-1">
+              <div className="flex items-center bg-white/50 backdrop-blur-md rounded-xl p-0.5 mr-1 border border-white/60">
                 <button
                   onClick={goToPrevDay}
                   disabled={currentDayIndex <= 0}
-                  className="flex items-center gap-0.5 text-[11px] text-white font-medium bg-white/25 hover:bg-white/35 backdrop-blur-md px-2 py-1.5 rounded-full border border-white/20 transition-all disabled:opacity-30 disabled:cursor-default min-w-[44px] min-h-[44px] justify-center cursor-pointer focus-visible:ring-2 focus-visible:ring-white/50 shadow-sm"
+                  className="flex items-center justify-center w-10 h-10 text-gray-600 rounded-lg hover:bg-white/40 transition-all disabled:opacity-25 disabled:cursor-default cursor-pointer"
                   aria-label={t('day.prevDay' as TranslationKey)}
                 >
-                  <ChevronLeft size={14} />
+                  <ChevronLeft size={16} />
                 </button>
                 <button
                   onClick={goToNextDay}
                   disabled={currentDayIndex >= days.length - 1}
-                  className="flex items-center gap-0.5 text-[11px] text-white font-medium bg-white/25 hover:bg-white/35 backdrop-blur-md px-2 py-1.5 rounded-full border border-white/20 transition-all disabled:opacity-30 disabled:cursor-default min-w-[44px] min-h-[44px] justify-center cursor-pointer focus-visible:ring-2 focus-visible:ring-white/50 shadow-sm"
+                  className="flex items-center justify-center w-10 h-10 text-gray-600 rounded-lg hover:bg-white/40 transition-all disabled:opacity-25 disabled:cursor-default cursor-pointer"
                   aria-label={t('day.nextDay' as TranslationKey)}
                 >
-                  <ChevronRight size={14} />
+                  <ChevronRight size={16} />
                 </button>
               </div>
 
+              {canEdit && (
               <div className="flex items-center gap-1.5">
                 <button
                   onClick={() => { setInsertAtIndex(undefined); setShowAdd(true); }}
-                  className="flex items-center gap-1 text-[11px] text-white font-semibold bg-white/30 hover:bg-white/40 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/25 transition-all shadow-sm"
+                  className="flex items-center gap-1 text-[11px] text-gray-700 font-semibold bg-white/55 hover:bg-white/70 backdrop-blur-md px-3 py-2 rounded-xl border border-white/60 transition-all"
                 >
-                  <Plus size={13} />
+                  <CalendarDays size={13} />
                   {t('day.addActivity')}
                 </button>
                 <button
                   onClick={() => { setInsertAtIndex(undefined); setShowAddPlace(true); }}
-                  className="flex items-center gap-1 text-[11px] text-white font-semibold bg-white/25 hover:bg-white/35 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/20 transition-all shadow-sm"
+                  className="flex items-center gap-1 text-[11px] text-gray-700 font-semibold bg-white/55 hover:bg-white/70 backdrop-blur-md px-3 py-2 rounded-xl border border-white/60 transition-all"
                 >
                   <MapPin size={12} />
                   {t('day.addPlace' as TranslationKey)}
                 </button>
               </div>
+              )}
             </div>
 
             {currentDay.notes && (
-              <div className="mt-2 bg-white/10 backdrop-blur-md rounded-xl px-3 py-2 text-xs text-white/90 border border-white/10 line-clamp-2">
+              <div className="mt-2 bg-white/50 backdrop-blur-md rounded-xl px-3 py-2 text-xs text-gray-600 border border-white/60 line-clamp-2">
                 {currentDay.notes}
               </div>
             )}
@@ -388,6 +391,7 @@ export function DayContent() {
                 <Hotel size={12} className="text-white" />
               </div>
               <span className="text-[10px] font-bold text-purple-600 uppercase tracking-wider">{t('accommodation.title' as TranslationKey)}</span>
+              {canEdit && (
               <div className="ml-auto flex items-center gap-1">
                 <button onClick={() => setShowAccomModal(true)} className="p-1.5 text-purple-400 hover:text-purple-600 hover:bg-purple-100/60 rounded-lg transition-all">
                   <Pencil size={12} />
@@ -403,6 +407,7 @@ export function DayContent() {
                   <Trash2 size={12} />
                 </button>
               </div>
+              )}
             </div>
             <p className="text-sm font-bold text-gray-800">{currentDay.accommodation.name}</p>
             {currentDay.accommodation.address && (
@@ -441,14 +446,14 @@ export function DayContent() {
               </div>
             )}
           </div>
-        ) : (
+        ) : canEdit ? (
           <button
             onClick={() => setShowAccomModal(true)}
             className="w-full py-3 border border-dashed border-purple-200 rounded-2xl text-[11px] text-purple-400 hover:text-purple-600 hover:border-purple-300 hover:bg-purple-50/30 transition-all flex items-center justify-center gap-1.5"
           >
             <Hotel size={13} /> {t('accommodation.add' as TranslationKey)}
           </button>
-        )}
+        ) : null}
 
         {/* Activities (Drag & Drop) */}
         <div>
@@ -456,13 +461,13 @@ export function DayContent() {
             <h2 className="text-sm font-bold text-gray-800 tracking-tight">
               {t('day.todaySchedule')}
             </h2>
-            {currentDay.activities.length > 1 && (
+            {canEdit && currentDay.activities.length > 1 && (
               <button
                 onClick={() => setReorderMode(!reorderMode)}
-                className={`flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold transition-all border ${
+                className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-semibold transition-all ${
                   reorderMode
-                    ? 'bg-primary text-white border-primary shadow-sm shadow-primary/20'
-                    : 'bg-gray-100/80 text-gray-500 border-gray-300/70 hover:bg-gray-200/60 hover:text-gray-700'
+                    ? 'bg-primary text-white shadow-sm'
+                    : 'bg-gray-100 text-gray-500 hover:bg-gray-200/80 hover:text-gray-600'
                 }`}
               >
                 <ArrowUpDown size={12} />
@@ -511,6 +516,7 @@ export function DayContent() {
               <Calendar size={32} className="mx-auto mb-2 opacity-30" />
               <p className="text-sm font-medium">{t('day.noActivities')}</p>
               <p className="text-xs mt-1 mb-4">{t('day.noActivitiesDesc')}</p>
+              {canEdit && (
               <div className="flex gap-2 max-w-sm mx-auto">
                 <button
                   onClick={() => { setInsertAtIndex(undefined); setShowAdd(true); }}
@@ -533,13 +539,14 @@ export function DayContent() {
                   <span className="text-[9px] opacity-50">{t('day.addPlaceDesc' as TranslationKey)}</span>
                 </button>
               </div>
+              )}
             </div>
           ) : (
           <DndContext sensors={reorderMode ? sensors : undefined} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
             <SortableContext items={currentDay.activities.map((a) => a.id)} strategy={verticalListSortingStrategy}>
               <div className="space-y-1">
                 {/* Insert button + rest button before first activity */}
-                {!reorderMode && (
+                {canEdit && !reorderMode && (
                   <div className="pl-[72px] flex items-center gap-1">
                     <InsertButton onClick={() => { setInsertAtIndex(0); setShowAdd(true); }} label={t('day.insertHere' as TranslationKey)} />
                     <button
@@ -591,7 +598,7 @@ export function DayContent() {
                         )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <ActivityCard activity={activity} dayId={currentDay.id} index={index} totalCount={currentDay.activities.length} reorderMode={reorderMode} />
+                        <ActivityCard activity={activity} dayId={currentDay.id} index={index} totalCount={currentDay.activities.length} reorderMode={reorderMode} canEdit={canEdit} />
                       </div>
                     </div>
                     {/* Insert buttons between activities */}
@@ -693,7 +700,7 @@ export function DayContent() {
       {/* Scroll to top */}
       <button
         onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-        className={`fixed bottom-20 sm:bottom-6 right-4 z-20 w-10 h-10 bg-white/80 backdrop-blur-xl border border-gray-300/80 rounded-full shadow-lg flex items-center justify-center text-gray-500 hover:text-primary hover:border-primary/30 transition-all duration-300 ${
+        className={`fixed bottom-20 sm:bottom-6 right-4 z-20 w-10 h-10 bg-white/90 backdrop-blur-xl rounded-xl shadow-md flex items-center justify-center text-gray-400 hover:text-primary hover:shadow-lg transition-all duration-300 ${
           showScrollTop ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4 pointer-events-none'
         }`}
         aria-label={t('theme.scrollToTop' as TranslationKey)}

@@ -13,11 +13,11 @@ const ActivityDetailModal = lazy(() => import('./ActivityDetailModal.tsx').then(
 import { OwnerSelector, OwnerBadge } from '@/components/OwnerSelector.tsx';
 
 const typeColors: Record<string, string> = {
-  attraction: 'bg-indigo-500/10 text-indigo-600 border-indigo-200/50',
-  shopping: 'bg-amber-500/10 text-amber-600 border-amber-200/50',
-  meal: 'bg-orange-500/10 text-orange-600 border-orange-200/50',
-  transport: 'bg-slate-500/10 text-slate-500 border-slate-200/50',
-  free: 'bg-emerald-500/10 text-emerald-600 border-emerald-200/50',
+  attraction: 'bg-indigo-500/10 text-indigo-600',
+  shopping: 'bg-amber-500/10 text-amber-600',
+  meal: 'bg-orange-500/10 text-orange-600',
+  transport: 'bg-slate-500/10 text-slate-500',
+  free: 'bg-emerald-500/10 text-emerald-600',
 };
 
 interface Props {
@@ -26,6 +26,7 @@ interface Props {
   index?: number;
   totalCount?: number;
   reorderMode?: boolean;
+  canEdit?: boolean;
 }
 
 // Calculate end time from start time + duration string
@@ -49,7 +50,7 @@ function calcEndTime(startTime: string, duration: string): string | null {
   return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
 }
 
-export const ActivityCard = memo(function ActivityCard({ activity, dayId, reorderMode }: Props) {
+export const ActivityCard = memo(function ActivityCard({ activity, dayId, reorderMode, canEdit }: Props) {
   const [showBooking, setShowBooking] = useState(false);
   const [showEdit, setShowEdit] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -206,37 +207,41 @@ export const ActivityCard = memo(function ActivityCard({ activity, dayId, reorde
 
           {/* Row 2: Status toggles + Type + Time + Status badges */}
           <div className="flex items-center gap-1.5 flex-wrap mb-1">
-            <button
-              onClick={(e) => { e.stopPropagation(); toggleCompleted(dayId, activity.id); }}
-              onPointerDown={(e) => e.stopPropagation()}
-              className={`flex-shrink-0 p-1 -ml-1 transition-all duration-200 ${
-                isCompleted
-                  ? 'text-emerald-500 hover:text-emerald-600'
-                  : 'text-gray-400 hover:text-emerald-400'
-              }`}
-              title={isCompleted ? t('activity.undoDone') : t('activity.markDone')}
-            >
-              {isCompleted ? <CheckCircle2 size={16} /> : <Circle size={16} strokeWidth={1.5} />}
-            </button>
-            <button
-              onClick={(e) => { e.stopPropagation(); toggleSkipped(dayId, activity.id); }}
-              onPointerDown={(e) => e.stopPropagation()}
-              className={`flex-shrink-0 p-1 transition-all duration-200 ${
-                isSkipped
-                  ? 'text-amber-500 hover:text-amber-600'
-                  : 'text-gray-400 hover:text-amber-400'
-              }`}
-              title={isSkipped ? t('activity.undoSkipped') : t('activity.markSkipped')}
-            >
-              <SkipForward size={14} />
-            </button>
+            {canEdit !== false && (
+              <button
+                onClick={(e) => { e.stopPropagation(); toggleCompleted(dayId, activity.id); }}
+                onPointerDown={(e) => e.stopPropagation()}
+                className={`flex-shrink-0 p-1 -ml-1 transition-all duration-200 ${
+                  isCompleted
+                    ? 'text-emerald-500 hover:text-emerald-600'
+                    : 'text-gray-400 hover:text-emerald-400'
+                }`}
+                title={isCompleted ? t('activity.undoDone') : t('activity.markDone')}
+              >
+                {isCompleted ? <CheckCircle2 size={16} /> : <Circle size={16} strokeWidth={1.5} />}
+              </button>
+            )}
+            {canEdit !== false && (
+              <button
+                onClick={(e) => { e.stopPropagation(); toggleSkipped(dayId, activity.id); }}
+                onPointerDown={(e) => e.stopPropagation()}
+                className={`flex-shrink-0 p-1 transition-all duration-200 ${
+                  isSkipped
+                    ? 'text-amber-500 hover:text-amber-600'
+                    : 'text-gray-400 hover:text-amber-400'
+                }`}
+                title={isSkipped ? t('activity.undoSkipped') : t('activity.markSkipped')}
+              >
+                <SkipForward size={14} />
+              </button>
+            )}
             {(activity.time || activity.duration) && (
-              <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full border ${typeColors[activity.type] || 'bg-gray-500/10 text-gray-600 border-gray-300/70'}`}>
+              <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-lg ${typeColors[activity.type] || 'bg-gray-500/10 text-gray-600'}`}>
                 {typeLabel}
               </span>
             )}
             {!activity.time && !activity.duration && (
-              <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-full border bg-sky-500/10 text-sky-600 border-sky-200/50 flex items-center gap-0.5">
+              <span className="text-[11px] font-semibold px-2.5 py-0.5 rounded-lg bg-sky-500/10 text-sky-600 flex items-center gap-0.5">
                 <MapPin size={10} />
                 {t('day.addPlace' as TranslationKey)}
               </span>
@@ -273,13 +278,15 @@ export const ActivityCard = memo(function ActivityCard({ activity, dayId, reorde
                   className="inline-flex items-center gap-0.5 text-[10px] font-medium bg-blue-50 text-blue-700 border border-blue-200/50 px-2 py-0.5 rounded-full"
                 >
                   {memo}
-                  <button
-                    onClick={(e) => { e.stopPropagation(); removeMemo(dayId, activity.id, i); }}
-                    className="ml-0.5 text-blue-500 hover:text-blue-600 transition-colors"
-                    aria-label={t('activity.delete')}
-                  >
-                    <X size={9} />
-                  </button>
+                  {canEdit !== false && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); removeMemo(dayId, activity.id, i); }}
+                      className="ml-0.5 text-blue-500 hover:text-blue-600 transition-colors"
+                      aria-label={t('activity.delete')}
+                    >
+                      <X size={9} />
+                    </button>
+                  )}
                 </span>
               ))}
               {showMemoInput && (
@@ -301,7 +308,7 @@ export const ActivityCard = memo(function ActivityCard({ activity, dayId, reorde
           )}
 
           {/* Add memo button (when no memos and no input shown) */}
-          {(!activity.memos || activity.memos.length === 0) && !showMemoInput && (
+          {canEdit !== false && (!activity.memos || activity.memos.length === 0) && !showMemoInput && (
             <button
               onClick={(e) => { e.stopPropagation(); setShowMemoInput(true); }}
               onPointerDown={(e) => e.stopPropagation()}
@@ -310,7 +317,7 @@ export const ActivityCard = memo(function ActivityCard({ activity, dayId, reorde
               <Plus size={13} /> {t('memo.addMemo')}
             </button>
           )}
-          {activity.memos && activity.memos.length > 0 && !showMemoInput && (
+          {canEdit !== false && activity.memos && activity.memos.length > 0 && !showMemoInput && (
             <button
               onClick={(e) => { e.stopPropagation(); setShowMemoInput(true); }}
               onPointerDown={(e) => e.stopPropagation()}
@@ -329,20 +336,24 @@ export const ActivityCard = memo(function ActivityCard({ activity, dayId, reorde
                   <span className="text-gray-500 truncate">{exp.description}</span>
                   <OwnerBadge owner={exp.owner} />
                   <span className="text-primary font-bold tabular-nums ml-auto flex-shrink-0">{format(exp.amount)}</span>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); handleEditExpense(exp); }}
-                    className="text-gray-400 hover:text-primary transition-colors sm:opacity-0 sm:group-hover/expense:opacity-100 flex-shrink-0 p-1.5 -m-1 min-w-[28px] min-h-[28px] flex items-center justify-center"
-                    aria-label={t('activity.edit')}
-                  >
-                    <Pencil size={11} />
-                  </button>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); removeActivityExpense(dayId, activity.id, exp.id); }}
-                    className="text-gray-400 hover:text-red-400 transition-colors sm:opacity-0 sm:group-hover/expense:opacity-100 flex-shrink-0 p-1.5 -m-1 min-w-[28px] min-h-[28px] flex items-center justify-center"
-                    aria-label={t('activity.delete')}
-                  >
-                    <X size={11} />
-                  </button>
+                  {canEdit !== false && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleEditExpense(exp); }}
+                      className="text-gray-400 hover:text-primary transition-colors sm:opacity-0 sm:group-hover/expense:opacity-100 flex-shrink-0 p-1.5 -m-1 min-w-[28px] min-h-[28px] flex items-center justify-center"
+                      aria-label={t('activity.edit')}
+                    >
+                      <Pencil size={11} />
+                    </button>
+                  )}
+                  {canEdit !== false && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); removeActivityExpense(dayId, activity.id, exp.id); }}
+                      className="text-gray-400 hover:text-red-400 transition-colors sm:opacity-0 sm:group-hover/expense:opacity-100 flex-shrink-0 p-1.5 -m-1 min-w-[28px] min-h-[28px] flex items-center justify-center"
+                      aria-label={t('activity.delete')}
+                    >
+                      <X size={11} />
+                    </button>
+                  )}
                 </div>
               ))}
               {/* Cost summary */}
@@ -381,7 +392,7 @@ export const ActivityCard = memo(function ActivityCard({ activity, dayId, reorde
           )}
 
           {/* Add expense inline form */}
-          {showExpenseForm ? (
+          {canEdit !== false && (showExpenseForm ? (
             <div className="mt-2 space-y-1.5" onPointerDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>
               <div className="flex items-center gap-1.5">
                 <span className="text-[10px] font-bold text-primary/80 flex-shrink-0">{currencySymbol}</span>
@@ -438,7 +449,7 @@ export const ActivityCard = memo(function ActivityCard({ activity, dayId, reorde
             >
               <Receipt size={13} /> {t('expense.addExpense')}
             </button>
-          )}
+          ))}
 
           {/* Bottom info row */}
           <div className={`flex items-center gap-2.5 mt-2.5 ${isCompleted || isSkipped ? 'opacity-50' : ''}`}>
@@ -454,68 +465,74 @@ export const ActivityCard = memo(function ActivityCard({ activity, dayId, reorde
                 >
                   <MapPin size={13} /> {t('activity.viewMap')}
                 </a>
-                <button
-                  onClick={(e) => { e.stopPropagation(); setShowEdit(true); }}
-                  onPointerDown={(e) => e.stopPropagation()}
-                  className="flex items-center gap-0.5 text-[11px] text-gray-400 hover:text-primary font-medium cursor-pointer transition-colors min-h-[44px]"
-                >
-                  <Pencil size={10} /> {t('activity.edit')}
-                </button>
+                {canEdit !== false && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setShowEdit(true); }}
+                    onPointerDown={(e) => e.stopPropagation()}
+                    className="flex items-center gap-0.5 text-[11px] text-gray-400 hover:text-primary font-medium cursor-pointer transition-colors min-h-[44px]"
+                  >
+                    <Pencil size={10} /> {t('activity.edit')}
+                  </button>
+                )}
               </div>
             ) : (
-              <button
-                onClick={(e) => { e.stopPropagation(); setShowLocationEdit(true); }}
-                onPointerDown={(e) => e.stopPropagation()}
-                className="flex items-center gap-1 text-[11px] text-amber-600 hover:text-amber-700 font-medium hover:underline cursor-pointer min-h-[44px]"
-              >
-                <MapPin size={12} /> {t('activity.addLocation' as TranslationKey)}
-              </button>
+              canEdit !== false && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); setShowLocationEdit(true); }}
+                  onPointerDown={(e) => e.stopPropagation()}
+                  className="flex items-center gap-1 text-[11px] text-amber-600 hover:text-amber-700 font-medium hover:underline cursor-pointer min-h-[44px]"
+                >
+                  <MapPin size={12} /> {t('activity.addLocation' as TranslationKey)}
+                </button>
+              )
             )}
 
             {/* Action buttons */}
-            <div className="flex items-center gap-0.5 relative flex-shrink-0 ml-auto" ref={actionsRef}>
-              {/* More actions toggle */}
-              <button
-                onClick={(e) => { e.stopPropagation(); setShowActions(!showActions); }}
-                onPointerDown={(e) => e.stopPropagation()}
-                className="p-1.5 text-gray-300 hover:text-gray-500 rounded-lg hover:bg-gray-100/60 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center cursor-pointer focus-visible:ring-2 focus-visible:ring-primary/30"
-                aria-label={t('activity.moreActions' as TranslationKey)}
-              >
-                <MoreHorizontal size={16} />
-              </button>
+            {canEdit !== false && (
+              <div className="flex items-center gap-0.5 relative flex-shrink-0 ml-auto" ref={actionsRef}>
+                {/* More actions toggle */}
+                <button
+                  onClick={(e) => { e.stopPropagation(); setShowActions(!showActions); }}
+                  onPointerDown={(e) => e.stopPropagation()}
+                  className="p-1.5 text-gray-300 hover:text-gray-500 rounded-lg hover:bg-gray-100/60 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center cursor-pointer focus-visible:ring-2 focus-visible:ring-primary/30"
+                  aria-label={t('activity.moreActions' as TranslationKey)}
+                >
+                  <MoreHorizontal size={16} />
+                </button>
 
-              {/* Dropdown actions */}
-              {showActions && (
-                <div className="absolute right-0 bottom-full mb-1 bg-surface rounded-xl shadow-lg shadow-black/10 border border-gray-300/80 py-1 z-30 min-w-[140px] animate-fade-in" onPointerDown={(e) => e.stopPropagation()}>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setShowEdit(true); setShowActions(false); }}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-xs text-gray-600 hover:bg-gray-50 transition-colors"
-                  >
-                    <Pencil size={13} /> {t('activity.edit')}
-                  </button>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); duplicateActivity(dayId, activity.id); setShowActions(false); }}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-xs text-gray-600 hover:bg-gray-50 transition-colors"
-                  >
-                    <Copy size={13} /> {t('feature.duplicate' as TranslationKey)}
-                  </button>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setShowBooking(true); setShowActions(false); }}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-xs text-gray-600 hover:bg-gray-50 transition-colors"
-                  >
-                    {activity.booking ? <FileText size={13} /> : <Ticket size={13} />}
-                    {t('booking.title')}
-                  </button>
-                  <div className="border-t border-gray-100 my-1" />
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setShowDeleteConfirm(true); setShowActions(false); }}
-                    className="w-full flex items-center gap-2 px-3 py-2 text-xs text-red-500 hover:bg-red-50 transition-colors"
-                  >
-                    <Trash2 size={13} /> {t('activity.delete')}
-                  </button>
-                </div>
-              )}
-            </div>
+                {/* Dropdown actions */}
+                {showActions && (
+                  <div className="absolute right-0 bottom-full mb-1 bg-surface rounded-xl shadow-lg shadow-black/10 border border-gray-300/80 py-1 z-30 min-w-[140px] animate-fade-in" onPointerDown={(e) => e.stopPropagation()}>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setShowEdit(true); setShowActions(false); }}
+                      className="w-full flex items-center gap-2 px-3 py-2 text-xs text-gray-600 hover:bg-gray-50 transition-colors"
+                    >
+                      <Pencil size={13} /> {t('activity.edit')}
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); duplicateActivity(dayId, activity.id); setShowActions(false); }}
+                      className="w-full flex items-center gap-2 px-3 py-2 text-xs text-gray-600 hover:bg-gray-50 transition-colors"
+                    >
+                      <Copy size={13} /> {t('feature.duplicate' as TranslationKey)}
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setShowBooking(true); setShowActions(false); }}
+                      className="w-full flex items-center gap-2 px-3 py-2 text-xs text-gray-600 hover:bg-gray-50 transition-colors"
+                    >
+                      {activity.booking ? <FileText size={13} /> : <Ticket size={13} />}
+                      {t('booking.title')}
+                    </button>
+                    <div className="border-t border-gray-100 my-1" />
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setShowDeleteConfirm(true); setShowActions(false); }}
+                      className="w-full flex items-center gap-2 px-3 py-2 text-xs text-red-500 hover:bg-red-50 transition-colors"
+                    >
+                      <Trash2 size={13} /> {t('activity.delete')}
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>

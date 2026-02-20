@@ -199,10 +199,10 @@ export function DayFormModal({ day, onClose }: Props) {
                 <button
                   key={d.id}
                   onClick={() => { setDestId(d.id); setSearchedDest(null); }}
-                  className={`text-[11px] px-3 py-1.5 rounded-full border font-medium transition-all ${
+                  className={`text-[11px] px-3 py-1.5 rounded-xl font-medium transition-all ${
                     destId === d.id && !searchedDest
-                      ? 'bg-primary text-white border-primary shadow-sm'
-                      : 'bg-gray-50/80 text-gray-500 border-gray-100 hover:bg-gray-100 hover:border-gray-200'
+                      ? 'bg-primary text-white shadow-sm'
+                      : 'bg-gray-100 text-gray-500 hover:bg-gray-200/80 hover:text-gray-600'
                   }`}
                 >
                   {d.nameKo}

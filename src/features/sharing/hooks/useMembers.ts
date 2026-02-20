@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '@/api/client.ts';
+import { TRIPS_QUERY_KEY } from '@/hooks/useTripQuery.ts';
 
 export function useMembers(tripId: string | undefined) {
   return useQuery({
@@ -51,6 +52,22 @@ export function useRemoveMember(tripId: string | undefined) {
   });
 }
 
+export function useLeaveTrip() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ tripId, userId }: { tripId: string; userId: string }) => {
+      const { data, error } = await apiClient.DELETE('/api/trips/{tripId}/members/{userId}', {
+        params: { path: { tripId, userId } },
+      });
+      if (error) throw new Error(error.error);
+      return data.member;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: TRIPS_QUERY_KEY });
+    },
+  });
+}
+
 export function useUpdateMemberRole(tripId: string | undefined) {
   const queryClient = useQueryClient();
   return useMutation({
@@ -63,7 +80,20 @@ export function useUpdateMemberRole(tripId: string | undefined) {
       if (error) throw new Error(error.error);
       return data.member;
     },
-    onSuccess: () => {
+    onMutate: async ({ userId, role }) => {
+      await queryClient.cancelQueries({ queryKey: ['trip-members', tripId] });
+      const prev = queryClient.getQueryData<{ userId: string; role: string }[]>(['trip-members', tripId]);
+      if (prev) {
+        queryClient.setQueryData(['trip-members', tripId], prev.map((m) => m.userId === userId ? { ...m, role } : m));
+      }
+      return { prev };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.prev) {
+        queryClient.setQueryData(['trip-members', tripId], context.prev);
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['trip-members', tripId] });
     },
   });

@@ -432,10 +432,10 @@ export function ActivityFormModal({ dayId, onClose, insertAtIndex, activity, pla
                 <button
                   key={key}
                   onClick={() => setDuration(label)}
-                  className={`text-[10px] px-2.5 py-1 rounded-full border transition-all ${
+                  className={`text-[10px] px-2.5 py-1 rounded-xl transition-all ${
                     duration === label
-                      ? 'bg-primary text-white border-primary shadow-sm'
-                      : 'bg-gray-50/80 text-gray-500 border-gray-100 hover:bg-gray-100 hover:border-gray-200'
+                      ? 'bg-primary text-white shadow-sm'
+                      : 'bg-gray-100 text-gray-500 hover:bg-gray-200/80 hover:text-gray-600'
                   }`}
                 >
                   {label}
@@ -466,10 +466,10 @@ export function ActivityFormModal({ dayId, onClose, insertAtIndex, activity, pla
                   <button
                     key={v}
                     onClick={() => setCostInput(v)}
-                    className={`text-[10px] px-2.5 py-1 rounded-full border transition-all ${
+                    className={`text-[10px] px-2.5 py-1 rounded-xl transition-all ${
                       costInput === v
-                        ? 'bg-primary text-white border-primary shadow-sm'
-                        : 'bg-gray-50/80 text-gray-400 border-gray-100 hover:bg-gray-100 hover:border-gray-200'
+                        ? 'bg-primary text-white shadow-sm'
+                        : 'bg-gray-100 text-gray-400 hover:bg-gray-200/80 hover:text-gray-500'
                     }`}
                   >
                     {v === 0 ? t('addActivity.free') : `${symbol}${v.toLocaleString()}`}
@@ -506,7 +506,7 @@ export function ActivityFormModal({ dayId, onClose, insertAtIndex, activity, pla
                 <button
                   type="button"
                   onClick={applyAccommodationLocation}
-                  className="flex items-center gap-1 text-[11px] text-purple-600 bg-purple-50 hover:bg-purple-100 px-2 py-0.5 rounded-full font-medium transition-colors border border-purple-200/50"
+                  className="flex items-center gap-1 text-[11px] text-purple-600 bg-purple-500/8 hover:bg-purple-500/15 px-2 py-0.5 rounded-lg font-medium transition-colors"
                 >
                   <Hotel size={10} />
                   {accommodation!.name}
@@ -527,7 +527,7 @@ export function ActivityFormModal({ dayId, onClose, insertAtIndex, activity, pla
             <button
               type="button"
               onClick={applyAccommodationLocation}
-              className="flex items-center gap-1 text-[11px] text-purple-600 bg-purple-50 hover:bg-purple-100 px-2 py-1 rounded-full font-medium transition-colors border border-purple-200/50"
+              className="flex items-center gap-1 text-[11px] text-purple-600 bg-purple-500/8 hover:bg-purple-500/15 px-2 py-1 rounded-lg font-medium transition-colors"
             >
               <Hotel size={10} />
               {accommodation!.name} {t('activityForm.lat' as TranslationKey)}

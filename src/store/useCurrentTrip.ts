@@ -1,6 +1,5 @@
-import { useQuery } from '@tanstack/react-query';
 import { useTripStore } from './useTripStore.ts';
-import { TRIPS_QUERY_KEY } from '@/hooks/useTripQuery.ts';
+import { useTripsQuery } from '@/hooks/useTripQuery.ts';
 import type { Trip } from '@/types/index.ts';
 
 const EMPTY_TRIP: Trip = {
@@ -36,11 +35,7 @@ export function useTripData<T>(selector: (trip: Trip) => T): T {
   const currentTripId = useTripStore((s) => s.currentTripId);
 
   // Subscribe to React Query cache updates — re-renders on setQueryData calls
-  const { data: trips } = useQuery<Trip[]>({
-    queryKey: TRIPS_QUERY_KEY,
-    staleTime: Infinity,
-    enabled: false, // Don't auto-fetch; AuthLayout handles fetching
-  });
+  const { data: trips } = useTripsQuery(false);
 
   const trip = trips?.find((t) => t.id === currentTripId);
   return selector(trip ?? EMPTY_TRIP);

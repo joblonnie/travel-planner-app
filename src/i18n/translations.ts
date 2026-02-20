@@ -331,10 +331,10 @@ export const translations = {
   'nav.nextDay': { ko: '다음', en: 'Next' },
 
   // Features
-  'feature.export': { ko: '데이터 내보내기', en: 'Export Data' },
-  'feature.import': { ko: '데이터 가져오기', en: 'Import Data' },
-  'feature.exportSuccess': { ko: '내보내기 완료!', en: 'Export complete!' },
-  'feature.importSuccess': { ko: '가져오기 완료!', en: 'Import complete!' },
+  'feature.export': { ko: '여행 백업', en: 'Backup Trip' },
+  'feature.import': { ko: '여행 불러오기', en: 'Import Trip' },
+  'feature.exportSuccess': { ko: '백업 완료!', en: 'Backup complete!' },
+  'feature.importSuccess': { ko: '불러오기 완료!', en: 'Import complete!' },
   'feature.importError': { ko: '잘못된 파일입니다', en: 'Invalid file' },
   'feature.duplicate': { ko: '복제', en: 'Duplicate' },
   'feature.duplicateDay': { ko: '날짜 복제', en: 'Duplicate Day' },
@@ -346,7 +346,8 @@ export const translations = {
   'feature.budgetWarn': { ko: '예산의 90%를 사용했습니다', en: '90% of budget used' },
   'feature.quickAdd': { ko: '추천 일정', en: 'Suggested' },
   'feature.quickAddDesc': { ko: '이 도시의 추천 장소에서 추가', en: 'Add from destination guide' },
-  'feature.csvExport': { ko: '지출 CSV 내보내기', en: 'Export Expenses CSV' },
+  'feature.csvExport': { ko: '지출 CSV 저장', en: 'Save Expenses CSV' },
+  'feature.dataDesc': { ko: '여행 백업은 현재 여행의 모든 일정·지출·메모를 JSON 파일로 저장합니다. 불러오기 시 동일한 JSON 파일을 선택하면 새 여행으로 복원됩니다.', en: 'Backup saves all activities, expenses, and notes as a JSON file. To restore, select the same JSON file to import as a new trip.' },
 
   // Activity Detail Modal
   'detail.title': { ko: '일정 상세', en: 'Activity Detail' },
@@ -367,6 +368,7 @@ export const translations = {
   'trips.delete': { ko: '여행 삭제', en: 'Delete Trip' },
   'trips.deleteConfirm': { ko: '이 여행을 삭제하시겠습니까? 모든 데이터가 삭제됩니다.', en: 'Delete this trip? All data will be removed.' },
   'trips.duplicate': { ko: '여행 복제', en: 'Duplicate Trip' },
+  'trips.duplicateConfirm': { ko: '이 여행을 복제하시겠습니까?', en: 'Duplicate this trip?' },
   'trips.edit': { ko: '여행 수정', en: 'Edit Trip' },
   'trips.noTrips': { ko: '여행이 없습니다', en: 'No trips yet' },
   'trips.current': { ko: '현재 여행', en: 'Current Trip' },
@@ -467,7 +469,7 @@ export const translations = {
   'trips.namePlaceholder': { ko: '예: 이탈리아 여행 2026', en: 'e.g. Italy Trip 2026' },
 
   // Settings
-  'settings.dataManagement': { ko: '데이터 관리', en: 'Data Management' },
+  'settings.dataManagement': { ko: '여행 내보내기 / 불러오기', en: 'Export / Import' },
 
   // Camera OCR
   'camera.ocrResult': { ko: 'OCR 인식 결과', en: 'OCR Result' },
@@ -499,11 +501,12 @@ export const translations = {
 
   // Sharing
   'sharing.members': { ko: '멤버', en: 'Members' },
+  'sharing.membersCount': { ko: '명', en: ' members' },
   'sharing.invite': { ko: '초대', en: 'Invite' },
   'sharing.inviteByEmail': { ko: '이메일로 초대', en: 'Invite by email' },
   'sharing.emailPlaceholder': { ko: '이메일 주소 입력', en: 'Enter email address' },
   'sharing.role': { ko: '역할', en: 'Role' },
-  'sharing.owner': { ko: '소유자', en: 'Owner' },
+  'sharing.owner': { ko: '관리자', en: 'Owner' },
   'sharing.editor': { ko: '편집자', en: 'Editor' },
   'sharing.viewer': { ko: '뷰어', en: 'Viewer' },
   'sharing.remove': { ko: '제거', en: 'Remove' },
@@ -523,7 +526,7 @@ export const translations = {
 
   // Invite accept page
   'invite.title': { ko: '여행 초대', en: 'Trip Invitation' },
-  'invite.invitedBy': { ko: '님의 초대', en: 'invited you' },
+  'invite.invitedBy': { ko: '님의 여행 초대', en: "'s Trip Invitation" },
   'invite.tripName': { ko: '여행', en: 'Trip' },
   'invite.role': { ko: '역할', en: 'Role' },
   'invite.roleEditor': { ko: '편집자', en: 'Editor' },

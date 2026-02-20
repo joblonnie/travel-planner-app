@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Users, Trash2, ChevronDown, Crown, Pencil, Eye } from 'lucide-react';
+import { Users, Trash2, Crown, Pencil, Eye } from 'lucide-react';
 import { useI18n, type TranslationKey } from '@/i18n/useI18n.ts';
 import { useTripStore } from '@/store/useTripStore.ts';
 import { useTripData } from '@/store/useCurrentTrip.ts';
@@ -29,7 +29,6 @@ export function TripMembersSection() {
   const updateRoleMutation = useUpdateMemberRole(tripId || undefined);
 
   const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null);
-  const [editRoleId, setEditRoleId] = useState<string | null>(null);
   const [message, setMessage] = useState('');
 
   const handleRemove = async (userId: string) => {
@@ -45,7 +44,6 @@ export function TripMembersSection() {
   const handleRoleChange = async (userId: string, role: 'editor' | 'viewer') => {
     try {
       await updateRoleMutation.mutateAsync({ userId, role });
-      setEditRoleId(null);
     } catch (err) {
       setMessage((err as Error).message);
       setTimeout(() => setMessage(''), 3000);
@@ -92,33 +90,22 @@ export function TripMembersSection() {
                 )}
               </div>
 
-              {/* Role badge */}
-              {editRoleId === member.userId && isOwner && member.role !== 'owner' ? (
-                <div className="flex gap-1">
-                  {(['editor', 'viewer'] as const).map((r) => (
-                    <button
-                      key={r}
-                      onClick={() => handleRoleChange(member.userId, r)}
-                      className={`text-[10px] px-2 py-1 rounded-lg border font-medium transition-colors ${
-                        member.role === r ? ROLE_COLORS[r] : 'text-gray-400 bg-white border-gray-200 hover:border-gray-300'
-                      }`}
-                    >
-                      {t(`sharing.${r}` as TranslationKey)}
-                    </button>
-                  ))}
-                </div>
-              ) : (
-                <button
-                  onClick={() => isOwner && member.role !== 'owner' ? setEditRoleId(member.userId) : undefined}
-                  className={`flex items-center gap-1 text-[10px] px-2 py-1 rounded-lg border font-medium ${roleColor} ${
-                    isOwner && member.role !== 'owner' ? 'cursor-pointer hover:opacity-80' : ''
-                  }`}
-                  disabled={!isOwner || member.role === 'owner'}
+              {/* Role select / badge */}
+              {isOwner && member.role !== 'owner' ? (
+                <select
+                  value={member.role}
+                  onChange={(e) => handleRoleChange(member.userId, e.target.value as 'editor' | 'viewer')}
+                  className={`text-[10px] px-2 py-1 rounded-lg border font-medium appearance-none cursor-pointer bg-no-repeat bg-[right_4px_center] bg-[length:10px] pr-4 ${roleColor}`}
+                  style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%236B7280' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")` }}
                 >
+                  <option value="editor">{t('sharing.editor' as TranslationKey)}</option>
+                  <option value="viewer">{t('sharing.viewer' as TranslationKey)}</option>
+                </select>
+              ) : (
+                <span className={`flex items-center gap-1 text-[10px] px-2 py-1 rounded-lg border font-medium ${roleColor}`}>
                   <RoleIcon size={10} />
                   {t(`sharing.${member.role}` as TranslationKey)}
-                  {isOwner && member.role !== 'owner' && <ChevronDown size={8} />}
-                </button>
+                </span>
               )}
 
               {/* Remove button */}

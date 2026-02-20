@@ -14,6 +14,7 @@ import type { Expense } from '@/store/useTripStore.ts';
 import { OwnerSelector, OwnerBadge, ownerColorMap } from '@/components/OwnerSelector.tsx';
 import { CameraOcrModal } from './CameraOcrModal.tsx';
 import type { ExpenseOwner } from '@/types/index.ts';
+import { useCanEdit } from '@/features/sharing/hooks/useMyRole.ts';
 
 const categoryIcons: Record<Expense['category'], React.ReactNode> = {
   accommodation: <Bed size={14} />,
@@ -36,13 +37,13 @@ const categoryColors: Record<Expense['category'], string> = {
 };
 
 const categoryBgColors: Record<Expense['category'], string> = {
-  accommodation: 'bg-blue-50 text-blue-700 border-blue-200',
-  food: 'bg-orange-50 text-orange-700 border-orange-200',
-  transport: 'bg-green-50 text-green-700 border-green-200',
-  attraction: 'bg-purple-50 text-purple-700 border-purple-200',
-  shopping: 'bg-pink-50 text-pink-700 border-pink-200',
-  entertainment: 'bg-yellow-50 text-yellow-700 border-yellow-200',
-  other: 'bg-gray-50 text-gray-700 border-gray-200',
+  accommodation: 'bg-blue-50 text-blue-700',
+  food: 'bg-orange-50 text-orange-700',
+  transport: 'bg-green-50 text-green-700',
+  attraction: 'bg-purple-50 text-purple-700',
+  shopping: 'bg-pink-50 text-pink-700',
+  entertainment: 'bg-yellow-50 text-yellow-700',
+  other: 'bg-gray-100 text-gray-700',
 };
 
 const categories: Expense['category'][] = ['accommodation', 'food', 'transport', 'attraction', 'shopping', 'entertainment', 'other'];
@@ -60,6 +61,7 @@ export function BudgetPage() {
   const pendingCameraExpense = useTripData((t) => t.pendingCameraExpense);
   const owners = useTripData((t) => t.owners);
   const { addExpense, removeExpense, setTotalBudget, removeActivityExpense, setPendingCameraExpense, addOwner, removeOwner, updateOwner } = useTripActions();
+  const canEdit = useCanEdit();
 
   const [showAddForm, setShowAddForm] = useState(false);
   const [showBudgetEdit, setShowBudgetEdit] = useState(false);
@@ -229,21 +231,23 @@ export function BudgetPage() {
               <p className="text-[10px] sm:text-xs text-gray-400 hidden sm:block">{t('budget.summary')}</p>
             </div>
           </div>
-          <div className="flex items-center gap-1.5 flex-shrink-0">
-            <button
-              onClick={() => setShowCamera(true)}
-              className="bg-gray-100 text-gray-600 p-2.5 rounded-xl hover:bg-gray-200 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
-              title={t('camera.title')}
-            >
-              <Calculator size={18} />
-            </button>
-            <button
-              onClick={() => setShowAddForm(true)}
-              className="bg-primary text-white px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1.5 sm:gap-2 hover:bg-primary-dark transition-colors min-h-[44px]"
-            >
-              <Plus size={14} /> <span className="hidden sm:inline">{t('budget.addExpense')}</span><span className="sm:hidden">{t('activityForm.add')}</span>
-            </button>
-          </div>
+          {canEdit && (
+            <div className="flex items-center gap-1.5 flex-shrink-0">
+              <button
+                onClick={() => setShowCamera(true)}
+                className="bg-gray-100 text-gray-600 p-2.5 rounded-xl hover:bg-gray-200 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+                title={t('camera.title')}
+              >
+                <Calculator size={18} />
+              </button>
+              <button
+                onClick={() => setShowAddForm(true)}
+                className="bg-primary text-white px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center gap-1.5 sm:gap-2 hover:bg-primary-dark transition-colors min-h-[44px]"
+              >
+                <Plus size={14} /> <span className="hidden sm:inline">{t('budget.addExpense')}</span><span className="sm:hidden">{t('activityForm.add')}</span>
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Owner Filter Tabs */}
@@ -266,18 +270,20 @@ export function BudgetPage() {
               );
             })}
           </div>
-          <button
-            onClick={() => setShowOwnerManage(!showOwnerManage)}
-            className="p-2.5 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-xl transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center flex-shrink-0 cursor-pointer"
-            title={t('owner.manage')}
-            aria-label={t('owner.manage')}
-          >
-            <Settings size={16} />
-          </button>
+          {canEdit && (
+            <button
+              onClick={() => setShowOwnerManage(!showOwnerManage)}
+              className="p-2.5 text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded-xl transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center flex-shrink-0 cursor-pointer"
+              title={t('owner.manage')}
+              aria-label={t('owner.manage')}
+            >
+              <Settings size={16} />
+            </button>
+          )}
         </div>
 
         {/* Owner Management Section */}
-        {showOwnerManage && (
+        {canEdit && showOwnerManage && (
           <div className="bg-surface rounded-2xl p-4 sm:p-5 border border-card-border shadow-sm space-y-3 animate-section">
             <h2 className="font-bold text-theme-dark text-sm flex items-center gap-2">
               <Users size={16} /> {t('owner.manage')}
@@ -401,9 +407,11 @@ export function BudgetPage() {
             <div className="flex items-baseline gap-1 mt-1.5">
               <p className="text-base sm:text-xl font-bold text-theme-dark">{format(totalBudget)}</p>
             </div>
-            <button onClick={() => { setShowBudgetEdit(true); setBudgetInput(totalBudget.toString()); }} className="text-[11px] text-primary mt-1.5 hover:underline font-medium cursor-pointer">
-              {t('budget.setBudget')}
-            </button>
+            {canEdit && (
+              <button onClick={() => { setShowBudgetEdit(true); setBudgetInput(totalBudget.toString()); }} className="text-[11px] text-primary mt-1.5 hover:underline font-medium cursor-pointer">
+                {t('budget.setBudget')}
+              </button>
+            )}
           </div>
 
           <div className="bg-gradient-to-br from-white to-yellow-50/30 rounded-2xl p-3 sm:p-4 border border-secondary/30 shadow-sm">
@@ -658,13 +666,15 @@ export function BudgetPage() {
                                   <span className="text-[11px] text-gray-500 truncate flex-1 min-w-0">{exp.description}</span>
                                   <OwnerBadge owner={exp.owner} />
                                   <span className="text-[11px] font-bold text-primary tabular-nums flex-shrink-0">{format(exp.amount)}</span>
-                                  <button
-                                    onClick={() => removeActivityExpense(day.id, act.id, exp.id)}
-                                    className="p-1.5 text-gray-200 hover:text-red-400 transition-colors sm:opacity-0 sm:group-hover/budgetExp:opacity-100 flex-shrink-0"
-                                    aria-label={t('activity.delete')}
-                                  >
-                                    <X size={12} />
-                                  </button>
+                                  {canEdit && (
+                                    <button
+                                      onClick={() => removeActivityExpense(day.id, act.id, exp.id)}
+                                      className="p-1.5 text-gray-200 hover:text-red-400 transition-colors sm:opacity-0 sm:group-hover/budgetExp:opacity-100 flex-shrink-0"
+                                      aria-label={t('activity.delete')}
+                                    >
+                                      <X size={12} />
+                                    </button>
+                                  )}
                                 </div>
                               ))}
                             </div>
@@ -689,13 +699,15 @@ export function BudgetPage() {
                               <span className="text-[11px] text-gray-500 truncate flex-1 min-w-0">{exp.description}</span>
                               <OwnerBadge owner={exp.owner} />
                               <span className="text-[11px] font-bold text-primary tabular-nums flex-shrink-0">{format(exp.amount)}</span>
-                              <button
-                                onClick={() => setDeleteExpenseId(exp.id)}
-                                className="p-1.5 text-gray-200 hover:text-red-400 transition-colors sm:opacity-0 sm:group-hover/dayExp:opacity-100 flex-shrink-0"
-                                aria-label={t('activity.delete')}
-                              >
-                                <X size={12} />
-                              </button>
+                              {canEdit && (
+                                <button
+                                  onClick={() => setDeleteExpenseId(exp.id)}
+                                  className="p-1.5 text-gray-200 hover:text-red-400 transition-colors sm:opacity-0 sm:group-hover/dayExp:opacity-100 flex-shrink-0"
+                                  aria-label={t('activity.delete')}
+                                >
+                                  <X size={12} />
+                                </button>
+                              )}
                             </div>
                           ))}
                         </div>
@@ -729,20 +741,22 @@ export function BudgetPage() {
                       <OwnerBadge owner={expense.owner} />
                     </div>
                     <div className="flex flex-wrap items-center gap-1 sm:gap-1.5 text-xs text-gray-400">
-                      <span className={`flex-shrink-0 whitespace-nowrap px-1.5 sm:px-2 py-0.5 rounded-full border ${categoryBgColors[expense.category]} text-[11px] sm:text-xs font-medium`}>
+                      <span className={`flex-shrink-0 whitespace-nowrap px-1.5 sm:px-2 py-0.5 rounded-lg ${categoryBgColors[expense.category]} text-[11px] sm:text-xs font-medium`}>
                         {t(`cat.${expense.category}` as TranslationKey)}
                       </span>
                       <span className="whitespace-nowrap">{expense.date}</span>
                     </div>
                   </div>
                   <span className="text-xs sm:text-sm font-bold text-theme-dark flex-shrink-0 text-right whitespace-nowrap">{formatWithBoth(expense.amount)}</span>
-                  <button
-                    onClick={() => setDeleteExpenseId(expense.id)}
-                    className="p-2 text-gray-300 hover:text-red-500 sm:opacity-0 sm:group-hover:opacity-100 transition-all flex-shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center cursor-pointer"
-                    aria-label={t('activity.delete')}
-                  >
-                    <Trash2 size={14} />
-                  </button>
+                  {canEdit && (
+                    <button
+                      onClick={() => setDeleteExpenseId(expense.id)}
+                      className="p-2 text-gray-300 hover:text-red-500 sm:opacity-0 sm:group-hover:opacity-100 transition-all flex-shrink-0 min-w-[44px] min-h-[44px] flex items-center justify-center cursor-pointer"
+                      aria-label={t('activity.delete')}
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
@@ -751,7 +765,7 @@ export function BudgetPage() {
       </div>
 
       {/* Add Expense Modal */}
-      {showAddForm && (
+      {canEdit && showAddForm && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-md animate-backdrop" onClick={() => setShowAddForm(false)} onKeyDown={(e) => e.key === 'Escape' && setShowAddForm(false)}>
           <div className="bg-surface w-full sm:max-w-md sm:rounded-3xl rounded-t-3xl shadow-2xl border border-gray-200/80 animate-sheet-up sm:animate-modal-pop" onClick={(e) => e.stopPropagation()}>
             <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-warm-50 to-accent-cream/30 sm:rounded-t-3xl rounded-t-3xl">
@@ -857,7 +871,7 @@ export function BudgetPage() {
       )}
 
       {/* Camera OCR Modal */}
-      {showCamera && (
+      {canEdit && showCamera && (
         <CameraOcrModal
           onClose={() => setShowCamera(false)}
           onAddExpense={handleCameraExpense}
@@ -865,7 +879,7 @@ export function BudgetPage() {
       )}
 
       {/* Budget Edit Modal */}
-      {showBudgetEdit && (
+      {canEdit && showBudgetEdit && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-md animate-backdrop" onClick={() => setShowBudgetEdit(false)} onKeyDown={(e) => e.key === 'Escape' && setShowBudgetEdit(false)}>
           <div className="bg-surface w-full sm:max-w-sm sm:rounded-3xl rounded-t-3xl shadow-2xl p-6 border border-gray-200/80 animate-sheet-up sm:animate-modal-pop" onClick={(e) => e.stopPropagation()}>
             <h3 className="font-bold text-theme-dark mb-3">{t('budget.setBudget')}</h3>
@@ -888,7 +902,7 @@ export function BudgetPage() {
       )}
 
       {/* Delete Expense Confirm */}
-      {deleteExpenseId && (
+      {canEdit && deleteExpenseId && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-md animate-backdrop" onClick={() => setDeleteExpenseId(null)} onKeyDown={(e) => e.key === 'Escape' && setDeleteExpenseId(null)}>
           <div className="bg-surface w-full sm:max-w-sm sm:rounded-3xl rounded-t-3xl shadow-2xl p-6 border border-gray-200/80 animate-sheet-up sm:animate-modal-pop" onClick={(e) => e.stopPropagation()}>
             <h3 className="font-bold text-lg text-gray-800 mb-2">{t('activity.delete')}</h3>

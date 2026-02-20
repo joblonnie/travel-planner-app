@@ -2,6 +2,7 @@ import { useState, useRef, lazy, Suspense } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { X, Settings, Globe, Download, Upload, FileSpreadsheet, Palette, Check, RefreshCw } from 'lucide-react';
+import { useCanEdit } from '@/features/sharing/hooks/useMyRole.ts';
 import { useTripStore } from '@/store/useTripStore.ts';
 import { useTripData } from '@/store/useCurrentTrip.ts';
 import { useTripActions } from '@/hooks/useTripActions.ts';
@@ -36,6 +37,7 @@ export function TripSettingsModal({ onClose }: Props) {
   const tripData = useTripData((trip) => trip);
   const { currency, convert, toBase } = useCurrency();
   const { refreshRates } = useExchangeRates();
+  const canEdit = useCanEdit();
   const [refreshing, setRefreshing] = useState(false);
   useEscKey(onClose);
 
@@ -153,7 +155,8 @@ export function TripSettingsModal({ onClose }: Props) {
               type="text"
               value={tripName}
               onChange={(e) => setTripName(e.target.value)}
-              className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary/40 outline-none bg-gray-50/30 focus:bg-white transition-colors"
+              readOnly={!canEdit}
+              className={`w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm outline-none transition-colors ${canEdit ? 'focus:ring-2 focus:ring-primary/20 focus:border-primary/40 bg-gray-50/30 focus:bg-white' : 'bg-gray-100 text-gray-500 cursor-default'}`}
             />
           </div>
 
@@ -164,7 +167,8 @@ export function TripSettingsModal({ onClose }: Props) {
                 type="date"
                 value={startDate}
                 onChange={(e) => setStartDate(e.target.value)}
-                className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary/40 outline-none bg-gray-50/30 focus:bg-white transition-colors"
+                disabled={!canEdit}
+                className={`w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm outline-none transition-colors ${canEdit ? 'focus:ring-2 focus:ring-primary/20 focus:border-primary/40 bg-gray-50/30 focus:bg-white' : 'bg-gray-100 text-gray-500 cursor-not-allowed'}`}
               />
             </div>
             <div>
@@ -173,7 +177,8 @@ export function TripSettingsModal({ onClose }: Props) {
                 type="date"
                 value={endDate}
                 onChange={(e) => setEndDate(e.target.value)}
-                className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary/40 outline-none bg-gray-50/30 focus:bg-white transition-colors"
+                disabled={!canEdit}
+                className={`w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm outline-none transition-colors ${canEdit ? 'focus:ring-2 focus:ring-primary/20 focus:border-primary/40 bg-gray-50/30 focus:bg-white' : 'bg-gray-100 text-gray-500 cursor-not-allowed'}`}
               />
             </div>
           </div>
@@ -189,7 +194,8 @@ export function TripSettingsModal({ onClose }: Props) {
               value={totalBudget}
               onChange={(e) => setTotalBudget(e.target.value)}
               min={0}
-              className="w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary/40 outline-none bg-gray-50/30 focus:bg-white transition-colors"
+              disabled={!canEdit}
+              className={`w-full px-3.5 py-2.5 border border-gray-200 rounded-xl text-sm outline-none transition-colors ${canEdit ? 'focus:ring-2 focus:ring-primary/20 focus:border-primary/40 bg-gray-50/30 focus:bg-white' : 'bg-gray-100 text-gray-500 cursor-not-allowed'}`}
             />
             <div className="flex items-center justify-between mt-1.5">
               <span className="text-[10px] text-gray-400">
@@ -197,15 +203,17 @@ export function TripSettingsModal({ onClose }: Props) {
                   ? `${t('currency.lastUpdated' as TranslationKey)}: ${new Date(ratesUpdatedAt).toLocaleString()}`
                   : ''}
               </span>
-              <button
-                type="button"
-                onClick={handleRefreshRates}
-                disabled={refreshing}
-                className="flex items-center gap-1 text-[10px] text-primary hover:text-primary-dark transition-colors disabled:opacity-50"
-              >
-                <RefreshCw size={10} className={refreshing ? 'animate-spin' : ''} />
-                {t('currency.refresh' as TranslationKey)}
-              </button>
+              {canEdit && (
+                <button
+                  type="button"
+                  onClick={handleRefreshRates}
+                  disabled={refreshing}
+                  className="flex items-center gap-1 text-[10px] text-primary hover:text-primary-dark transition-colors disabled:opacity-50"
+                >
+                  <RefreshCw size={10} className={refreshing ? 'animate-spin' : ''} />
+                  {t('currency.refresh' as TranslationKey)}
+                </button>
+              )}
             </div>
           </div>
 
@@ -216,16 +224,19 @@ export function TripSettingsModal({ onClose }: Props) {
 
           {/* Data Management */}
           <div>
-            <label className="block text-xs font-medium text-gray-500 mb-1.5">{t('settings.dataManagement' as TranslationKey)}</label>
+            <label className="block text-xs font-medium text-gray-500 mb-1">{t('settings.dataManagement' as TranslationKey)}</label>
+            <p className="text-[11px] text-gray-400 mb-2 leading-relaxed">{t('feature.dataDesc' as TranslationKey)}</p>
             <div className="flex gap-2">
               <button onClick={handleExport} className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-emerald-50 text-emerald-700 rounded-xl text-xs font-bold hover:bg-emerald-100 transition-colors border border-emerald-200/50">
                 <Download size={14} /> {t('feature.export' as TranslationKey)}
               </button>
-              <button onClick={() => fileInputRef.current?.click()} className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-blue-50 text-blue-700 rounded-xl text-xs font-bold hover:bg-blue-100 transition-colors border border-blue-200/50">
-                <Upload size={14} /> {t('feature.import' as TranslationKey)}
-              </button>
-              <button onClick={handleCsvExport} className="flex items-center justify-center gap-1.5 py-2.5 px-3 bg-amber-50 text-amber-700 rounded-xl text-xs font-bold hover:bg-amber-100 transition-colors border border-amber-200/50" title={t('feature.csvExport' as TranslationKey)}>
-                <FileSpreadsheet size={14} />
+              {canEdit && (
+                <button onClick={() => fileInputRef.current?.click()} className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-blue-50 text-blue-700 rounded-xl text-xs font-bold hover:bg-blue-100 transition-colors border border-blue-200/50">
+                  <Upload size={14} /> {t('feature.import' as TranslationKey)}
+                </button>
+              )}
+              <button onClick={handleCsvExport} className="flex-1 flex items-center justify-center gap-1.5 py-2.5 bg-amber-50 text-amber-700 rounded-xl text-xs font-bold hover:bg-amber-100 transition-colors border border-amber-200/50">
+                <FileSpreadsheet size={14} /> {t('feature.csvExport' as TranslationKey)}
               </button>
             </div>
             <input ref={fileInputRef} type="file" accept=".json" className="hidden" onChange={handleImport} />

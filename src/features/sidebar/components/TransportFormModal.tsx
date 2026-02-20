@@ -16,6 +16,14 @@ interface Props {
 
 const transportTypes = ['train', 'bus', 'flight', 'taxi', 'rental_car'] as const;
 
+const typeColors: Record<string, { selected: string; focus: string }> = {
+  train: { selected: 'bg-blue-500 text-white shadow-sm shadow-blue-200', focus: 'focus:ring-blue-200/50 focus:border-blue-400' },
+  bus: { selected: 'bg-emerald-500 text-white shadow-sm shadow-emerald-200', focus: 'focus:ring-emerald-200/50 focus:border-emerald-400' },
+  flight: { selected: 'bg-indigo-500 text-white shadow-sm shadow-indigo-200', focus: 'focus:ring-indigo-200/50 focus:border-indigo-400' },
+  taxi: { selected: 'bg-amber-500 text-white shadow-sm shadow-amber-200', focus: 'focus:ring-amber-200/50 focus:border-amber-400' },
+  rental_car: { selected: 'bg-orange-500 text-white shadow-sm shadow-orange-200', focus: 'focus:ring-orange-200/50 focus:border-orange-400' },
+};
+
 export function TransportFormModal({ fromDayId, toDayId, fromCity, toCity, transport, onClose }: Props) {
   const { addInterCityTransport, updateInterCityTransport } = useTripActions();
   const { t } = useI18n();
@@ -54,7 +62,7 @@ export function TransportFormModal({ fromDayId, toDayId, fromCity, toCity, trans
     onClose();
   };
 
-  const inputClass = 'w-full text-sm px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 focus:ring-amber-200/50 focus:border-amber-400 outline-none bg-gray-50/30 focus:bg-white transition-colors';
+  const inputClass = `w-full text-sm px-3 py-2.5 border border-gray-200 rounded-xl focus:ring-2 ${typeColors[type].focus} outline-none bg-gray-50/30 focus:bg-white transition-colors`;
 
   const getTypeLabel = (tp: string) => {
     const key = `transport.${tp}`;
@@ -88,7 +96,7 @@ export function TransportFormModal({ fromDayId, toDayId, fromCity, toCity, trans
                   onClick={() => setType(tp)}
                   className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
                     type === tp
-                      ? 'bg-amber-500 text-white shadow-sm'
+                      ? typeColors[tp].selected
                       : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
                   }`}
                 >

@@ -20,7 +20,7 @@ export function InvitationsBadge() {
     <>
       <button
         onClick={() => setShowModal(true)}
-        className="relative flex items-center justify-center p-2.5 bg-warm-100/80 text-warm-400 rounded-full hover:bg-primary/10 hover:text-primary transition-all duration-200 border border-warm-300/60 min-w-[44px] min-h-[44px] cursor-pointer"
+        className="relative flex items-center justify-center w-8 h-8 text-gray-400 rounded-lg hover:bg-gray-100 hover:text-gray-600 transition-all duration-200 cursor-pointer"
         title={t('sharing.invitations' as TranslationKey)}
         aria-label={t('sharing.invitations' as TranslationKey)}
       >
@@ -66,8 +66,8 @@ export function InvitationsBadge() {
                         {t('sharing.invitedBy' as TranslationKey)}: {inv.inviterName ?? inv.inviterEmail}
                       </p>
                       <div className="flex items-center gap-2 mt-1">
-                        <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium border ${
-                          inv.role === 'editor' ? 'text-blue-600 bg-blue-50 border-blue-200' : 'text-gray-600 bg-gray-50 border-gray-200'
+                        <span className={`text-[10px] px-1.5 py-0.5 rounded-lg font-medium ${
+                          inv.role === 'editor' ? 'text-blue-600 bg-blue-50' : 'text-gray-600 bg-gray-100'
                         }`}>
                           {t(`sharing.${inv.role}` as TranslationKey)}
                         </span>

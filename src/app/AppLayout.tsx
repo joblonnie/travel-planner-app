@@ -1,6 +1,5 @@
 import { useState, useCallback, useEffect, lazy, Suspense } from 'react';
 import { Outlet, useNavigate, useLocation, useSearchParams, Navigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
 import { Plane, Heart, CalendarDays, Wallet, Globe, ArrowLeftRight, Settings, Calculator, PanelLeftOpen, Search, Map, FileText, User, LogOut, ChevronLeft } from 'lucide-react';
 import { UserMenu } from '@/features/auth/components/UserMenu.tsx';
 import { useTripStore } from '@/store/useTripStore.ts';
@@ -11,8 +10,8 @@ import { useExchangeRates } from '@/hooks/useExchangeRates.ts';
 import { languageNames } from '@/i18n/translations.ts';
 import { LoadingSpinner } from '@/components/LoadingSpinner.tsx';
 import { apiClient } from '@/api/client.ts';
-import { TRIPS_QUERY_KEY } from '@/hooks/useTripQuery.ts';
-import type { Trip } from '@/types/index.ts';
+import { useTripsQuery } from '@/hooks/useTripQuery.ts';
+
 
 const DaySidebar = lazy(() => import('@/features/sidebar/components/DaySidebar.tsx').then(m => ({ default: m.DaySidebar })));
 const TripSettingsModal = lazy(() => import('@/features/trips/components/TripSettingsModal.tsx').then(m => ({ default: m.TripSettingsModal })));
@@ -30,7 +29,8 @@ export function AppLayout() {
   const setUser = useTripStore((s) => s.setUser);
   const currentTripId = useTripStore((s) => s.currentTripId);
 
-  const { data: trips } = useQuery<Trip[]>({ queryKey: TRIPS_QUERY_KEY, staleTime: Infinity, enabled: false });
+  const { data: trips } = useTripsQuery(false);
+  const tripsLoaded = trips !== undefined;
   const hasTrips = (trips?.length ?? 0) > 0;
   const currentTrip = trips?.find((t) => t.id === currentTripId);
 
@@ -76,25 +76,31 @@ export function AppLayout() {
     setLanguage(languages[(idx + 1) % languages.length]);
   };
 
-  // Redirect to /trips if no trips
-  if (!hasTrips && !isTrips) {
+  // Redirect to /trips if loaded but no trips
+  if (tripsLoaded && !hasTrips && !isTrips) {
     return <Navigate to="/trips" replace />;
   }
 
-  // No trips — minimal header
+  // No trips (or still loading) — minimal header + content area loading
   if (!hasTrips) {
     return (
       <div className="min-h-screen bg-warm-50">
-        <header className="sticky top-0 z-30 bg-header-bg backdrop-blur-2xl border-b border-card-border px-3 sm:px-5 py-2.5 sm:py-3 flex items-center justify-between flex-shrink-0">
+        <header className="sticky top-0 z-30 bg-header-bg/80 backdrop-blur-2xl border-b border-card-border px-3 sm:px-5 py-2 sm:py-2.5 flex items-center justify-between flex-shrink-0 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
           <div className="flex items-center gap-2.5">
-            <div className="bg-gradient-to-br from-primary to-primary-dark text-white p-1.5 sm:p-2 rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.15)]">
+            <div className="bg-gradient-to-br from-primary to-primary-dark text-white p-1.5 sm:p-2 rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.12)]">
               <Plane size={16} />
             </div>
-            <span className="font-semibold text-theme-dark text-sm">Travel Planner</span>
+            <span className="font-bold text-theme-dark text-sm tracking-tight">Travel Planner</span>
           </div>
           {user && <UserMenu user={user} onLogout={logout} />}
         </header>
-        <Outlet />
+        {!tripsLoaded ? (
+          <div className="flex items-center justify-center py-32">
+            <LoadingSpinner />
+          </div>
+        ) : (
+          <Outlet />
+        )}
       </div>
     );
   }
@@ -110,16 +116,16 @@ export function AppLayout() {
   return (
     <div className="min-h-screen flex flex-col bg-warm-50">
       {/* Top Header */}
-      <header className="sticky top-0 z-30 bg-header-bg backdrop-blur-2xl border-b border-card-border px-3 sm:px-5 py-2.5 sm:py-3 flex items-center justify-between flex-shrink-0 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_8px_24px_rgba(0,0,0,0.04)]">
-        <div className="flex items-center gap-1.5 sm:gap-3.5 min-w-0">
+      <header className="sticky top-0 z-30 bg-header-bg/80 backdrop-blur-2xl border-b border-card-border px-3 sm:px-5 py-2 sm:py-2.5 flex items-center justify-between flex-shrink-0 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
+        <div className="flex items-center gap-1.5 sm:gap-3 min-w-0">
           {/* Sidebar Toggle — leftmost on planner (mobile + desktop) */}
           {!isTrips && isPlanner && (
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className={`flex items-center justify-center p-2 -ml-1 rounded-full transition-all duration-200 flex-shrink-0 min-w-[36px] min-h-[36px] sm:min-w-[40px] sm:min-h-[40px] ${
+              className={`flex items-center justify-center p-2 -ml-1 rounded-xl transition-all duration-200 flex-shrink-0 min-w-[36px] min-h-[36px] sm:min-w-[40px] sm:min-h-[40px] ${
                 sidebarOpen
-                  ? 'bg-primary/10 text-primary'
-                  : 'text-warm-400 hover:bg-primary/10 hover:text-primary'
+                  ? 'bg-primary text-white shadow-sm'
+                  : 'text-gray-400 hover:bg-gray-100 hover:text-gray-600'
               }`}
               title={t('sidebar.schedule')}
               aria-label={t('sidebar.schedule')}
@@ -130,110 +136,112 @@ export function AppLayout() {
           {!isTrips && !isPlanner && (
             <button
               onClick={() => navigate('/trips')}
-              className="flex items-center justify-center p-1.5 -ml-1 rounded-full text-warm-400 hover:text-primary hover:bg-primary/10 transition-all flex-shrink-0 sm:hidden"
+              className="flex items-center justify-center p-1.5 -ml-1 rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-all flex-shrink-0 sm:hidden"
               aria-label={t('trips.manageTrips' as TranslationKey)}
             >
               <ChevronLeft size={20} />
             </button>
           )}
-          <div className="bg-gradient-to-br from-primary to-primary-dark text-white p-1.5 sm:p-2 rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.15)] flex-shrink-0">
+          <div className="bg-gradient-to-br from-primary to-primary-dark text-white p-1.5 sm:p-2 rounded-xl shadow-[0_2px_8px_rgba(0,0,0,0.12)] flex-shrink-0">
             <Plane size={16} className="sm:w-[18px] sm:h-[18px]" />
           </div>
           {isTrips ? (
-            <span className="font-semibold text-theme-dark text-sm">Travel Planner</span>
+            <span className="font-bold text-theme-dark text-sm tracking-tight">Travel Planner</span>
           ) : (
             <div className="min-w-0">
               <button
                 onClick={() => setShowSettings(true)}
-                className="font-semibold text-theme-dark flex items-center gap-1.5 text-xs sm:text-sm hover:text-primary transition-colors duration-200 group max-w-full tracking-tight"
+                className="font-bold text-theme-dark flex items-center gap-1.5 text-xs sm:text-sm hover:text-primary transition-colors duration-200 group max-w-full tracking-tight"
               >
                 <span className="truncate">{tripName}</span>
                 <Heart size={11} className="text-primary fill-primary flex-shrink-0 opacity-80" />
-                <Settings size={10} className="text-warm-400 group-hover:text-primary transition-colors duration-200 flex-shrink-0" />
+                <Settings size={10} className="text-gray-300 group-hover:text-primary transition-colors duration-200 flex-shrink-0" />
               </button>
-              <p className="text-[10px] text-warm-400 font-mono tracking-wide">
+              <p className="text-[10px] text-gray-400 font-mono tracking-wide">
                 {startDate} ~ {endDate} ({daysLength}{t('app.days')})
               </p>
             </div>
           )}
         </div>
 
-        <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+        <div className="flex items-center gap-1 sm:gap-1.5 flex-shrink-0">
           {!isTrips && (
             <>
               {/* Page Navigation (desktop only — mobile uses bottom nav) */}
-              {/* Order: 여행 관리 → 일정 → 가계부 → 가이드 */}
-              <div className="hidden sm:flex bg-warm-100/80 rounded-full p-0.5 border border-warm-300/60" role="tablist">
+              <nav className="hidden sm:flex items-center bg-gray-100/80 rounded-xl p-1 gap-0.5" role="tablist">
                 <button
                   onClick={() => navigate('/trips')}
                   role="tab"
                   aria-selected={false}
-                  className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium transition-all duration-200 text-warm-400 hover:text-theme-dark focus-visible:ring-2 focus-visible:ring-primary/30"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all duration-200 text-gray-400 hover:text-gray-600 hover:bg-white/50"
                 >
-                  <Map size={13} />
+                  <Map size={14} />
                   <span>{t('trips.manageTrips' as TranslationKey)}</span>
                 </button>
                 <button
                   onClick={() => navigate('/')}
                   role="tab"
                   aria-selected={isPlanner}
-                  className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary/30 ${
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 ${
                     isPlanner
-                      ? 'bg-white text-primary shadow-[0_1px_3px_rgba(0,0,0,0.08)]'
-                      : 'text-warm-400 hover:text-theme-dark'
+                      ? 'bg-white text-primary shadow-sm'
+                      : 'text-gray-400 hover:text-gray-600 hover:bg-white/50'
                   }`}
                 >
-                  <CalendarDays size={13} />
+                  <CalendarDays size={14} />
                   <span>{t('nav.planner')}</span>
                 </button>
                 <button
                   onClick={() => navigate('/budget')}
                   role="tab"
                   aria-selected={isBudget}
-                  className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary/30 ${
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 ${
                     isBudget
-                      ? 'bg-white text-primary shadow-[0_1px_3px_rgba(0,0,0,0.08)]'
-                      : 'text-warm-400 hover:text-theme-dark'
+                      ? 'bg-white text-primary shadow-sm'
+                      : 'text-gray-400 hover:text-gray-600 hover:bg-white/50'
                   }`}
                 >
-                  <Wallet size={13} />
+                  <Wallet size={14} />
                   <span>{t('nav.budget')}</span>
                 </button>
                 <button
                   onClick={() => navigate('/guide')}
                   role="tab"
                   aria-selected={isGuide}
-                  className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-medium transition-all duration-200 focus-visible:ring-2 focus-visible:ring-primary/30 ${
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 ${
                     isGuide
-                      ? 'bg-white text-primary shadow-[0_1px_3px_rgba(0,0,0,0.08)]'
-                      : 'text-warm-400 hover:text-theme-dark'
+                      ? 'bg-white text-primary shadow-sm'
+                      : 'text-gray-400 hover:text-gray-600 hover:bg-white/50'
                   }`}
                 >
-                  <FileText size={13} />
+                  <FileText size={14} />
                   <span>{t('guide.title' as TranslationKey)}</span>
                 </button>
-              </div>
+              </nav>
+
+              {/* Divider */}
+              <div className="hidden sm:block w-px h-5 bg-gray-200 mx-0.5" />
 
               {/* Desktop action buttons */}
               <button
                 onClick={() => setShowSearch(true)}
-                className="hidden sm:flex items-center justify-center p-2.5 bg-warm-100/80 text-warm-400 rounded-full hover:bg-primary/10 hover:text-primary transition-all duration-200 border border-warm-300/60 min-w-[44px] min-h-[44px] cursor-pointer"
+                className="hidden sm:flex items-center justify-center w-8 h-8 text-gray-400 rounded-lg hover:bg-gray-100 hover:text-gray-600 transition-all duration-200 cursor-pointer"
                 title={t('feature.search')}
                 aria-label={t('feature.search')}
               >
-                <Search size={14} />
+                <Search size={15} />
               </button>
               <button
                 onClick={() => setShowCamera(true)}
-                className="hidden sm:flex items-center justify-center p-2.5 bg-warm-100/80 text-warm-400 rounded-full hover:bg-primary/10 hover:text-primary transition-all duration-200 border border-warm-300/60 min-w-[44px] min-h-[44px] cursor-pointer"
+                className="hidden sm:flex items-center justify-center w-8 h-8 text-gray-400 rounded-lg hover:bg-gray-100 hover:text-gray-600 transition-all duration-200 cursor-pointer"
                 title={t('camera.title')}
                 aria-label={t('camera.title')}
               >
-                <Calculator size={14} />
+                <Calculator size={15} />
               </button>
               <button
                 onClick={nextCurrency}
-                className="flex items-center gap-1 px-3 py-1.5 bg-secondary/10 text-secondary-dark rounded-full text-[11px] font-semibold hover:bg-secondary/20 transition-all duration-200 border border-secondary/30"
+                className="flex items-center gap-1 px-2.5 py-1.5 bg-primary/8 text-primary rounded-lg text-[11px] font-bold hover:bg-primary/15 transition-all duration-200"
                 title={t('currency.toggle')}
               >
                 <ArrowLeftRight size={11} />
@@ -241,11 +249,10 @@ export function AppLayout() {
               </button>
               <button
                 onClick={nextLanguage}
-                className="hidden sm:flex items-center gap-1 px-2.5 py-1.5 bg-warm-100/80 text-warm-400 rounded-full text-[11px] font-semibold hover:bg-warm-200/60 hover:text-theme-dark transition-all duration-200 border border-warm-300/60"
+                className="hidden sm:flex items-center justify-center w-8 h-8 text-gray-400 rounded-lg hover:bg-gray-100 hover:text-gray-600 transition-all duration-200"
                 title={t('settings.language')}
               >
-                <Globe size={11} />
-                {languageNames[language]}
+                <Globe size={15} />
               </button>
             </>
           )}
@@ -276,24 +283,26 @@ export function AppLayout() {
       {showSearch && <Suspense fallback={<LoadingSpinner />}><SearchModal onClose={() => setShowSearch(false)} /></Suspense>}
 
       {/* Mobile Bottom Navigation — context-aware */}
-      <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-30 bg-bottom-nav-bg backdrop-blur-2xl border-t border-card-border shadow-[0_-2px_10px_rgba(0,0,0,0.05)] pb-[env(safe-area-inset-bottom)]" aria-label={t('nav.planner')}>
-        <div className="flex items-center justify-around px-2 h-14">
+      <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-30 bg-white/90 backdrop-blur-2xl border-t border-gray-200/60 pb-[env(safe-area-inset-bottom)]" aria-label={t('nav.planner')}>
+        <div className="flex items-center justify-around px-1 h-[56px]">
           {isTrips ? (
             <>
               {/* 여행 관리 */}
               <button
                 onClick={() => navigate('/trips')}
-                className="flex flex-col items-center gap-0.5 min-w-[48px] min-h-[48px] py-1.5 rounded-xl text-primary transition-colors"
+                className="flex flex-col items-center justify-center gap-0.5 min-w-[52px] min-h-[48px] py-1 rounded-2xl transition-colors text-primary"
                 aria-label={t('trips.manageTrips' as TranslationKey)}
               >
-                <Map size={20} />
-                <span className="text-[10px] font-medium">{t('trips.manageTrips' as TranslationKey)}</span>
+                <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
+                  <Map size={18} />
+                </div>
+                <span className="text-[10px] font-bold">{t('trips.manageTrips' as TranslationKey)}</span>
               </button>
 
               {/* 환율 계산기 */}
               <button
                 onClick={() => setShowCamera(true)}
-                className="flex flex-col items-center gap-0.5 min-w-[48px] min-h-[48px] py-1.5 rounded-xl text-gray-400 active:text-primary transition-colors"
+                className="flex flex-col items-center justify-center gap-0.5 min-w-[52px] min-h-[48px] py-1 rounded-2xl text-gray-400 active:text-primary transition-colors"
                 aria-label={t('nav.exchange' as TranslationKey)}
               >
                 <Calculator size={20} />
@@ -303,7 +312,7 @@ export function AppLayout() {
               {/* 내 정보 */}
               <button
                 onClick={() => setShowProfile(true)}
-                className="flex flex-col items-center gap-0.5 min-w-[48px] min-h-[48px] py-1.5 rounded-xl text-gray-400 active:text-primary transition-colors"
+                className="flex flex-col items-center justify-center gap-0.5 min-w-[52px] min-h-[48px] py-1 rounded-2xl text-gray-400 active:text-primary transition-colors"
                 aria-label={t('nav.myInfo' as TranslationKey)}
               >
                 <User size={20} />
@@ -315,19 +324,25 @@ export function AppLayout() {
               {/* 일정 */}
               <button
                 onClick={() => navigate('/')}
-                className={`flex flex-col items-center gap-0.5 min-w-[48px] min-h-[48px] py-1.5 rounded-xl transition-colors ${
+                className={`flex flex-col items-center justify-center gap-0.5 min-w-[52px] min-h-[48px] py-1 rounded-2xl transition-colors ${
                   isPlanner ? 'text-primary' : 'text-gray-400 active:text-primary'
                 }`}
                 aria-label={t('nav.planner')}
               >
-                <CalendarDays size={20} />
-                <span className="text-[10px] font-medium">{t('nav.planner')}</span>
+                {isPlanner ? (
+                  <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <CalendarDays size={18} />
+                  </div>
+                ) : (
+                  <CalendarDays size={20} />
+                )}
+                <span className={`text-[10px] ${isPlanner ? 'font-bold' : 'font-medium'}`}>{t('nav.planner')}</span>
               </button>
 
               {/* 환율 계산기 */}
               <button
                 onClick={() => setShowCamera(true)}
-                className="flex flex-col items-center gap-0.5 min-w-[48px] min-h-[48px] py-1.5 rounded-xl text-gray-400 active:text-primary transition-colors"
+                className="flex flex-col items-center justify-center gap-0.5 min-w-[52px] min-h-[48px] py-1 rounded-2xl text-gray-400 active:text-primary transition-colors"
                 aria-label={t('nav.exchange' as TranslationKey)}
               >
                 <Calculator size={20} />
@@ -337,29 +352,35 @@ export function AppLayout() {
               {/* 가계부 */}
               <button
                 onClick={() => navigate('/budget')}
-                className={`flex flex-col items-center gap-0.5 min-w-[48px] min-h-[48px] py-1.5 rounded-xl transition-colors ${
+                className={`flex flex-col items-center justify-center gap-0.5 min-w-[52px] min-h-[48px] py-1 rounded-2xl transition-colors ${
                   isBudget ? 'text-primary' : 'text-gray-400 active:text-primary'
                 }`}
                 aria-label={t('nav.budget')}
               >
-                <Wallet size={20} />
-                <span className="text-[10px] font-medium">{t('nav.budget')}</span>
+                {isBudget ? (
+                  <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center">
+                    <Wallet size={18} />
+                  </div>
+                ) : (
+                  <Wallet size={20} />
+                )}
+                <span className={`text-[10px] ${isBudget ? 'font-bold' : 'font-medium'}`}>{t('nav.budget')}</span>
               </button>
 
-              {/* 검색 */}
+              {/* 여행 목록 */}
               <button
-                onClick={() => setShowSearch(true)}
-                className="flex flex-col items-center gap-0.5 min-w-[48px] min-h-[48px] py-1.5 rounded-xl text-gray-400 active:text-primary transition-colors"
-                aria-label={t('feature.search')}
+                onClick={() => navigate('/trips')}
+                className="flex flex-col items-center justify-center gap-0.5 min-w-[52px] min-h-[48px] py-1 rounded-2xl text-gray-400 active:text-primary transition-colors"
+                aria-label={t('trips.manageTrips' as TranslationKey)}
               >
-                <Search size={20} />
-                <span className="text-[10px] font-medium">{t('feature.search')}</span>
+                <Map size={20} />
+                <span className="text-[10px] font-medium">{t('trips.manageTrips' as TranslationKey)}</span>
               </button>
 
               {/* 내 정보 */}
               <button
                 onClick={() => setShowProfile(true)}
-                className="flex flex-col items-center gap-0.5 min-w-[48px] min-h-[48px] py-1.5 rounded-xl text-gray-400 active:text-primary transition-colors"
+                className="flex flex-col items-center justify-center gap-0.5 min-w-[52px] min-h-[48px] py-1 rounded-2xl text-gray-400 active:text-primary transition-colors"
                 aria-label={t('nav.myInfo' as TranslationKey)}
               >
                 <User size={20} />

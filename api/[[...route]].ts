@@ -2,8 +2,10 @@ import type { IncomingMessage, ServerResponse } from 'node:http';
 import { app } from './_server/app.js';
 
 export default async function handler(req: IncomingMessage, res: ServerResponse) {
-  const protocol = req.headers['x-forwarded-proto'] || 'https';
-  const host = req.headers['x-forwarded-host'] || req.headers.host || 'localhost';
+  const rawProto = req.headers['x-forwarded-proto'] || 'https';
+  const protocol = String(rawProto).split(',')[0].trim();
+  const rawHost = req.headers['x-forwarded-host'] || req.headers.host || 'localhost';
+  const host = String(rawHost).split(',')[0].trim();
   const url = `${protocol}://${host}${req.url}`;
 
   const headers = new Headers();

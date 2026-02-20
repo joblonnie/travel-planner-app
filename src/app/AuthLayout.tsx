@@ -1,9 +1,7 @@
 import { useEffect } from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
-import { Plane } from 'lucide-react';
 import { useTripsQuery } from '@/hooks/useTripQuery.ts';
 import { useTripStore } from '@/store/useTripStore.ts';
-import { LoadingSpinner } from '@/components/LoadingSpinner.tsx';
 
 export function AuthLayout() {
   const isAuthenticated = useTripStore((s) => s.isAuthenticated);
@@ -11,7 +9,7 @@ export function AuthLayout() {
   const setCurrentTripId = useTripStore((s) => s.setCurrentTripId);
   const setTripsLoaded = useTripStore((s) => s.setTripsLoaded);
 
-  const { data: trips, isLoading, isSuccess } = useTripsQuery(isAuthenticated);
+  const { data: trips, isSuccess } = useTripsQuery(isAuthenticated);
 
   // When trips load, set currentTripId if not already set
   useEffect(() => {
@@ -27,18 +25,7 @@ export function AuthLayout() {
     return <Navigate to="/login" replace />;
   }
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-warm-50">
-        <div className="flex flex-col items-center gap-4">
-          <div className="bg-gradient-to-br from-primary to-primary-dark text-white p-4 rounded-2xl shadow-lg">
-            <Plane size={32} />
-          </div>
-          <LoadingSpinner />
-        </div>
-      </div>
-    );
-  }
-
+  // Always render Outlet — AppLayout shows header immediately,
+  // content area handles its own loading state
   return <Outlet />;
 }

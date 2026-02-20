@@ -164,8 +164,8 @@ export const sharingRoute = new OpenAPIHono<AppEnv>()
     const { email, role } = c.req.valid('json');
 
     const userRole = await getTripRole(tripId, userId);
-    if (!hasMinRole(userRole, 'owner')) {
-      return c.json({ error: 'Only owner can invite' }, 403);
+    if (!hasMinRole(userRole, 'editor')) {
+      return c.json({ error: 'Only owner or editor can invite' }, 403);
     }
 
     const db = getDb();
@@ -220,18 +220,27 @@ export const sharingRoute = new OpenAPIHono<AppEnv>()
       });
     }
 
-    // Fire-and-forget email
+    // Send invitation email (await to capture result)
     const url = new URL(c.req.url);
     const baseUrl = process.env.APP_BASE_URL || `${url.protocol}//${url.host}`;
-    sendInvitationEmail({
-      to: email,
-      inviterName: inviter?.name ?? null,
-      inviterEmail: inviter?.email ?? '',
-      tripName: trip?.tripName ?? '',
-      role,
-      invitationId,
-      baseUrl,
-    }).catch((err) => console.error('[email] Send failed:', err));
+    let emailSent = false;
+    let emailError: string | undefined;
+    try {
+      const result = await sendInvitationEmail({
+        to: email,
+        inviterName: inviter?.name ?? null,
+        inviterEmail: inviter?.email ?? '',
+        tripName: trip?.tripName ?? '',
+        role,
+        invitationId,
+        baseUrl,
+      });
+      emailSent = result.success;
+      emailError = result.error;
+    } catch (err) {
+      console.error('[email] Send failed:', err);
+      emailError = err instanceof Error ? err.message : String(err);
+    }
 
     return c.json({
       invitation: {
@@ -245,6 +254,8 @@ export const sharingRoute = new OpenAPIHono<AppEnv>()
         createdAt: existingInvite?.createdAt.toISOString() ?? now.toISOString(),
         expiresAt: expiresAt.toISOString(),
       },
+      emailSent,
+      ...(emailError ? { emailError } : {}),
     }, 201);
   })
 

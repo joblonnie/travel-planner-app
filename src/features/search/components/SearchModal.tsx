@@ -13,11 +13,11 @@ interface Props {
 }
 
 const typeColors: Record<string, string> = {
-  attraction: 'bg-indigo-500/10 text-indigo-600 border-indigo-200/50',
-  shopping: 'bg-amber-500/10 text-amber-600 border-amber-200/50',
-  meal: 'bg-orange-500/10 text-orange-600 border-orange-200/50',
-  transport: 'bg-slate-500/10 text-slate-500 border-slate-200/50',
-  free: 'bg-emerald-500/10 text-emerald-600 border-emerald-200/50',
+  attraction: 'bg-indigo-500/10 text-indigo-600',
+  shopping: 'bg-amber-500/10 text-amber-600',
+  meal: 'bg-orange-500/10 text-orange-600',
+  transport: 'bg-slate-500/10 text-slate-500',
+  free: 'bg-emerald-500/10 text-emerald-600',
 };
 
 export function SearchModal({ onClose }: Props) {
@@ -126,7 +126,7 @@ export function SearchModal({ onClose }: Props) {
                       <p className="text-sm font-medium text-gray-800 truncate">{activity.nameKo}</p>
                       <div className="flex items-center gap-2 mt-1">
                         <span className="text-xs text-gray-500">{activity.time}</span>
-                        <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full border ${typeColors[activity.type] ?? ''}`}>
+                        <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-lg ${typeColors[activity.type] ?? ''}`}>
                           {translations[`type.${activity.type}` as TranslationKey] ? t(`type.${activity.type}` as TranslationKey) : activity.type}
                         </span>
                       </div>

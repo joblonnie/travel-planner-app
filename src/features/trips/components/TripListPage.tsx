@@ -1,19 +1,18 @@
 import { useState, useRef, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
-import { Plus, Trash2, Copy, MapPin, Calendar, ArrowLeft, Settings, Users, Crown, Pencil, Eye, UserPlus, Send } from 'lucide-react';
+import { Plus, Trash2, Copy, MapPin, Calendar, ArrowLeft, Settings, Users, Crown, Pencil, Eye, UserPlus, Send, LogOut } from 'lucide-react';
 import { useTripStore } from '@/store/useTripStore.ts';
 import { useTripActions } from '@/hooks/useTripActions.ts';
 import { useI18n, type TranslationKey } from '@/i18n/useI18n.ts';
 import { useCurrency } from '@/hooks/useCurrency.ts';
 import { TripCreateModal } from './TripCreateModal.tsx';
 import { useDeleteTrip } from '@/hooks/useTrips.ts';
-import { TRIPS_QUERY_KEY } from '@/hooks/useTripQuery.ts';
-import { useInviteMember } from '@/features/sharing/hooks/useMembers.ts';
+import { useTripsQuery } from '@/hooks/useTripQuery.ts';
+import { useInviteMember, useLeaveTrip } from '@/features/sharing/hooks/useMembers.ts';
 import type { Trip } from '@/types/index.ts';
 
 const ROLE_BADGE = {
-  owner: { icon: Crown, label: 'sharing.owner', color: 'text-amber-600 bg-amber-50 border-amber-200' },
+  owner: { icon: Crown, label: 'sharing.owner', color: 'text-amber-700 bg-amber-50 border-amber-300' },
   editor: { icon: Pencil, label: 'sharing.editor', color: 'text-blue-600 bg-blue-50 border-blue-200' },
   viewer: { icon: Eye, label: 'sharing.viewer', color: 'text-gray-600 bg-gray-100 border-gray-200' },
 } as const;
@@ -170,7 +169,7 @@ function InviteInlineForm({ tripId, onClose }: { tripId: string; onClose: () => 
 
 export function TripListPage() {
   const navigate = useNavigate();
-  const { data: trips = [] } = useQuery<Trip[]>({ queryKey: TRIPS_QUERY_KEY, staleTime: Infinity, enabled: false });
+  const { data: trips = [] } = useTripsQuery(false);
   const currentTripId = useTripStore((s) => s.currentTripId);
   const setCurrentTripId = useTripStore((s) => s.setCurrentTripId);
   const { deleteTrip, duplicateTrip } = useTripActions();
@@ -178,8 +177,12 @@ export function TripListPage() {
   const { format } = useCurrency();
   const [showCreate, setShowCreate] = useState(false);
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [confirmLeaveId, setConfirmLeaveId] = useState<string | null>(null);
+  const [confirmDuplicateId, setConfirmDuplicateId] = useState<string | null>(null);
   const [invitingTripId, setInvitingTripId] = useState<string | null>(null);
   const deleteTripMutation = useDeleteTrip();
+  const leaveTripMutation = useLeaveTrip();
+  const user = useTripStore((s) => s.user);
 
   const handleSwitch = (tripId: string) => {
     setCurrentTripId(tripId);
@@ -196,11 +199,29 @@ export function TripListPage() {
     setConfirmDeleteId(tripId);
   };
 
+  const handleLeave = (tripId: string) => {
+    setConfirmLeaveId(tripId);
+  };
+
+  const confirmLeave = () => {
+    if (confirmLeaveId && user?.id) {
+      leaveTripMutation.mutate({ tripId: confirmLeaveId, userId: user.id });
+      setConfirmLeaveId(null);
+    }
+  };
+
   const confirmDelete = () => {
     if (confirmDeleteId) {
       deleteTripMutation.mutate(confirmDeleteId);
       deleteTrip(confirmDeleteId);
       setConfirmDeleteId(null);
+    }
+  };
+
+  const confirmDuplicate = () => {
+    if (confirmDuplicateId) {
+      duplicateTrip(confirmDuplicateId);
+      setConfirmDuplicateId(null);
     }
   };
 
@@ -256,17 +277,18 @@ export function TripListPage() {
           const destinations = getUniqueDestinations(trip);
           const isCurrent = trip.id === currentTripId;
           const role = trip.role ?? 'owner';
-          const isShared = role !== 'owner';
           const isOwnerRole = role === 'owner';
           const badge = ROLE_BADGE[role] ?? ROLE_BADGE.viewer;
           const BadgeIcon = badge.icon;
+
+          const canInvite = role === 'owner' || role === 'editor';
 
           return (
             <div
               key={trip.id}
               className={`relative bg-surface rounded-2xl border transition-all ${
                 isCurrent
-                  ? 'border-[#EBD8DC] shadow-lg shadow-[#EBD8DC]/20 ring-1 ring-[#EBD8DC]/60'
+                  ? 'border-primary/60 border-2 shadow-lg shadow-primary/15 ring-1 ring-primary/30'
                   : 'border-gray-300/80 shadow-sm hover:shadow-md hover:border-gray-300'
               }`}
             >
@@ -277,9 +299,50 @@ export function TripListPage() {
                 </div>
               )}
 
+              {/* Top-right action icons */}
+              <div className="absolute top-3 right-3 flex items-center gap-1 z-10">
+                <button
+                  onClick={(e) => { e.stopPropagation(); handleEdit(trip.id); }}
+                  className="group relative p-1.5 text-gray-400 hover:text-primary hover:bg-primary/10 rounded-lg transition-colors"
+                  title={t('trips.edit' as TranslationKey)}
+                >
+                  <Settings size={14} />
+                  <span className="absolute -bottom-7 left-1/2 -translate-x-1/2 px-1.5 py-0.5 bg-gray-800 text-white text-[10px] rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">{t('trips.edit' as TranslationKey)}</span>
+                </button>
+                {isOwnerRole && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setConfirmDuplicateId(trip.id); }}
+                    className="group relative p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                    title={t('trips.duplicate' as TranslationKey)}
+                  >
+                    <Copy size={14} />
+                    <span className="absolute -bottom-7 left-1/2 -translate-x-1/2 px-1.5 py-0.5 bg-gray-800 text-white text-[10px] rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">{t('trips.duplicate' as TranslationKey)}</span>
+                  </button>
+                )}
+                {isOwnerRole ? (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleDelete(trip.id); }}
+                    className="group relative p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                    title={t('trips.delete' as TranslationKey)}
+                  >
+                    <Trash2 size={14} />
+                    <span className="absolute -bottom-7 left-1/2 -translate-x-1/2 px-1.5 py-0.5 bg-gray-800 text-white text-[10px] rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">{t('trips.delete' as TranslationKey)}</span>
+                  </button>
+                ) : (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); handleLeave(trip.id); }}
+                    className="group relative p-1.5 text-gray-400 hover:text-orange-500 hover:bg-orange-50 rounded-lg transition-colors"
+                    title={t('sharing.leaveTrip' as TranslationKey)}
+                  >
+                    <LogOut size={14} />
+                    <span className="absolute -bottom-7 left-1/2 -translate-x-1/2 px-1.5 py-0.5 bg-gray-800 text-white text-[10px] rounded whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">{t('sharing.leaveTrip' as TranslationKey)}</span>
+                  </button>
+                )}
+              </div>
+
               <button
                 onClick={() => handleSwitch(trip.id)}
-                className="w-full text-left p-4 pt-5 cursor-pointer"
+                className="w-full text-left p-4 pt-5 pr-28 cursor-pointer"
               >
                 <div className="flex items-start gap-3">
                   {/* Trip icon */}
@@ -294,12 +357,10 @@ export function TripListPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-1.5">
                       <h3 className="font-bold text-gray-800 text-sm truncate">{trip.tripName}</h3>
-                      {isShared && (
-                        <span className={`flex items-center gap-0.5 text-[9px] px-1.5 py-0.5 rounded-full border font-medium flex-shrink-0 ${badge.color}`}>
-                          <BadgeIcon size={8} />
-                          {t(badge.label as TranslationKey)}
-                        </span>
-                      )}
+                      <span className={`flex items-center gap-0.5 text-[9px] px-1.5 py-0.5 rounded-full border font-medium flex-shrink-0 ${badge.color}`}>
+                        <BadgeIcon size={8} />
+                        {t(badge.label as TranslationKey)}
+                      </span>
                     </div>
 
                     {/* Date range */}
@@ -323,9 +384,9 @@ export function TripListPage() {
                       </div>
                     )}
 
-                    {/* Member avatars */}
-                    {trip.members && trip.members.length > 0 && (
-                      <div className="flex items-center mt-1.5">
+                    {/* Member avatars + invite button */}
+                    <div className="flex items-center mt-1.5">
+                      {trip.members && trip.members.length > 0 && (
                         <div className="flex items-center">
                           {trip.members.slice(0, 5).map((member, idx) => (
                             <div
@@ -343,12 +404,25 @@ export function TripListPage() {
                               +{trip.members.length - 5}
                             </div>
                           )}
+                          <span className="text-[10px] text-gray-400 ml-1.5">
+                            {trip.members.length}{t('sharing.membersCount' as TranslationKey)}
+                          </span>
                         </div>
-                        <span className="text-[10px] text-gray-400 ml-1.5">
-                          {trip.members.length} {t('sharing.members' as TranslationKey)}
-                        </span>
-                      </div>
-                    )}
+                      )}
+                      {canInvite && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setInvitingTripId(invitingTripId === trip.id ? null : trip.id); }}
+                          className={`flex items-center gap-0.5 text-[10px] font-semibold ml-2 px-1.5 py-0.5 rounded-full transition-colors ${
+                            invitingTripId === trip.id
+                              ? 'text-primary bg-primary/10'
+                              : 'text-gray-400 hover:text-primary hover:bg-primary/10'
+                          }`}
+                        >
+                          <UserPlus size={10} />
+                          {t('sharing.invite' as TranslationKey)}
+                        </button>
+                      )}
+                    </div>
 
                     {/* Stats */}
                     <div className="flex items-center gap-3 mt-2">
@@ -388,61 +462,6 @@ export function TripListPage() {
               {invitingTripId === trip.id && (
                 <InviteInlineForm tripId={trip.id} onClose={() => setInvitingTripId(null)} />
               )}
-
-              {/* Action buttons */}
-              <div className="flex border-t border-gray-100 divide-x divide-gray-100">
-                <button
-                  onClick={() => handleEdit(trip.id)}
-                  className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs text-gray-500 hover:text-primary hover:bg-primary/5 transition-colors min-h-[44px]"
-                  title={t('trips.edit' as TranslationKey)}
-                >
-                  <Settings size={13} />
-                  {t('trips.edit' as TranslationKey)}
-                </button>
-                {isOwnerRole && (
-                  <button
-                    onClick={() => setInvitingTripId(invitingTripId === trip.id ? null : trip.id)}
-                    className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs transition-colors min-h-[44px] ${
-                      invitingTripId === trip.id
-                        ? 'text-primary bg-primary/5'
-                        : 'text-gray-500 hover:text-emerald-600 hover:bg-emerald-50/50'
-                    }`}
-                    title={t('sharing.invite' as TranslationKey)}
-                  >
-                    <UserPlus size={13} />
-                    {t('sharing.invite' as TranslationKey)}
-                  </button>
-                )}
-                {isOwnerRole && (
-                  <button
-                    onClick={() => duplicateTrip(trip.id)}
-                    className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs text-gray-500 hover:text-blue-600 hover:bg-blue-50/50 transition-colors min-h-[44px]"
-                    title={t('trips.duplicate' as TranslationKey)}
-                  >
-                    <Copy size={13} />
-                    {t('trips.duplicate' as TranslationKey)}
-                  </button>
-                )}
-                {isOwnerRole ? (
-                  <button
-                    onClick={() => handleDelete(trip.id)}
-                    className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs text-gray-500 hover:text-red-600 hover:bg-red-50/50 transition-colors min-h-[44px]"
-                    title={t('trips.delete' as TranslationKey)}
-                  >
-                    <Trash2 size={13} />
-                    {t('trips.delete' as TranslationKey)}
-                  </button>
-                ) : (
-                  <button
-                    onClick={() => handleDelete(trip.id)}
-                    className="flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs text-gray-500 hover:text-orange-600 hover:bg-orange-50/50 transition-colors min-h-[44px]"
-                    title={t('sharing.leaveTrip' as TranslationKey)}
-                  >
-                    <Users size={13} />
-                    {t('sharing.leaveTrip' as TranslationKey)}
-                  </button>
-                )}
-              </div>
             </div>
           );
         })}
@@ -457,6 +476,30 @@ export function TripListPage() {
 
       {/* Create modal */}
       {showCreate && <TripCreateModal onClose={() => setShowCreate(false)} />}
+
+      {/* Leave confirmation */}
+      {confirmLeaveId && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-md p-4 animate-backdrop" onClick={() => setConfirmLeaveId(null)} onKeyDown={(e) => e.key === 'Escape' && setConfirmLeaveId(null)}>
+          <div className="bg-surface/95 backdrop-blur-xl w-full sm:max-w-sm sm:rounded-2xl rounded-t-2xl shadow-2xl p-5 border border-gray-200/80 animate-sheet-up sm:animate-modal-pop" onClick={(e) => e.stopPropagation()}>
+            <h3 className="font-bold text-lg text-gray-800 mb-2">{t('sharing.leaveTrip' as TranslationKey)}</h3>
+            <p className="text-sm text-gray-500 mb-4">{t('sharing.leaveConfirm' as TranslationKey)}</p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setConfirmLeaveId(null)}
+                className="flex-1 py-2.5 bg-gray-100 text-gray-600 rounded-xl text-sm font-bold hover:bg-gray-200 transition-colors min-h-[44px]"
+              >
+                {t('activity.cancel' as TranslationKey)}
+              </button>
+              <button
+                onClick={confirmLeave}
+                className="flex-1 py-2.5 bg-orange-500 text-white rounded-xl text-sm font-bold hover:bg-orange-600 transition-colors flex items-center justify-center gap-2 min-h-[44px]"
+              >
+                <Users size={14} /> {t('sharing.leaveTrip' as TranslationKey)}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Delete confirmation */}
       {confirmDeleteId && (
@@ -476,6 +519,30 @@ export function TripListPage() {
                 className="flex-1 py-2.5 bg-red-500 text-white rounded-xl text-sm font-bold hover:bg-red-600 transition-colors flex items-center justify-center gap-2 min-h-[44px]"
               >
                 <Trash2 size={14} /> {t('trips.delete' as TranslationKey)}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Duplicate confirmation */}
+      {confirmDuplicateId && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/50 backdrop-blur-md p-4 animate-backdrop" onClick={() => setConfirmDuplicateId(null)} onKeyDown={(e) => e.key === 'Escape' && setConfirmDuplicateId(null)}>
+          <div className="bg-surface/95 backdrop-blur-xl w-full sm:max-w-sm sm:rounded-2xl rounded-t-2xl shadow-2xl p-5 border border-gray-200/80 animate-sheet-up sm:animate-modal-pop" onClick={(e) => e.stopPropagation()}>
+            <h3 className="font-bold text-lg text-gray-800 mb-2">{t('trips.duplicate' as TranslationKey)}</h3>
+            <p className="text-sm text-gray-500 mb-4">{t('trips.duplicateConfirm' as TranslationKey)}</p>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setConfirmDuplicateId(null)}
+                className="flex-1 py-2.5 bg-gray-100 text-gray-600 rounded-xl text-sm font-bold hover:bg-gray-200 transition-colors min-h-[44px]"
+              >
+                {t('activity.cancel' as TranslationKey)}
+              </button>
+              <button
+                onClick={confirmDuplicate}
+                className="flex-1 py-2.5 bg-blue-500 text-white rounded-xl text-sm font-bold hover:bg-blue-600 transition-colors flex items-center justify-center gap-2 min-h-[44px]"
+              >
+                <Copy size={14} /> {t('trips.duplicate' as TranslationKey)}
               </button>
             </div>
           </div>

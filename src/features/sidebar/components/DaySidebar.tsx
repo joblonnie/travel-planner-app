@@ -29,6 +29,7 @@ import { ImmigrationFormModal } from './ImmigrationFormModal.tsx';
 import { TransportFormModal } from './TransportFormModal.tsx';
 import { AccommodationFormModal } from '@/features/planner/components/AccommodationFormModal.tsx';
 import { destinations as staticDestinations } from '@/data/destinations.ts';
+import { useCanEdit } from '@/features/sharing/hooks/useMyRole.ts';
 import type { DayPlan, FlightInfo, ImmigrationSchedule, InterCityTransport } from '@/types/index.ts';
 
 /* ─── Destination accent colors ─── */
@@ -38,14 +39,25 @@ const destAccents: Record<string, string> = {
 };
 function getAccent(id: string) { return destAccents[id] || 'bg-gray-400'; }
 
+/* ─── Transport type color map ─── */
+const transportColors: Record<string, { icon: string; bg: string; border: string; text: string }> = {
+  train:      { icon: 'text-blue-600',   bg: 'bg-blue-500/[0.08]',   border: 'border-blue-300/40', text: 'text-blue-700' },
+  bus:        { icon: 'text-emerald-600', bg: 'bg-emerald-500/[0.08]', border: 'border-emerald-300/40', text: 'text-emerald-700' },
+  flight:     { icon: 'text-indigo-600', bg: 'bg-indigo-500/[0.08]', border: 'border-indigo-300/40', text: 'text-indigo-700' },
+  taxi:       { icon: 'text-amber-600',  bg: 'bg-amber-500/[0.08]',  border: 'border-amber-300/40', text: 'text-amber-700' },
+  rental_car: { icon: 'text-orange-600', bg: 'bg-orange-500/[0.08]', border: 'border-orange-300/40', text: 'text-orange-700' },
+};
+function getTransportColor(type: string) { return transportColors[type] || transportColors.train; }
+
 /* ─── Transport type icon helper ─── */
 function TransportIcon({ type }: { type: InterCityTransport['type'] }) {
+  const c = getTransportColor(type);
   switch (type) {
-    case 'train': return <Train size={12} className="text-amber-600" />;
-    case 'bus': return <Bus size={12} className="text-amber-600" />;
-    case 'flight': return <Plane size={12} className="text-amber-600" />;
-    case 'taxi': case 'rental_car': return <Car size={12} className="text-amber-600" />;
-    default: return <Train size={12} className="text-amber-600" />;
+    case 'train': return <Train size={12} className={c.icon} />;
+    case 'bus': return <Bus size={12} className={c.icon} />;
+    case 'flight': return <Plane size={12} className={c.icon} />;
+    case 'taxi': case 'rental_car': return <Car size={12} className={c.icon} />;
+    default: return <Train size={12} className={c.icon} />;
   }
 }
 
@@ -54,9 +66,10 @@ interface ImmigrationCardProps {
   schedule: ImmigrationSchedule;
   onEdit: () => void;
   onDelete: () => void;
+  canEdit?: boolean;
 }
 
-function ImmigrationCard({ schedule, onEdit, onDelete }: ImmigrationCardProps) {
+function ImmigrationCard({ schedule, onEdit, onDelete, canEdit = true }: ImmigrationCardProps) {
   const { t } = useI18n();
   const isDeparture = schedule.type === 'departure';
   const Icon = isDeparture ? PlaneTakeoff : PlaneLanding;
@@ -114,22 +127,24 @@ function ImmigrationCard({ schedule, onEdit, onDelete }: ImmigrationCardProps) {
       </div>
 
       {/* Action buttons - always visible on mobile, hover on desktop */}
-      <div className="flex items-center justify-end gap-1 px-2.5 pb-2 sm:opacity-0 sm:group-hover/imm:opacity-100 transition-all duration-200">
-        <button
-          onClick={(e) => { e.stopPropagation(); onEdit(); }}
-          className={`p-2 ${labelColorClass} sm:text-gray-400 sm:hover:${labelColorClass} hover:bg-white/60 rounded-lg transition-all focus-visible:ring-2 focus-visible:ring-blue-300 min-w-[44px] min-h-[44px] flex items-center justify-center cursor-pointer`}
-          aria-label={t('activity.edit')}
-        >
-          <Pencil size={14} />
-        </button>
-        <button
-          onClick={(e) => { e.stopPropagation(); onDelete(); }}
-          className="p-2 text-red-400 sm:text-gray-400 hover:text-red-500 hover:bg-red-50/60 rounded-lg transition-all focus-visible:ring-2 focus-visible:ring-red-300 min-w-[44px] min-h-[44px] flex items-center justify-center cursor-pointer"
-          aria-label={t('activity.delete')}
-        >
-          <Trash2 size={14} />
-        </button>
-      </div>
+      {canEdit && (
+        <div className="flex items-center justify-end gap-1 px-2.5 pb-2 sm:opacity-0 sm:group-hover/imm:opacity-100 transition-all duration-200">
+          <button
+            onClick={(e) => { e.stopPropagation(); onEdit(); }}
+            className={`p-2 ${labelColorClass} sm:text-gray-400 sm:hover:${labelColorClass} hover:bg-white/60 rounded-lg transition-all focus-visible:ring-2 focus-visible:ring-blue-300 min-w-[44px] min-h-[44px] flex items-center justify-center cursor-pointer`}
+            aria-label={t('activity.edit')}
+          >
+            <Pencil size={14} />
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); onDelete(); }}
+            className="p-2 text-red-400 sm:text-gray-400 hover:text-red-500 hover:bg-red-50/60 rounded-lg transition-all focus-visible:ring-2 focus-visible:ring-red-300 min-w-[44px] min-h-[44px] flex items-center justify-center cursor-pointer"
+            aria-label={t('activity.delete')}
+          >
+            <Trash2 size={14} />
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -143,9 +158,10 @@ interface InterCityIndicatorProps {
   onEdit: (transport: InterCityTransport) => void;
   onDelete: (id: string) => void;
   t: (key: TranslationKey) => string;
+  canEdit?: boolean;
 }
 
-function InterCityIndicator({ fromCity, toCity, transports, onAdd, onEdit, onDelete, t }: InterCityIndicatorProps) {
+function InterCityIndicator({ fromCity, toCity, transports, onAdd, onEdit, onDelete, t, canEdit = true }: InterCityIndicatorProps) {
   return (
     <div className="my-1">
       <div className="relative py-1.5">
@@ -153,36 +169,43 @@ function InterCityIndicator({ fromCity, toCity, transports, onAdd, onEdit, onDel
         <div className="absolute left-[calc(50%-0.5px)] top-0 bottom-0 w-px border-l border-dashed border-secondary/40" />
 
         {/* Existing transports */}
-        {transports.map((tr) => (
-          <div key={tr.id} className="group/tr relative mx-2 my-1 bg-secondary/[0.08] rounded-xl border border-secondary/30 px-2.5 py-1.5 flex items-center gap-2 cursor-pointer hover:border-secondary/50 transition-all" onClick={() => onEdit(tr)}>
+        {transports.map((tr) => {
+          const tc = getTransportColor(tr.type);
+          return (
+          <div key={tr.id} className={`group/tr relative mx-2 my-1 ${tc.bg} rounded-xl border ${tc.border} px-2.5 py-1.5 flex items-center gap-2 ${canEdit ? 'cursor-pointer hover:shadow-sm' : ''} transition-all`} onClick={canEdit ? () => onEdit(tr) : undefined}>
             <TransportIcon type={tr.type} />
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-1">
-                <span className="text-[11px] font-bold text-gray-700 uppercase">{t(`transport.${tr.type}`)}</span>
+                <span className={`text-[11px] font-bold ${tc.text} uppercase`}>{t(`transport.${tr.type}`)}</span>
                 {tr.operator && <span className="text-[11px] text-gray-500">{tr.operator}</span>}
               </div>
               <div className="flex items-center gap-1 text-[11px] text-gray-500">
                 <span>{tr.departure || fromCity}</span>
-                <span className="text-secondary">→</span>
+                <span className={tc.icon}>→</span>
                 <span>{tr.arrival || toCity}</span>
                 {tr.departureTime && <span className="text-[11px] text-gray-600 font-mono ml-1">{tr.departureTime}</span>}
               </div>
             </div>
-            <div className="p-1.5 text-secondary rounded-lg min-w-[36px] min-h-[36px] flex items-center justify-center">
-              <Pencil size={13} />
-            </div>
-            <button
-              onClick={(e) => { e.stopPropagation(); onDelete(tr.id); }}
-              className="p-1.5 text-red-400 sm:text-gray-300 hover:text-red-500 rounded-lg sm:opacity-0 sm:group-hover/tr:opacity-100 transition-all focus-visible:ring-2 focus-visible:ring-red-300 min-w-[36px] min-h-[36px] flex items-center justify-center cursor-pointer"
-              aria-label={t('activity.delete')}
-            >
-              <Trash2 size={13} />
-            </button>
+            {canEdit && (
+              <div className={`p-1.5 ${tc.icon} rounded-lg min-w-[36px] min-h-[36px] flex items-center justify-center`}>
+                <Pencil size={13} />
+              </div>
+            )}
+            {canEdit && (
+              <button
+                onClick={(e) => { e.stopPropagation(); onDelete(tr.id); }}
+                className="p-1.5 text-red-400 sm:text-gray-300 hover:text-red-500 rounded-lg sm:opacity-0 sm:group-hover/tr:opacity-100 transition-all focus-visible:ring-2 focus-visible:ring-red-300 min-w-[36px] min-h-[36px] flex items-center justify-center cursor-pointer"
+                aria-label={t('activity.delete')}
+              >
+                <Trash2 size={13} />
+              </button>
+            )}
           </div>
-        ))}
+          );
+        })}
 
         {/* Add button */}
-        {transports.length === 0 && (
+        {canEdit && transports.length === 0 && (
           <button
             onClick={onAdd}
             className="relative mx-4 flex items-center justify-center gap-1 py-1 text-[11px] text-secondary hover:text-secondary-dark transition-all group/add"
@@ -193,7 +216,7 @@ function InterCityIndicator({ fromCity, toCity, transports, onAdd, onEdit, onDel
             <span className="font-medium">{fromCity} → {toCity}</span>
           </button>
         )}
-        {transports.length > 0 && (
+        {canEdit && transports.length > 0 && (
           <button
             onClick={onAdd}
             className="relative mx-4 mt-0.5 flex items-center justify-center gap-0.5 py-0.5 text-[11px] text-secondary/60 hover:text-secondary transition-all"
@@ -213,9 +236,10 @@ interface FlightCardProps {
   dayId: string;
   onEdit: () => void;
   onDelete: () => void;
+  canEdit?: boolean;
 }
 
-function FlightCard({ flight, onEdit, onDelete }: FlightCardProps) {
+function FlightCard({ flight, onEdit, onDelete, canEdit = true }: FlightCardProps) {
   const { t } = useI18n();
   return (
     <div className="group/flight relative bg-gradient-to-r from-blue-500/[0.07] via-indigo-500/[0.05] to-sky-500/[0.07] backdrop-blur-xl rounded-2xl border border-blue-200/30 overflow-hidden transition-all duration-300 hover:shadow-[0_4px_20px_rgba(59,130,246,0.1)] hover:border-blue-200/50">
@@ -267,22 +291,24 @@ function FlightCard({ flight, onEdit, onDelete }: FlightCardProps) {
       </div>
 
       {/* Action buttons - always visible on mobile, hover on desktop */}
-      <div className="flex items-center justify-end gap-1 px-2.5 pb-2 sm:opacity-0 sm:group-hover/flight:opacity-100 transition-all duration-200">
-        <button
-          onClick={(e) => { e.stopPropagation(); onEdit(); }}
-          className="p-2 text-blue-500 sm:text-gray-400 hover:text-blue-600 hover:bg-blue-100/60 rounded-lg transition-all focus-visible:ring-2 focus-visible:ring-blue-300 min-w-[44px] min-h-[44px] flex items-center justify-center cursor-pointer"
-          aria-label={t('activity.edit')}
-        >
-          <Pencil size={14} />
-        </button>
-        <button
-          onClick={(e) => { e.stopPropagation(); onDelete(); }}
-          className="p-2 text-red-400 sm:text-gray-400 hover:text-red-500 hover:bg-red-50/60 rounded-lg transition-all focus-visible:ring-2 focus-visible:ring-red-300 min-w-[44px] min-h-[44px] flex items-center justify-center cursor-pointer"
-          aria-label={t('activity.delete')}
-        >
-          <Trash2 size={14} />
-        </button>
-      </div>
+      {canEdit && (
+        <div className="flex items-center justify-end gap-1 px-2.5 pb-2 sm:opacity-0 sm:group-hover/flight:opacity-100 transition-all duration-200">
+          <button
+            onClick={(e) => { e.stopPropagation(); onEdit(); }}
+            className="p-2 text-blue-500 sm:text-gray-400 hover:text-blue-600 hover:bg-blue-100/60 rounded-lg transition-all focus-visible:ring-2 focus-visible:ring-blue-300 min-w-[44px] min-h-[44px] flex items-center justify-center cursor-pointer"
+            aria-label={t('activity.edit')}
+          >
+            <Pencil size={14} />
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); onDelete(); }}
+            className="p-2 text-red-400 sm:text-gray-400 hover:text-red-500 hover:bg-red-50/60 rounded-lg transition-all focus-visible:ring-2 focus-visible:ring-red-300 min-w-[44px] min-h-[44px] flex items-center justify-center cursor-pointer"
+            aria-label={t('activity.delete')}
+          >
+            <Trash2 size={14} />
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -302,12 +328,13 @@ interface SortableDayItemProps {
   format: (n: number) => string;
   dayCost: number;
   t: (key: TranslationKey) => string;
+  canEdit?: boolean;
 }
 
 function SortableDayItem({
   day, isActive,
   onSelect, onEdit, onDelete, onDuplicate, onMoveUp, onMoveDown, canMoveUp, canMoveDown,
-  format, dayCost, t,
+  format, dayCost, t, canEdit = true,
 }: SortableDayItemProps) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: day.id });
   const style = { transform: CSS.Transform.toString(transform), transition, zIndex: isDragging ? 50 : undefined };
@@ -351,15 +378,17 @@ function SortableDayItem({
                 </p>
               </div>
               {/* Drag handle */}
-              <div
-                {...attributes}
-                {...listeners}
-                className="cursor-grab active:cursor-grabbing text-gray-200 hover:text-gray-400 touch-none opacity-0 group-hover:opacity-100 transition-opacity"
-                aria-label={t('day.reorderMode')}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <GripVertical size={16} />
-              </div>
+              {canEdit && (
+                <div
+                  {...attributes}
+                  {...listeners}
+                  className="cursor-grab active:cursor-grabbing text-gray-200 hover:text-gray-400 touch-none opacity-0 group-hover:opacity-100 transition-opacity"
+                  aria-label={t('day.reorderMode')}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <GripVertical size={16} />
+                </div>
+              )}
             </div>
 
             {/* Stats */}
@@ -401,48 +430,50 @@ function SortableDayItem({
         </button>
 
         {/* Action bar - always visible on mobile, hover/active on desktop */}
-        <div className={`flex items-center gap-0.5 px-3.5 pb-2 ml-9 transition-all duration-200 ${
-          isActive ? 'opacity-100' : 'sm:opacity-0 sm:group-hover:opacity-100 sm:max-h-0 sm:group-hover:max-h-10 sm:overflow-hidden'
-        }`}>
-          <button
-            onClick={(e) => { e.stopPropagation(); onMoveUp(); }}
-            disabled={!canMoveUp}
-            className={`p-2 rounded-lg transition-all min-w-[36px] min-h-[36px] flex items-center justify-center ${canMoveUp ? 'text-gray-500 hover:text-gray-700 hover:bg-gray-100/80' : 'text-gray-200'}`}
-            aria-label={t('day.prevDay' as TranslationKey)}
-          >
-            <ChevronUp size={14} />
-          </button>
-          <button
-            onClick={(e) => { e.stopPropagation(); onMoveDown(); }}
-            disabled={!canMoveDown}
-            className={`p-2 rounded-lg transition-all min-w-[36px] min-h-[36px] flex items-center justify-center ${canMoveDown ? 'text-gray-500 hover:text-gray-700 hover:bg-gray-100/80' : 'text-gray-200'}`}
-            aria-label={t('day.nextDay' as TranslationKey)}
-          >
-            <ChevronDown size={14} />
-          </button>
-          <div className="flex-1" />
-          <button
-            onClick={(e) => { e.stopPropagation(); onDuplicate(); }}
-            className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50/80 rounded-lg transition-all min-w-[36px] min-h-[36px] flex items-center justify-center"
-            aria-label={t('feature.duplicate' as TranslationKey)}
-          >
-            <Copy size={14} />
-          </button>
-          <button
-            onClick={(e) => { e.stopPropagation(); onEdit(); }}
-            className="p-2 text-gray-500 hover:text-primary hover:bg-red-50/80 rounded-lg transition-all min-w-[36px] min-h-[36px] flex items-center justify-center"
-            aria-label={t('activity.edit')}
-          >
-            <Pencil size={14} />
-          </button>
-          <button
-            onClick={(e) => { e.stopPropagation(); onDelete(); }}
-            className="p-2 text-gray-500 hover:text-red-500 hover:bg-red-50/80 rounded-lg transition-all min-w-[36px] min-h-[36px] flex items-center justify-center"
-            aria-label={t('activity.delete')}
-          >
-            <Trash2 size={14} />
-          </button>
-        </div>
+        {canEdit && (
+          <div className={`flex items-center gap-0.5 px-3.5 pb-2 ml-9 transition-all duration-200 ${
+            isActive ? 'opacity-100' : 'sm:opacity-0 sm:group-hover:opacity-100 sm:max-h-0 sm:group-hover:max-h-10 sm:overflow-hidden'
+          }`}>
+            <button
+              onClick={(e) => { e.stopPropagation(); onMoveUp(); }}
+              disabled={!canMoveUp}
+              className={`p-2 rounded-lg transition-all min-w-[36px] min-h-[36px] flex items-center justify-center ${canMoveUp ? 'text-gray-500 hover:text-gray-700 hover:bg-gray-100/80' : 'text-gray-200'}`}
+              aria-label={t('day.prevDay' as TranslationKey)}
+            >
+              <ChevronUp size={14} />
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); onMoveDown(); }}
+              disabled={!canMoveDown}
+              className={`p-2 rounded-lg transition-all min-w-[36px] min-h-[36px] flex items-center justify-center ${canMoveDown ? 'text-gray-500 hover:text-gray-700 hover:bg-gray-100/80' : 'text-gray-200'}`}
+              aria-label={t('day.nextDay' as TranslationKey)}
+            >
+              <ChevronDown size={14} />
+            </button>
+            <div className="flex-1" />
+            <button
+              onClick={(e) => { e.stopPropagation(); onDuplicate(); }}
+              className="p-2 text-gray-500 hover:text-blue-600 hover:bg-blue-50/80 rounded-lg transition-all min-w-[36px] min-h-[36px] flex items-center justify-center"
+              aria-label={t('feature.duplicate' as TranslationKey)}
+            >
+              <Copy size={14} />
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); onEdit(); }}
+              className="p-2 text-gray-500 hover:text-primary hover:bg-red-50/80 rounded-lg transition-all min-w-[36px] min-h-[36px] flex items-center justify-center"
+              aria-label={t('activity.edit')}
+            >
+              <Pencil size={14} />
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); onDelete(); }}
+              className="p-2 text-gray-500 hover:text-red-500 hover:bg-red-50/80 rounded-lg transition-all min-w-[36px] min-h-[36px] flex items-center justify-center"
+              aria-label={t('activity.delete')}
+            >
+              <Trash2 size={14} />
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -457,6 +488,7 @@ export function DaySidebar({ onClose }: { onClose: () => void }) {
   const { setCurrentDay, removeDay, removeFlight, reorderDays, removeImmigrationSchedule, removeInterCityTransport, duplicateDay } = useTripActions();
   const { format } = useCurrency();
   const { t } = useI18n();
+  const canEdit = useCanEdit();
 
   const [editingDay, setEditingDay] = useState<DayPlan | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
@@ -560,17 +592,19 @@ export function DaySidebar({ onClose }: { onClose: () => void }) {
             <div className="flex items-center justify-between mb-2.5">
               <h2 className="text-xs font-bold text-gray-700 tracking-wide">{t('sidebar.schedule')}</h2>
               <div className="flex items-center gap-1">
-                <button
-                  onClick={() => setShowDestModal(true)}
-                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold text-primary hover:bg-red-50/80 transition-all border border-primary/15"
-                >
-                  <MapPin size={12} />
-                  {t('place.addPlace')}
-                </button>
-                {days.length > 0 && (
+                {canEdit && (
+                  <button
+                    onClick={() => setShowDestModal(true)}
+                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-semibold text-primary bg-primary/8 hover:bg-primary/15 transition-all"
+                  >
+                    <MapPin size={12} />
+                    {t('place.addPlace')}
+                  </button>
+                )}
+                {canEdit && days.length > 0 && (
                   <button
                     onClick={() => setShowAccomModal(true)}
-                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold text-purple-500 hover:bg-purple-50/80 transition-all border border-purple-200/50"
+                    className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[11px] font-semibold text-purple-600 bg-purple-500/8 hover:bg-purple-500/15 transition-all"
                   >
                     <Hotel size={12} />
                     {t('accommodation.title' as TranslationKey)}
@@ -630,11 +664,12 @@ export function DaySidebar({ onClose }: { onClose: () => void }) {
                   schedule={sched}
                   onEdit={() => { setImmModalType('departure'); setEditingImmigration(sched); }}
                   onDelete={() => setDeleteImmId(sched.id)}
+                  canEdit={canEdit}
                 />
               );
             })}
             {/* Add departure button - hide when one exists */}
-            {departureSchedules.length === 0 && (
+            {canEdit && departureSchedules.length === 0 && (
               <button
                 onClick={() => { setImmModalType('departure'); setEditingImmigration(undefined); }}
                 className="w-full flex items-center justify-center gap-1.5 py-2 px-3 text-[10px] text-primary hover:text-primary-dark rounded-xl border border-dashed border-primary/30 hover:border-primary/50 hover:bg-primary/5 transition-all"
@@ -689,6 +724,7 @@ export function DaySidebar({ onClose }: { onClose: () => void }) {
                         format={format}
                         dayCost={dayCostMap[day.id] ?? 0}
                         t={t}
+                        canEdit={canEdit}
                       />
 
                       {/* ── Flight cards (standalone, between days) ── */}
@@ -722,6 +758,7 @@ export function DaySidebar({ onClose }: { onClose: () => void }) {
                                   dayId={day.id}
                                   onEdit={() => setEditingFlightInfo({ dayId: day.id, flight })}
                                   onDelete={() => setDeleteFlightInfo({ dayId: day.id, flightId: flight.id })}
+                                  canEdit={canEdit}
                                 />
                               );
                             })}
@@ -739,6 +776,7 @@ export function DaySidebar({ onClose }: { onClose: () => void }) {
                           onEdit={(tr) => setTransportModal({ fromDayId: day.id, toDayId: nextDay.id, fromCity: day.destination, toCity: nextDay.destination, transport: tr })}
                           onDelete={(id) => removeInterCityTransport(id)}
                           t={t}
+                          canEdit={canEdit}
                         />
                       )}
                     </div>
@@ -772,11 +810,12 @@ export function DaySidebar({ onClose }: { onClose: () => void }) {
                   schedule={sched}
                   onEdit={() => { setImmModalType('arrival'); setEditingImmigration(sched); }}
                   onDelete={() => setDeleteImmId(sched.id)}
+                  canEdit={canEdit}
                 />
               );
             })}
             {/* Add arrival button - hide when one exists */}
-            {arrivalSchedules.length === 0 && (
+            {canEdit && arrivalSchedules.length === 0 && (
               <button
                 onClick={() => { setImmModalType('arrival'); setEditingImmigration(undefined); }}
                 className="w-full flex items-center justify-center gap-1.5 py-2 px-3 text-[10px] text-primary hover:text-primary-dark rounded-xl border border-dashed border-primary/30 hover:border-primary/50 hover:bg-primary/5 transition-all"
