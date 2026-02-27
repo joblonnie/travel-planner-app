@@ -1,50 +1,84 @@
-import { createBrowserRouter } from 'react-router-dom';
-import { lazy, Suspense } from 'react';
-import { RootLayout } from './RootLayout.tsx';
-import { LoginPage } from '@/features/auth/components/LoginPage.tsx';
-import { AuthLayout } from './AuthLayout.tsx';
-import { AppLayout } from './AppLayout.tsx';
-import { DayContent } from '@/features/planner/components/DayContent.tsx';
-import { LoadingSpinner } from '@/components/LoadingSpinner.tsx';
+import { createBrowserRouter } from "react-router-dom";
+import { lazy, Suspense } from "react";
+import { RootLayout } from "./RootLayout.tsx";
+import { LoginScreen } from "@/features/auth/components/LoginScreen.tsx";
+import { AuthLayout } from "./AuthLayout.tsx";
+import { AppLayout } from "./AppLayout.tsx";
+import { DayContent } from "@/features/planner/components/DayContent.tsx";
+import { LoadingSpinner } from "@/components/LoadingSpinner.tsx";
 
-const BudgetPage = lazy(() => import('@/features/budget/components/BudgetPage.tsx').then(m => ({ default: m.BudgetPage })));
-const TripListPage = lazy(() => import('@/features/trips/components/TripListPage.tsx').then(m => ({ default: m.TripListPage })));
-const GuidePage = lazy(() => import('@/features/guide/components/GuidePage.tsx').then(m => ({ default: m.GuidePage })));
-const InviteAcceptPage = lazy(() => import('@/features/sharing/components/InviteAcceptPage.tsx').then(m => ({ default: m.InviteAcceptPage })));
+const BudgetDashboard = lazy(() =>
+  import("@/features/budget/components/BudgetDashboard.tsx").then((m) => ({
+    default: m.BudgetDashboard,
+  })),
+);
+const TripList = lazy(() =>
+  import("@/features/trips/components/TripList.tsx").then((m) => ({
+    default: m.TripList,
+  })),
+);
+const GuideEditor = lazy(() =>
+  import("@/features/guide/components/GuideEditor.tsx").then((m) => ({
+    default: m.GuideEditor,
+  })),
+);
+const InviteAcceptFlow = lazy(() =>
+  import("@/features/sharing/components/InviteAcceptFlow.tsx").then((m) => ({
+    default: m.InviteAcceptFlow,
+  })),
+);
 
-function LazyBudgetPage() {
-  return <Suspense fallback={<LoadingSpinner />}><BudgetPage /></Suspense>;
+function LazyBudgetDashboard() {
+  return (
+    <Suspense fallback={<LoadingSpinner />}>
+      <BudgetDashboard />
+    </Suspense>
+  );
 }
 
-function LazyTripListPage() {
-  return <Suspense fallback={<LoadingSpinner />}><TripListPage /></Suspense>;
+function LazyTripList() {
+  return (
+    <Suspense fallback={<LoadingSpinner />}>
+      <TripList />
+    </Suspense>
+  );
 }
 
-function LazyGuidePage() {
-  return <Suspense fallback={<LoadingSpinner />}><GuidePage /></Suspense>;
+function LazyGuideEditor() {
+  return (
+    <Suspense fallback={<LoadingSpinner />}>
+      <GuideEditor />
+    </Suspense>
+  );
 }
 
-function LazyInviteAcceptPage() {
-  return <Suspense fallback={<LoadingSpinner />}><InviteAcceptPage /></Suspense>;
+function LazyInviteAcceptFlow() {
+  return (
+    <Suspense fallback={<LoadingSpinner />}>
+      <InviteAcceptFlow />
+    </Suspense>
+  );
 }
 
 export const router = createBrowserRouter([
   {
     element: <RootLayout />,
     children: [
-      { path: '/login', element: <LoginPage /> },
-      { path: '/invite/:invitationId', element: <LazyInviteAcceptPage /> },
+      { path: "/login", element: <LoginScreen /> },
+      { path: "/invite/:invitationId", element: <LazyInviteAcceptFlow /> },
       {
         element: <AuthLayout />,
-        children: [{
-          element: <AppLayout />,
-          children: [
-            { index: true, element: <DayContent /> },
-            { path: 'budget', element: <LazyBudgetPage /> },
-            { path: 'guide', element: <LazyGuidePage /> },
-            { path: 'trips', element: <LazyTripListPage /> },
-          ],
-        }],
+        children: [
+          {
+            element: <AppLayout />,
+            children: [
+              { index: true, element: <DayContent /> },
+              { path: "budget", element: <LazyBudgetDashboard /> },
+              { path: "guide", element: <LazyGuideEditor /> },
+              { path: "trips", element: <LazyTripList /> },
+            ],
+          },
+        ],
       },
     ],
   },

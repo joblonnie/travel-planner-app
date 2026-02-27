@@ -3,7 +3,7 @@ import { Plane, CalendarDays, Wallet, Cloud } from 'lucide-react';
 import { useTripStore } from '@/store/useTripStore.ts';
 import { useI18n, type TranslationKey } from '@/i18n/useI18n.ts';
 
-export function LoginPage() {
+export function LoginScreen() {
   const isAuthenticated = useTripStore((s) => s.isAuthenticated);
   const { t } = useI18n();
 

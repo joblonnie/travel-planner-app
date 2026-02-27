@@ -1,1 +1,1 @@
-export { GuidePage } from './components/GuidePage.tsx';
+export { GuideEditor } from './components/GuideEditor.tsx';

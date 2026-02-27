@@ -1,2 +1,2 @@
-export { BudgetPage } from './components/BudgetPage.tsx';
+export { BudgetDashboard } from './components/BudgetDashboard.tsx';
 export { CameraOcrModal } from './components/CameraOcrModal.tsx';
