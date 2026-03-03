@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, memo } from 'react';
+import { useState, useRef, useCallback, useMemo, memo } from 'react';
 import { Send } from 'lucide-react';
 import { useI18n, type TranslationKey } from '@/i18n/useI18n.ts';
 import { useInviteMember } from '@/features/sharing/hooks/useMembers.ts';
@@ -18,7 +18,7 @@ export const InviteInlineForm = memo(function InviteInlineForm({ tripId, onClose
   const [selectedIdx, setSelectedIdx] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const suggestions = (() => {
+  const suggestions = useMemo(() => {
     const atIdx = email.indexOf('@');
     if (atIdx < 1) return [];
     const typed = email.slice(atIdx + 1).toLowerCase();
@@ -26,7 +26,7 @@ export const InviteInlineForm = memo(function InviteInlineForm({ tripId, onClose
     return EMAIL_DOMAINS
       .filter((d) => d.startsWith(typed) && d !== typed)
       .map((d) => `${local}@${d}`);
-  })();
+  }, [email]);
 
   const handleEmailChange = useCallback((value: string) => {
     setEmail(value);

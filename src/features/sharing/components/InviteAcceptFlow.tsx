@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { Plane, Check, XCircle, Clock, AlertTriangle } from 'lucide-react';
 import { useI18n, type TranslationKey } from '@/i18n/useI18n.ts';
@@ -8,11 +9,11 @@ export function InviteAcceptFlow() {
   const { status, details, isAuthenticated, user, handleLogin, handleLogoutAndRetry } =
     useInviteAccept();
 
-  const roleLabel = (role: 'editor' | 'viewer') => {
+  const roleLabel = useCallback((role: 'editor' | 'viewer') => {
     return role === 'editor'
       ? t('invite.roleEditor' as TranslationKey)
       : t('invite.roleViewer' as TranslationKey);
-  };
+  }, [t]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-warm-50 px-4">
