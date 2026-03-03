@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback } from 'react';
+import { useState, useRef, useCallback, memo } from 'react';
 import { Send } from 'lucide-react';
 import { useI18n, type TranslationKey } from '@/i18n/useI18n.ts';
 import { useInviteMember } from '@/features/sharing/hooks/useMembers.ts';
@@ -8,7 +8,7 @@ const EMAIL_DOMAINS = [
   'outlook.com', 'yahoo.com', 'icloud.com', 'hotmail.com',
 ];
 
-export function InviteInlineForm({ tripId, onClose }: { tripId: string; onClose: () => void }) {
+export const InviteInlineForm = memo(function InviteInlineForm({ tripId, onClose }: { tripId: string; onClose: () => void }) {
   const { t } = useI18n();
   const inviteMutation = useInviteMember(tripId);
   const [email, setEmail] = useState('');
@@ -151,4 +151,4 @@ export function InviteInlineForm({ tripId, onClose }: { tripId: string; onClose:
       </div>
     </div>
   );
-}
+});

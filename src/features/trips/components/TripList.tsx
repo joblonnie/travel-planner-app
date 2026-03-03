@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Plus, Trash2, Copy, ArrowLeft, Users } from 'lucide-react';
 import { useTripStore } from '@/store/useTripStore.ts';
@@ -26,46 +26,59 @@ export function TripList() {
   const leaveTripMutation = useLeaveTrip();
   const user = useTripStore((s) => s.user);
 
-  const handleSwitch = (tripId: string) => {
+  const [, setSearchParams] = useSearchParams();
+
+  const handleSwitch = useCallback((tripId: string) => {
     setCurrentTripId(tripId);
     navigate('/');
-  };
+  }, [setCurrentTripId, navigate]);
 
-  const [, setSearchParams] = useSearchParams();
-  const handleEdit = (tripId: string) => {
+  const handleEdit = useCallback((tripId: string) => {
     setCurrentTripId(tripId);
     setSearchParams({ settings: 'true' });
-  };
+  }, [setCurrentTripId, setSearchParams]);
 
-  const handleDelete = (tripId: string) => {
+  const handleDelete = useCallback((tripId: string) => {
     setConfirmDeleteId(tripId);
-  };
+  }, []);
 
-  const handleLeave = (tripId: string) => {
+  const handleLeave = useCallback((tripId: string) => {
     setConfirmLeaveId(tripId);
-  };
+  }, []);
 
-  const confirmLeave = () => {
+  const confirmLeave = useCallback(() => {
     if (confirmLeaveId && user?.id) {
       leaveTripMutation.mutate({ tripId: confirmLeaveId, userId: user.id });
       setConfirmLeaveId(null);
     }
-  };
+  }, [confirmLeaveId, user?.id, leaveTripMutation]);
 
-  const confirmDelete = () => {
+  const confirmDelete = useCallback(() => {
     if (confirmDeleteId) {
       deleteTripMutation.mutate(confirmDeleteId);
       deleteTrip(confirmDeleteId);
       setConfirmDeleteId(null);
     }
-  };
+  }, [confirmDeleteId, deleteTripMutation, deleteTrip]);
 
-  const confirmDuplicate = () => {
+  const confirmDuplicate = useCallback(() => {
     if (confirmDuplicateId) {
       duplicateTrip(confirmDuplicateId);
       setConfirmDuplicateId(null);
     }
-  };
+  }, [confirmDuplicateId, duplicateTrip]);
+
+  const handleDuplicate = useCallback((id: string) => {
+    setConfirmDuplicateId(id);
+  }, []);
+
+  const handleToggleInvite = useCallback((id: string) => {
+    setInvitingTripId((prev) => (prev === id ? null : id));
+  }, []);
+
+  const handleCloseInvite = useCallback(() => {
+    setInvitingTripId(null);
+  }, []);
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6">
@@ -105,9 +118,9 @@ export function TripList() {
             onEdit={handleEdit}
             onDelete={handleDelete}
             onLeave={handleLeave}
-            onDuplicate={(id) => setConfirmDuplicateId(id)}
-            onToggleInvite={(id) => setInvitingTripId(invitingTripId === id ? null : id)}
-            onCloseInvite={() => setInvitingTripId(null)}
+            onDuplicate={handleDuplicate}
+            onToggleInvite={handleToggleInvite}
+            onCloseInvite={handleCloseInvite}
           />
         ))}
       </div>
